@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-navbar: #023047;
+  --color-hover-navbar: #ffb703;
+}
