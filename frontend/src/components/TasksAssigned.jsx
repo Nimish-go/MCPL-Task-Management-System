@@ -15,44 +15,39 @@ import {
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { AddTask } from "@mui/icons-material";
+import { useLocation } from "react-router-dom";
+import useEmail from "../hooks/useEmail";
+import Toast from "./Toast";
 
-const TasksAssigned = ({ open, onClose }) => {
+const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   const [projectData, setProjectData] = useState([]);
   const [selectedProjectCode, setSelectedProjectCode] = useState("");
   const [projectName, setProjectName] = useState("");
   const [employeeData, setEmployeeData] = useState([]);
   const [assignedToEmployee, setAssignedToEmployee] = useState("");
   const [assignedByEmployee, setAssignedByEmployee] = useState(
-    sessionStorage.getItem("emp_name"),
+    sessionStorage.getItem("empName"),
   );
   const [workTypeData, setWorkTypeData] = useState([]);
   const [selectedWorkType, setSelectedWorkType] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [formData, setFormData] = useState({
-    projectCode: "",
-    projectName: "",
-    assigningToEmp: "",
-    assignedBy: "",
-    workType: "",
-    taskDescription: "",
-    remarks: "",
-    deadline: "",
-  });
+  const [deadline, setDeadline] = useState("");
+  const [toastStatus, setToastStatus] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [assigning, setAssigning] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
+  const location = useLocation();
+
+  const { sendEmail, loading, error, success } = useEmail();
 
   useEffect(() => {
     axios.defaults.baseURL = "http://localhost:5002";
-    axios.get("/get_all_projects").then((res) => {
-      if (res.status === 200) {
-        const data = res.data;
-        setProjectData(data);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
+    setProjectData(projects);
+    setWorkTypeData(workTypes);
+    setEmployeeData(employees);
     if (!selectedProjectCode) return;
     axios.get(`/get_project_data/${selectedProjectCode}`).then((res) => {
       if (res.status === 200) {
@@ -60,38 +55,57 @@ const TasksAssigned = ({ open, onClose }) => {
         setProjectName(data.project_name);
       }
     });
-  }, [selectedProjectCode]);
+  }, [projects, workTypes, employees, selectedProjectCode]);
 
-  useEffect(() => {
-    axios
-      .get("/get_work_type")
-      .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setWorkTypeData(data);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get("/get_employee_names")
-      .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setEmployeeData(data);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
+  const resetForm = () => {};
 
   const assignTask = (event) => {
     event.preventDefault();
+    setAssigning(true);
+    const formData = new FormData();
+    formData.append("dateOfEntry", today);
+    formData.append("projectCode", selectedProjectCode);
+    formData.append("taskDesc", taskDescription);
+    formData.append("workType", selectedWorkType);
+    formData.append("assignTo", assignedToEmployee);
+    formData.append("assignBy", assignedByEmployee);
+    formData.append("remarks", remarks);
+    formData.append("deadline", deadline);
+    axios
+      .post("/assign_task", formData)
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setToastStatus(data.status);
+          setToastMessage(data.message);
+          setShowToast(true);
+          setAssigning(false);
+          const templateParams = {
+            to_email: data.empEmail.to_email,
+            to_name: data.empEmail.to_name,
+            from_name: assignedByEmployee,
+            from_email: sessionStorage.getItem("email"),
+            task_details: taskDescription,
+            project_code: selectedProjectCode,
+            project_name: projectName,
+          };
+          console.log(templateParams);
+          try {
+            sendEmail(templateParams);
+          } catch (err) {
+            setToastStatus("error");
+            setToastMessage("Something Went Wrong while sending email.");
+            setShowToast(true);
+            console.error(err);
+          }
+        }
+      })
+      .catch((err) => {
+        setToastStatus("error");
+        setToastMessage("Something Went Wrong. Check Console for the same.");
+        setShowToast(true);
+        console.error(err);
+      });
   };
 
   return (
@@ -114,7 +128,7 @@ const TasksAssigned = ({ open, onClose }) => {
                 onChange={(e, newValue) => setSelectedProjectCode(newValue)}
               >
                 {projectData.map((project) => (
-                  <Option key={project.code} value={project.code}>
+                  <Option key={project.id} value={project.id}>
                     {project.code}
                   </Option>
                 ))}
@@ -175,7 +189,10 @@ const TasksAssigned = ({ open, onClose }) => {
           </FormControl>
           <FormControl>
             <FormLabel>Assign Deadline</FormLabel>
-            <Input type="date" />
+            <Input
+              type="date"
+              onChange={(e) => setDeadline(e.target.value.toString())}
+            />
           </FormControl>
           <FormControl>
             <FormLabel>Remarks</FormLabel>
@@ -186,11 +203,19 @@ const TasksAssigned = ({ open, onClose }) => {
               placeholder="Remarks:......"
             ></Textarea>
           </FormControl>
-          <Button size="md" variant="soft" color="primary" onClick={assignTask} startDecorator={<AddTask />}>
+          <Button
+            size="md"
+            variant="soft"
+            color="primary"
+            loading={assigning}
+            startDecorator={<AddTask />}
+            onClick={assignTask}
+          >
             Assign Task
           </Button>
         </Stack>
       </Box>
+      <Toast open={showToast} status={toastStatus} message={toastMessage} />
     </Drawer>
   );
 };

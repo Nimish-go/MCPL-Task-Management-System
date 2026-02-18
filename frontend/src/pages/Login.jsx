@@ -66,6 +66,7 @@ const Login = () => {
       .catch((err) => {
         console.error(err);
         setError(true);
+        setOrgCodeLoading(false);
         setValidOrgCode(false);
       });
   };
@@ -85,6 +86,7 @@ const Login = () => {
           sessionStorage.setItem("empName", data.empName);
           sessionStorage.setItem("designation", data.designation);
           sessionStorage.setItem("role", data.role);
+          sessionStorage.setItem("email", data.email);
           setLoading(false);
           navigate("/dashboard");
         }

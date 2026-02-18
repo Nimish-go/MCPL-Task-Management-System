@@ -1,0 +1,46 @@
+import { PieChart, TableChart } from "@mui/icons-material";
+import { ListItemDecorator, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
+import React, { useEffect, useState } from "react";
+import Tables from "./Tables";
+import Charts from "./Charts";
+
+const DashboardTasksAssigned = () => {
+
+  const [tasksData, setTasksData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    
+  }, [])
+
+  return (
+    <div className="tasksAssigned">
+      <div className="tabs">
+        <Tabs variant="soft">
+          <TabList>
+            <Tab indicatorInset>
+              <ListItemDecorator>
+                <TableChart />
+              </ListItemDecorator>
+              Tabular View
+            </Tab>
+            <Tab indicatorInset>
+              <ListItemDecorator>
+                <PieChart />
+              </ListItemDecorator>
+              Chart View
+            </Tab>
+          </TabList>
+          <TabPanel value={0}>
+            <Tables />
+          </TabPanel>
+          <TabPanel value={1}>
+            <Charts />
+          </TabPanel>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardTasksAssigned;

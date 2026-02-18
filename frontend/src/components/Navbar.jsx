@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Dropdown,
@@ -25,6 +25,7 @@ import {
 } from "@mui/icons-material";
 import TasksAssigned from "./TasksAssigned";
 import ProjectHistory from "./ProjectHistory";
+import axios from "axios";
 
 const Navbar = () => {
   const location = useLocation();
@@ -33,14 +34,48 @@ const Navbar = () => {
 
   const [spin, setSpin] = useState(false);
   const [taskAssignOpen, setTaskAssignOpen] = useState(false);
-  const [taskPerformOpen, setTaskPerformOpen] = useState(false);
   const [projHistoryOpen, setProjHistoryOpen] = useState(false);
+  const [projectData, setProjectData] = useState([]);
+  const [employeeData, setEmployeeData] = useState([]);
+  const [workTypeData, setWorkTypeData] = useState([]);
   const [drawerType, setDrawerType] = useState("");
 
   const logout = () => {
     sessionStorage.clear();
     navigate("/");
   };
+
+  useEffect(() => {
+    axios.defaults.baseURL = "http://localhost:5002";
+    axios.get("/get_all_projects").then((res) => {
+      if (res.status === 200) {
+        const data = res.data;
+        setProjectData(data);
+      }
+    });
+    axios
+      .get("/get_work_type")
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setWorkTypeData(data);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+    axios
+      .get("/get_employee_names")
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setEmployeeData(data);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   return (
     <div className="navbar-container bg-bg-navbar p-3 text-white">
@@ -219,11 +254,17 @@ const Navbar = () => {
       <TasksAssigned
         open={taskAssignOpen}
         onClose={() => setTaskAssignOpen(false)}
+        projects={projectData}
+        employees={employeeData}
+        workTypes={workTypeData}
       />
       <ProjectHistory
         open={projHistoryOpen}
         onClose={() => setProjHistoryOpen(false)}
         type={drawerType}
+        projects={projectData}
+        employees={employeeData}
+        workTypes={workTypeData}
       />
     </div>
   );

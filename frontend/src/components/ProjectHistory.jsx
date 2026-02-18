@@ -18,31 +18,27 @@ import {
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 
-const ProjectHistory = ({ open, onClose, type }) => {
+const ProjectHistory = ({
+  open,
+  onClose,
+  type,
+  projects,
+  employees,
+  workTypes,
+}) => {
   const [projectData, setProjectData] = useState([]);
   const [selectedProjectCode, setSelectedProjectCode] = useState("");
   const [projectName, setProjectName] = useState("");
   const [workTypeData, setWorkTypeData] = useState([]);
-  const [selectedWorkTypeData, setSelectedWorkType] = useState("");
+  const [selectedWorkType, setSelectedWorkType] = useState("");
   const [employeeData, setEmployeeData] = useState([]);
   const [timeSpent, setTimeSpent] = useState("");
 
   useEffect(() => {
     axios.defaults.baseURL = "http://localhost:5002";
-    axios
-      .get("/get_all_projects")
-      .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setProjectData(data);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
-
-  useEffect(() => {
+    setProjectData(projects);
+    setWorkTypeData(workTypes);
+    setEmployeeData(employees);
     if (!selectedProjectCode) return;
     axios.get(`/get_project_data/${selectedProjectCode}`).then((res) => {
       if (res.status === 200) {
@@ -50,35 +46,7 @@ const ProjectHistory = ({ open, onClose, type }) => {
         setProjectName(data.project_name);
       }
     });
-  }, [selectedProjectCode]);
-
-  useEffect(() => {
-    axios
-      .get("/get_work_type")
-      .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setWorkTypeData(data);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get("/get_employee_names")
-      .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setEmployeeData(data);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
+  }, [employees, projects, workTypes, selectedProjectCode]);
 
   const today = new Date().toISOString().split("T")[0];
 
