@@ -21,6 +21,10 @@ def get_db_connection():
         port=os.environ.get("DB_PORT")
     )
 
+@app.route("/",methods=["GET"])
+def index():
+    return "Welcome to MCPL Task Management System Server."
+
 @app.route("/validate_org_code/<code>",methods=["GET","POST"])
 def validate_org_code(code):
     
@@ -178,15 +182,9 @@ def dashboard_tasks_assigned(user):
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[user,])
     user_id = cursor.fetchone()
     
-    cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", um."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
-                       FROM "ProjectHistory" ph
-                       JOIN "UserMaster" um ON ph."AssignedBy" = um."UserID"
-                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
-                       WHERE ph."ChangeStatus?" = true AND ph."UserID" = %s ORDER BY ph."ProjectHistoryID" ASC """,[user_id[0],])
     
-    task_details = [{ "id": row[0], "task_desc": row[1], "emp_name" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "deadline" : row[6], "date_of_entry" : row[7], "status" : row[8] } for row in cursor.fetchall() ]
     
-    return jsonify(task_details), 200
+    return jsonify({}), 200
 
 @app.route("/dashboard_tasks_under_review/<user>",methods = ["GET"])
 def dashboard_tasks_under_review(user):

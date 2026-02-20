@@ -3,6 +3,7 @@ import { ListItemDecorator, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
 import React, { useEffect, useState } from "react";
 import Tables from "./Tables";
 import Charts from "./Charts";
+import axios from 'axios';
 
 const DashboardTasksAssigned = () => {
 
@@ -10,8 +11,9 @@ const DashboardTasksAssigned = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    
-  }, [])
+    axios.defaults.baseURL = "http://localhost:5002";
+    axios.post()
+  }, []);
 
   return (
     <div className="tasksAssigned">
