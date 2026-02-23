@@ -163,6 +163,53 @@ def assignTask():
         "empEmail" : assignToEmailDetails
         }), 200
 
+@app.route("/getTaskUpdates/<id>",methods={"GET"})
+def getTaskUpdates(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "Event", "Remarks" FROM "ProjectHistory" WHERE "ProjectHistoryID" = %s """,[id,])
+    
+    row = cursor.fetchone()
+    taskDesc = row[0]
+    remarks = row[1]
+    
+    return jsonify(
+        {
+            "taskDesc" : taskDesc,
+            "remarks" : remarks
+        }    
+    ), 200
+
+@app.route("/update_task_assigned",methods=["PUT"])
+def updateTaskAssigned():
+    
+    taskId = request.form.get("taskId")
+    taskDesc = request.form.get("taskDesc")
+    remarks = request.form.get("remarks")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "Event", "Remarks" FROM "ProjectHistory" WHERE "ProjectHistoryID" = %s """,[taskId,])
+    
+    row = cursor.fetchone()
+    
+    task_old_desc = row[0]
+    remarks_old = row[1]
+    
+    finalTaskDesc = task_old_desc+" | (Edited): "+taskDesc
+    finalRemarks = remarks_old+" | (Edited): "+remarks
+    
+    
+    cursor.execute(""" UPDATE "ProjectHistory" SET "Event" = %s, "Remarks" = %s WHERE "ProjectHistoryID" = %s """,[finalTaskDesc,finalRemarks,taskId])
+    conn.commit()
+
+    return jsonify({
+        "status" : "success",
+        "message" : "Task Updated Successfully"
+    }), 200
+
 @app.route("/get_employee_names",methods=["GET"])
 def getEmpNames():
     conn = get_db_connection()
@@ -182,9 +229,15 @@ def dashboard_tasks_assigned(user):
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[user,])
     user_id = cursor.fetchone()
     
+    cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", um."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
+                       FROM "ProjectHistory" ph
+                       JOIN "UserMaster" um ON ph."AssignedBy" = um."UserID"
+                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       WHERE ph."ChangeStatus?" = true AND ph."UserID" = %s ORDER BY ph."ProjectHistoryID" ASC """,[user_id[0],])
     
+    tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_to" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "deadline" : row[6], "date_of_entry" : row[7], "status" : row[8] } for row in cursor.fetchall()]
     
-    return jsonify({}), 200
+    return jsonify(tasks_assigned), 200
 
 @app.route("/dashboard_tasks_under_review/<user>",methods = ["GET"])
 def dashboard_tasks_under_review(user):
@@ -195,13 +248,18 @@ def dashboard_tasks_under_review(user):
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[user,])
     user_id = cursor.fetchone()
     
-    cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", um."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TaskStatus", ph."TargetDate", ph."DateOfEntry"
-                       FROM "ProjectHistory" ph
-                       JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
-                       WHERE ph."ChangeStatus?" = true AND ph."AssignedBy" = %s ORDER BY ph."ProjectHistoryID" DESC """,[user_id[0]])
+    cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'), 
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Completed') , 
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND "TargetDate" < CURRENT_DATE),
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')
+                        FROM "ProjectHistory" ph
+                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
+                        WHERE ph."AssignedBy" = %s AND ph."IsHistory" = FALSE AND ph."ChangeStatus?" = TRUE
+                        GROUP BY um."EmpName";  """, [user_id[0],])
     
-    tasks_under_review = [{ "id" : row[0], "taskDesc" : row[1], "emp_name" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "status" : row[6], "deadline" : row[7], "date_of_entry" : row[8] } for row in cursor.fetchall() ]
+    tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]
+    
+    # tasks_under_review = [{ "id" : row[0], "taskDesc" : row[1], "emp_name" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "status" : row[6], "deadline" : row[7], "date_of_entry" : row[8] } for row in cursor.fetchall() ]
     
     return jsonify(tasks_under_review), 200
 
