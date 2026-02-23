@@ -227,7 +227,9 @@ def dashboard_tasks_assigned(user):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[user,])
+    decodedUser = unquote(user)
+    
+    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[decodedUser,])
     user_id = cursor.fetchone()
     
     cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", um."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
