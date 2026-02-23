@@ -10,7 +10,7 @@ const DashboardTasksAssigned = () => {
   const [tableData, setTableData] = useState([]);
 
   useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
 
     setLoading(true);
     axios

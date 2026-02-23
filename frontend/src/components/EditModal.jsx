@@ -28,7 +28,7 @@ const EditModal = ({ open, onClose, taskId }) => {
   const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     setLoading(true);
     axios
       .get(`/getTaskUpdates/${taskId}`)

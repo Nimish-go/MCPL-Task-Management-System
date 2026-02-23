@@ -34,19 +34,19 @@ const ProjectHistory = ({
   const [employeeData, setEmployeeData] = useState([]);
   const [timeSpent, setTimeSpent] = useState("");
 
-  useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
-    setProjectData(projects);
-    setWorkTypeData(workTypes);
-    setEmployeeData(employees);
-    if (!selectedProjectCode) return;
-    axios.get(`/get_project_data/${selectedProjectCode}`).then((res) => {
-      if (res.status === 200) {
-        const data = res.data;
-        setProjectName(data.project_name);
-      }
-    });
-  }, [employees, projects, workTypes, selectedProjectCode]);
+  // useEffect(() => {
+  //   axios.defaults.baseURL = "http://localhost:5002";
+  //   setProjectData(projects);
+  //   setWorkTypeData(workTypes);
+  //   setEmployeeData(employees);
+  //   if (!selectedProjectCode) return;
+  //   axios.get(`/get_project_data/${selectedProjectCode}`).then((res) => {
+  //     if (res.status === 200) {
+  //       const data = res.data;
+  //       setProjectName(data.project_name);
+  //     }
+  //   });
+  // }, [employees, projects, workTypes, selectedProjectCode]);
 
   const today = new Date().toISOString().split("T")[0];
 

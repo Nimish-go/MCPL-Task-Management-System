@@ -25,7 +25,7 @@ import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
   }, []);
 
   const [username, setUsername] = useState("");

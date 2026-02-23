@@ -12,8 +12,7 @@ const DashboardTasksUnderReview = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Under Review Mounted!!");
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     axios
       .get(`/dashboard_tasks_under_review/${sessionStorage.getItem("empName")}`)
       .then((res) => {

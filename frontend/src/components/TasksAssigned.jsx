@@ -44,7 +44,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   const { sendEmail, loading, error, success } = useEmail();
 
   useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     setProjectData(projects);
     setWorkTypeData(workTypes);
     setEmployeeData(employees);
