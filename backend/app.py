@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, date
 import psycopg2
 import psycopg2.extras
 import os
+from urllib.parse import unquote
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -244,10 +245,13 @@ def dashboard_tasks_under_review(user):
     
     print("Requested User: ",user)
     
+    decodedUser = unquote(user)
+    print("Decoded User: ", decodedUser)
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[user,])
+    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[decodedUser,])
     user_id = cursor.fetchone()
     print("Fetched User: ",user_id)
     
