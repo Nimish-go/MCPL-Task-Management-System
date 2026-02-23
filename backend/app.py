@@ -242,11 +242,17 @@ def dashboard_tasks_assigned(user):
 @app.route("/dashboard_tasks_under_review/<user>",methods = ["GET"])
 def dashboard_tasks_under_review(user):
     
+    print("Requested User: ",user)
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[user,])
     user_id = cursor.fetchone()
+    print("Fetched User: ",user_id)
+    
+    if not user_id:
+        return jsonify({"message" : "User Not Found"}), 404
     
     cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'), 
                         COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Completed') , 
