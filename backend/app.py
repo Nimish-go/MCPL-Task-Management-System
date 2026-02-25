@@ -109,6 +109,22 @@ def get_project_data(code):
     
     return jsonify({ "project_code": project_details[0], "project_name": project_details[1] }), 200
 
+@app.route("/get_employee_tasks/<name>",methods=["GET"])
+def getEmployeeTasks(name):
+    empName = unquote(name)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
+                       FROM "ProjectHistory" ph
+                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       WHERE ph."ChangeStatus?" = true AND ph."UserID" IN (SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s) ORDER BY ph."ProjectHistoryID" ASC """,[empName,])
+    
+    tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7] } for row in cursor.fetchall()]
+    
+    return jsonify(tasks), 200
+
+
 @app.route("/get_work_type",methods = ["GET"])
 def getWorkType():
     conn = get_db_connection()
