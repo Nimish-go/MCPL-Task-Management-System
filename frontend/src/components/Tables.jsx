@@ -18,7 +18,7 @@ import TasksModal from "./TasksModal";
 
 const Tables = ({ type, tableData, loading = true }) => {
   useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
   }, []);
 
   const [expandedRow, setExpandedRow] = useState(null);
@@ -35,6 +35,7 @@ const Tables = ({ type, tableData, loading = true }) => {
 
   const fetchEmployeeTasks = (name) => {
     if (!name) return;
+    setEmployeeTasks([]);
     setEmployeeName(name);
     setShowEmployeeTasks(true);
     setEmployeeTasksLoading(true);
@@ -44,10 +45,12 @@ const Tables = ({ type, tableData, loading = true }) => {
         if (res.status === 200) {
           const data = res.data;
           setEmployeeTasks(data);
+          setEmployeeTasksLoading(false);
         }
       })
       .catch((err) => {
         console.error(err);
+        setEmployeeTasksLoading(false);
       });
   };
 

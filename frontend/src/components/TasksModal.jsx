@@ -8,8 +8,13 @@ import {
   Stack,
   Table,
   Link,
+  Box,
+  Typography,
+  Select,
+  Option,
+  Skeleton,
 } from "@mui/joy";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 const TasksModal = ({ open, onClose, taskData, name, loading }) => {
   const [page, setPage] = useState(0);
@@ -21,8 +26,16 @@ const TasksModal = ({ open, onClose, taskData, name, loading }) => {
   const startIndex = page * rows;
   const endIndex = startIndex + rows;
   const paginatedData = taskData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(taskData.length / rows);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  useEffect(() => {
+    setPage(0);
+    setExpandedRow(null);
+    setExpandedRemarksRow(null);
+    setExpandedProjectRow(null);
+  }, [name]);
 
   const getProjectCodeOnly = (text) => {
     if (!text) return "";
@@ -74,110 +87,195 @@ const TasksModal = ({ open, onClose, taskData, name, loading }) => {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((task, index) => {
-                const isExpanded = expandedRow === index;
-                const deadline = new Date(task.deadline);
-                deadline.setHours(0, 0, 0, 0);
-                const isOverdue = today > deadline && task.status === "Pending";
-                return (
-                  <tr>
-                    <td>{index + startIndex + 1}</td>
-                    <td>{task.id}</td>
-                    <td>{task.dateOfEntry}</td>
-                    <td>
-                      {expandedProjectRow === index
-                        ? task.projectDetails
-                        : getProjectCodeOnly(task.projectDetails)}{" "}
-                      {task.projectDetails?.includes(":") && (
-                        <Link
-                          component="button"
-                          underline="hover"
-                          color="primary"
-                          sx={{ ml: 1, fontSize: "sm" }}
-                          onClick={() =>
-                            setExpandedProjectRow(
-                              expandedProjectRow === index ? null : index,
-                            )
-                          }
-                        >
-                          {expandedProjectRow === index
-                            ? "Show Less"
-                            : "Read More"}
-                        </Link>
-                      )}
-                    </td>
-                    <td>
-                      {isExpanded
-                        ? task.taskDesc
-                        : getShortDescription(task.taskDesc)}{" "}
-                      {task.taskDesc.includes("Task Assigned:") && (
-                        <Link
-                          component="button"
-                          underline="hover"
-                          variant="soft"
-                          color="primary"
-                          sx={{ ml: 1, fontSize: "sm" }}
-                          onClick={() =>
-                            setExpandedRow(isExpanded ? null : index)
-                          }
-                        >
-                          {isExpanded ? "Show Less" : "Read More"}
-                        </Link>
-                      )}
-                    </td>
-                    <td>
-                      {isOverdue ? (
-                        <Chip variant="solid" color="danger">
-                          Overdue by <br />
-                          {deadline.getDay() - today.getDay()} days
-                        </Chip>
-                      ) : task.status === "Completed" ? (
-                        <Chip variant="soft" color="success">
-                          Completed
-                        </Chip>
-                      ) : task.status === "Pending" ? (
-                        <Chip variant="soft" color="warning">
-                          Pending
-                        </Chip>
-                      ) : task.status === "Reloaded" ? (
-                        <Chip variant="soft" color="danger">
-                          Reloaded
-                        </Chip>
-                      ) : null}
-                    </td>
-                    <td>{task.deadline}</td>
-                    <td>
-                      {expandedRemarksRow === index
-                        ? task.remarks
-                        : getFirstThreeWords(task.remarks)}{" "}
-                      {task.remarks && task.remarks.split(/\s+/).length > 3 && (
-                        <Link
-                          component="button"
-                          underline="hover"
-                          color="primary"
-                          sx={{ ml: 1, fontSize: "sm" }}
-                          onClick={() =>
-                            setExpandedRemarksRow(
-                              expandedRemarksRow === index ? null : index,
-                            )
-                          }
-                        >
-                          {expandedRemarksRow === index
-                            ? "Show Less"
-                            : "Read More"}
-                        </Link>
-                      )}
-                    </td>
-                    <td>
-                      <Button color="primary" variant="soft">
-                        Edit
-                      </Button>
-                    </td>
+              {loading ? (
+                Array.from({ length: rows }).map((_, index) => (
+                  <tr key={index}>
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <td key={i}>
+                        <Skeleton
+                          variant="rectangular"
+                          animation="wave"
+                          sx={{
+                            height: 20,
+                            width: "100%",
+                            borderRadius: "6px",
+                          }}
+                        />
+                      </td>
+                    ))}
                   </tr>
-                );
-              })}
+                ))
+              ) : paginatedData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
+                    No Tasks Found
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((task, index) => {
+                  const isExpanded = expandedRow === index;
+                  const deadline = new Date(task.deadline);
+                  deadline.setHours(0, 0, 0, 0);
+                  const isOverdue = task.isOverdue;
+                  return (
+                    <tr>
+                      <td>{index + startIndex + 1}</td>
+                      <td>{task.id}</td>
+                      <td>{task.dateOfEntry}</td>
+                      <td>
+                        {expandedProjectRow === index
+                          ? task.projectDetails
+                          : getProjectCodeOnly(task.projectDetails)}{" "}
+                        {task.projectDetails?.includes(":") && (
+                          <Link
+                            component="button"
+                            underline="hover"
+                            color="primary"
+                            sx={{ ml: 1, fontSize: "sm" }}
+                            onClick={() =>
+                              setExpandedProjectRow(
+                                expandedProjectRow === index ? null : index,
+                              )
+                            }
+                          >
+                            {expandedProjectRow === index
+                              ? "Show Less"
+                              : "Read More"}
+                          </Link>
+                        )}
+                      </td>
+                      <td>
+                        {isExpanded
+                          ? task.taskDesc
+                          : getShortDescription(task.taskDesc)}{" "}
+                        {task.taskDesc.includes("Task Assigned:") && (
+                          <Link
+                            component="button"
+                            underline="hover"
+                            variant="soft"
+                            color="primary"
+                            sx={{ ml: 1, fontSize: "sm" }}
+                            onClick={() =>
+                              setExpandedRow(isExpanded ? null : index)
+                            }
+                          >
+                            {isExpanded ? "Show Less" : "Read More"}
+                          </Link>
+                        )}
+                      </td>
+                      <td>
+                        {isOverdue ? (
+                          <Chip variant="solid" color="danger">
+                            Overdue
+                          </Chip>
+                        ) : task.status === "Completed" ? (
+                          <Chip variant="soft" color="success">
+                            Completed
+                          </Chip>
+                        ) : task.status === "Pending" ? (
+                          <Chip variant="soft" color="warning">
+                            Pending
+                          </Chip>
+                        ) : task.status === "Reloaded" ? (
+                          <Chip variant="soft" color="danger">
+                            Reloaded
+                          </Chip>
+                        ) : null}
+                      </td>
+                      <td>{task.deadline}</td>
+                      <td>
+                        {expandedRemarksRow === index
+                          ? task.remarks
+                          : getFirstThreeWords(task.remarks)}{" "}
+                        {task.remarks &&
+                          task.remarks.split(/\s+/).length > 3 && (
+                            <Link
+                              component="button"
+                              underline="hover"
+                              color="primary"
+                              sx={{ ml: 1, fontSize: "sm" }}
+                              onClick={() =>
+                                setExpandedRemarksRow(
+                                  expandedRemarksRow === index ? null : index,
+                                )
+                              }
+                            >
+                              {expandedRemarksRow === index
+                                ? "Show Less"
+                                : "Read More"}
+                            </Link>
+                          )}
+                      </td>
+                      <td>
+                        <Button color="primary" variant="soft">
+                          Edit
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </Table>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mt: 2,
+              p: 1.5,
+              borderRadius: "md",
+              backgroundColor: "background.level1",
+            }}
+          >
+            {/* Rows Per Page */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography level="body-sm">Rows per page:</Typography>
+              <Select
+                size="sm"
+                value={rows}
+                onChange={(e, newValue) => {
+                  setRows(newValue);
+                  setPage(0);
+                }}
+                sx={{ width: 80 }}
+              >
+                <Option value={3} selected>
+                  3
+                </Option>
+                <Option value={5}>5</Option>
+                <Option value={6}>6</Option>
+              </Select>
+            </Box>
+
+            {/* Page Controls */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Button
+                size="sm"
+                variant="outlined"
+                disabled={page === 0}
+                onClick={() => setPage((prev) => prev - 1)}
+              >
+                Prev
+              </Button>
+
+              <Typography level="body-sm">
+                Page {page + 1} of {totalPages}
+              </Typography>
+
+              <Button
+                size="sm"
+                variant="outlined"
+                disabled={page + 1 >= totalPages}
+                onClick={() => setPage((prev) => prev + 1)}
+              >
+                Next
+              </Button>
+            </Box>
+          </Box>
         </ModalDialog>
       </Modal>
     </div>
