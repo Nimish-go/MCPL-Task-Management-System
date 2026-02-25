@@ -101,7 +101,10 @@ def get_project_data(code):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectID" = %s """,[code,])
+    projectCode = unquote(code)
+    print(projectCode)
+    
+    cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[projectCode,])
     project_details = cursor.fetchone()
     
     if len(project_details) <= 0:
@@ -220,6 +223,65 @@ def getEmpNames():
     employee_names = [{ "id": row[0], "name": row[1] }for row in cursor.fetchall()]
     
     return jsonify(employee_names)
+
+@app.route("/project_history",methods=["POST"])
+def projectHistory():
+    
+    # formData.append("type", type);
+    # formData.append("dateOfEntry", dateOfEntry);
+    # formData.append("eventDate", eventDate);
+    # formData.append("projectCode", selectedProjectCode);
+    # formData.append("workType", selectedWorkType);
+    # formData.append("assignerName", assignerName);
+    # formData.append("timeSpent", timeSpent);
+    # formData.append("eventDesc", eventDesc);
+    # formData.append("remarks", remarks);
+    type = request.form.get("type")
+    dateOfEntry = datetime.strptime(request.form.get("dateOfEntry"),"%Y-%m-%d")
+    eventDate = request.form.get("eventDate")
+    projectCode = request.form.get("projectCode")
+    workType = request.form.get("workType")
+    assignedBy = request.form.get("assignerName")
+    timeSpent = float(request.form.get("timeSpent"))
+    eventDesc = request.form.get("eventDesc")
+    remarks = request.form.get("remarks")
+    filledBy = request.form.get("filledBy")
+    rework = request.form.get("rework")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "ProjectID" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[projectCode,])
+    projectId = cursor.fetchone()
+    
+    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[filledBy,])
+    userId = cursor.fetchone()
+    
+    if type == "performed":
+        cursor.execute("""
+                    INSERT INTO "ProjectHistory" (
+                        "ProjectID", "UserID", "ProjectHistoryGUID", 
+                        "DateOfEntry", "EventDate", "Event", "Remarks", 
+                        "IsHistory", "WorkTypeID", "AssignedBy", "ChangeStatus?", "TimeSpent", "IsRework"
+                    )
+                    VALUES (%s, %s, gen_random_uuid(), %s, %s, %s, %s, %s, %s, %s, False, %s, %s)
+                """,[projectId[0],userId[0],dateOfEntry, eventDate, eventDesc, remarks, False, workType, assignedBy, timeSpent, rework])
+        conn.commit()
+    else:
+        cursor.execute("""
+                    INSERT INTO "ProjectHistory" (
+                        "ProjectID", "UserID", "ProjectHistoryGUID", 
+                        "DateOfEntry", "EventDate", "Event", "Remarks", 
+                        "IsHistory", "WorkTypeID", "ChangeStatus?", "TimeSpent", "IsRework"
+                    )
+                    VALUES (%s, %s, gen_random_uuid(), %s, %s, %s, %s, %s, %s, False, %s, %s)
+                """,[projectId[0],userId[0],dateOfEntry, eventDate, eventDesc, remarks, True, workType, timeSpent, rework])
+        conn.commit()
+    
+    return jsonify({
+        "status" : "success",
+        "message" : "Record Saved Successfully..//"
+        }), 200
 
 @app.route("/dashboard_tasks_assigned/<user>",methods=["GET"])
 def dashboard_tasks_assigned(user):

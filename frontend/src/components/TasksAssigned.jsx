@@ -215,7 +215,12 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
           </Button>
         </Stack>
       </Box>
-      <Toast open={showToast} status={toastStatus} message={toastMessage} />
+      <Toast
+        open={showToast}
+        status={toastStatus}
+        message={toastMessage}
+        onClose={() => setShowToast(false)}
+      />
     </Drawer>
   );
 };

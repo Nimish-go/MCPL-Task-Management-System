@@ -1,4 +1,5 @@
 import {
+  Badge,
   Box,
   Button,
   Chip,
@@ -18,6 +19,8 @@ const Tables = ({ type, tableData, loading = true }) => {
   const [expandedRow, setExpandedRow] = useState(null);
   const [taskId, setTaskId] = useState(0);
   const [editModal, setEditModal] = useState(false);
+  const [isNew, setIsNew] = useState(false);
+  const [expandedRemarksRow, setExpandedRemarksRow] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(3);
@@ -48,6 +51,13 @@ const Tables = ({ type, tableData, loading = true }) => {
     return words.slice(0, 3).join(" ");
   };
 
+  const getFirstThreeWords = (text) => {
+    if (!text) return "";
+
+    const words = text.trim().split(/\s+/);
+    return words.length > 3 ? words.slice(0, 3).join(" ") + "..." : text;
+  };
+
   return (
     <div className="table">
       {type === "assigned" ? (
@@ -60,13 +70,13 @@ const Tables = ({ type, tableData, loading = true }) => {
             <thead>
               <tr>
                 <th className="w-7">Sr.No</th>
-                <th className="w-7">Task Id</th>
+                <th className="w-8">Task Id</th>
                 <th className="w-10">Assigned Date</th>
                 <th className="w-11">Assigned By</th>
-                <th className="w-19">Task Description</th>
-                <th className="w-13">Status</th>
+                <th className="w-18">Task Description</th>
+                <th className="w-15">Status</th>
                 <th className="w-11">Deadline</th>
-                <th className="w-11">Remarks</th>
+                <th className="w-15">Remarks</th>
                 <th className="w-11">Actions</th>
               </tr>
             </thead>
@@ -172,10 +182,47 @@ const Tables = ({ type, tableData, loading = true }) => {
                   const isOverdue =
                     today > deadline && task.status === "Pending";
 
+                  const dateOfEntry = new Date(task.dateOfEntry);
+                  dateOfEntry.setHours(0, 0, 0, 0);
+                  const diffinMins = today - dateOfEntry;
+                  if (
+                    dateOfEntry.getDate() - today.getDate() === 0 ||
+                    diffinMins / (1000 * 60 * 60 * 24) >= 2
+                  ) {
+                    setIsNew(true);
+                  }
+
                   return (
                     <tr key={index}>
                       <td>{startIndex + index + 1}</td>
-                      <td>{task.id}</td>
+                      <td style={{ position: "relative" }}>
+                        <Box
+                          sx={{ position: "relative", display: "inline-block" }}
+                        >
+                          {task.id}
+
+                          {isNew && (
+                            <Badge
+                              badgeContent="NEW"
+                              color="primary"
+                              variant="solid"
+                              size="sm"
+                              sx={{
+                                position: "absolute",
+                                top: -8,
+                                right: -28,
+                                animation: "pulse 1.5s infinite",
+
+                                "@keyframes pulse": {
+                                  "0%": { transform: "scale(1)" },
+                                  "50%": { transform: "scale(1.15)" },
+                                  "100%": { transform: "scale(1)" },
+                                },
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </td>
                       <td>{formatDateOfEntry(task.date_of_entry)}</td>
                       <td>{task.assigned_to}</td>
                       <td>
@@ -218,7 +265,29 @@ const Tables = ({ type, tableData, loading = true }) => {
                         ) : null}
                       </td>
                       <td>{formatDateOfEntry(task.deadline)}</td>
-                      <td>{task.remarks}</td>
+                      <td>
+                        {expandedRemarksRow === index
+                          ? task.remarks
+                          : getFirstThreeWords(task.remarks)}{" "}
+                        {task.remarks &&
+                          task.remarks.split(/\s+/).length > 3 && (
+                            <Link
+                              component="button"
+                              underline="hover"
+                              color="primary"
+                              sx={{ ml: 1, fontSize: "sm" }}
+                              onClick={() =>
+                                setExpandedRemarksRow(
+                                  expandedRemarksRow === index ? null : index,
+                                )
+                              }
+                            >
+                              {expandedRemarksRow === index
+                                ? "Show Less"
+                                : "Read More"}
+                            </Link>
+                          )}
+                      </td>
                       <td>
                         <Button
                           id={task.id}

@@ -121,7 +121,12 @@ const EditModal = ({ open, onClose, taskId }) => {
           </Stack>
         </ModalDialog>
       </Modal>
-      <Toast open={toastShow} message={toastMessage} status={toastStatus} />
+      <Toast
+        open={toastShow}
+        message={toastMessage}
+        status={toastStatus}
+        onClose={() => setToastShow(false)}
+      />
     </>
   );
 };

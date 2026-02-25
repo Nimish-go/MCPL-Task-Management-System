@@ -1,8 +1,8 @@
-import { Check, Report, Warning } from "@mui/icons-material";
-import { Snackbar } from "@mui/joy";
+import { Check, Close, Report, Warning } from "@mui/icons-material";
+import { Button, ModalClose, Snackbar } from "@mui/joy";
 import React from "react";
 
-const Toast = ({ status, message, open }) => {
+const Toast = ({ status, message, open, onClose }) => {
   return (
     <Snackbar
       variant="soft"
@@ -24,8 +24,22 @@ const Toast = ({ status, message, open }) => {
         )
       }
       open={open}
+      onClose={onClose}
     >
-      {message}
+      {message}{" "}
+      <Button
+        onClick={onClose}
+        color={
+          status === "success"
+            ? "success"
+            : status === "error"
+              ? "danger"
+              : "warning"
+        }
+        variant="soft"
+      >
+        Dismiss
+      </Button>
     </Snackbar>
   );
 };
