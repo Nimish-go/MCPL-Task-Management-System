@@ -101,10 +101,7 @@ def get_project_data(code):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    projectCode = unquote(code)
-    print(projectCode)
-    
-    cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[projectCode,])
+    cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectID" = %s """,[code,])
     project_details = cursor.fetchone()
     
     if len(project_details) <= 0:

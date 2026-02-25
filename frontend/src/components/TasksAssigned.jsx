@@ -128,7 +128,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
                 onChange={(e, newValue) => setSelectedProjectCode(newValue)}
               >
                 {projectData.map((project) => (
-                  <Option key={project.id} value={project.code}>
+                  <Option key={project.id} value={project.id}>
                     {project.code}
                   </Option>
                 ))}
