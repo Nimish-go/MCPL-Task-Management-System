@@ -336,7 +336,7 @@ def dashboard_tasks_under_review(user):
         return jsonify({"message" : "User Not Found"}), 404
     
     cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'), 
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Completed') , 
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared') , 
                         COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND "TargetDate" < CURRENT_DATE),
                         COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')
                         FROM "ProjectHistory" ph

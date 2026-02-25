@@ -1,11 +1,9 @@
 import {
   Button,
   Chip,
-  DialogContent,
   DialogTitle,
   Modal,
   ModalDialog,
-  Stack,
   Table,
   Link,
   Box,
@@ -15,7 +13,6 @@ import {
   Skeleton,
 } from "@mui/joy";
 import React, { useEffect, useState } from "react";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 const TasksModal = ({ open, onClose, taskData, name, loading }) => {
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(3);
