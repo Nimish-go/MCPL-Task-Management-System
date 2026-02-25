@@ -28,6 +28,7 @@ const EditModal = ({ open, onClose, taskId }) => {
   const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
+    if (!open || !taskId) return;
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     setLoading(true);
     axios
@@ -43,7 +44,7 @@ const EditModal = ({ open, onClose, taskId }) => {
         console.error(err);
         setLoading(false);
       });
-  }, [taskId]);
+  }, [taskId, open]);
 
   const handleTaskUpdate = (event) => {
     event.preventDefault();

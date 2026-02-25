@@ -57,7 +57,9 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
     });
   }, [projects, workTypes, employees, selectedProjectCode]);
 
-  const resetForm = () => {};
+  const resetForm = () => {
+    
+  };
 
   const assignTask = (event) => {
     event.preventDefault();

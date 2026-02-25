@@ -11,19 +11,45 @@ import {
   Textarea,
   Typography,
 } from "@mui/joy";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EditModal from "./EditModal";
 import axios from "axios";
+import TasksModal from "./TasksModal";
 
 const Tables = ({ type, tableData, loading = true }) => {
+  useEffect(() => {
+    axios.defaults.baseURL = "http://localhost:5002";
+  }, []);
+
   const [expandedRow, setExpandedRow] = useState(null);
   const [taskId, setTaskId] = useState(0);
   const [editModal, setEditModal] = useState(false);
-  const [isNew, setIsNew] = useState(false);
   const [expandedRemarksRow, setExpandedRemarksRow] = useState(null);
+  const [employeeTasksLoading, setEmployeeTasksLoading] = useState(false);
+  const [employeeTasks, setEmployeeTasks] = useState([]);
+  const [showEmployeeTasks, setShowEmployeeTasks] = useState(false);
+  const [employeeName, setEmployeeName] = useState("");
 
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(3);
+
+  const fetchEmployeeTasks = (name) => {
+    if (!name) return;
+    setEmployeeName(name);
+    setShowEmployeeTasks(true);
+    setEmployeeTasksLoading(true);
+    axios
+      .get(`/get_employee_tasks/${encodeURIComponent(name)}`)
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setEmployeeTasks(data);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -63,9 +89,10 @@ const Tables = ({ type, tableData, loading = true }) => {
       {type === "assigned" ? (
         <>
           <Table
+            hoverRow
             variant="soft"
             borderAxis="bothBetween"
-            sx={{ tableLayout: "fixed", width: "100%" }}
+            sx={{ tableLayout: "fixed", width: "100%", cursor: "pointer" }}
           >
             <thead>
               <tr>
@@ -81,7 +108,6 @@ const Tables = ({ type, tableData, loading = true }) => {
               </tr>
             </thead>
             <tbody>
-              {console.log(paginatedData)}
               {loading ? (
                 Array.from({ length: rows }).map((_, index) => (
                   <tr key={index} style={{ height: "55px" }}>
@@ -184,13 +210,10 @@ const Tables = ({ type, tableData, loading = true }) => {
 
                   const dateOfEntry = new Date(task.dateOfEntry);
                   dateOfEntry.setHours(0, 0, 0, 0);
-                  const diffinMins = today - dateOfEntry;
-                  if (
-                    dateOfEntry.getDate() - today.getDate() === 0 ||
-                    diffinMins / (1000 * 60 * 60 * 24) >= 2
-                  ) {
-                    setIsNew(true);
-                  }
+                  // const diffInDays =
+                  //   (today - dateOfEntry) / (1000 * 60 * 60 * 24);
+
+                  // const newTask = diffInDays === 0 || diffInDays <= 2;
 
                   return (
                     <tr key={index}>
@@ -200,8 +223,7 @@ const Tables = ({ type, tableData, loading = true }) => {
                           sx={{ position: "relative", display: "inline-block" }}
                         >
                           {task.id}
-
-                          {isNew && (
+                          {/* {newTask && (
                             <Badge
                               badgeContent="NEW"
                               color="primary"
@@ -220,7 +242,7 @@ const Tables = ({ type, tableData, loading = true }) => {
                                 },
                               }}
                             />
-                          )}
+                          )} */}
                         </Box>
                       </td>
                       <td>{formatDateOfEntry(task.date_of_entry)}</td>
@@ -367,10 +389,11 @@ const Tables = ({ type, tableData, loading = true }) => {
       ) : type === "underReview" ? (
         <>
           <Table
+            hoverRow
             variant="soft"
             borderAxis="bothBetween"
             color="primary"
-            sx={{ tableLayout: "fixed", width: "100%" }}
+            sx={{ tableLayout: "fixed", width: "100%", cursor: "pointer" }}
           >
             <thead>
               <tr>
@@ -420,7 +443,7 @@ const Tables = ({ type, tableData, loading = true }) => {
                 </tr>
               ) : (
                 paginatedData.map((task, index) => (
-                  <tr key={index}>
+                  <tr key={index} onClick={() => fetchEmployeeTasks(task.name)}>
                     <td>{startIndex + index + 1}</td>
                     <td>{task.name}</td>
                     <td>{task.pending_count}</td>
@@ -494,6 +517,13 @@ const Tables = ({ type, tableData, loading = true }) => {
         taskId={taskId}
         open={editModal}
         onClose={() => setEditModal(false)}
+      />
+      <TasksModal
+        open={showEmployeeTasks}
+        taskData={employeeTasks}
+        loading={employeeTasksLoading}
+        name={employeeName}
+        onClose={() => setShowEmployeeTasks(false)}
       />
     </div>
   );
