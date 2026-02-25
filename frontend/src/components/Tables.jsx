@@ -387,24 +387,19 @@ const Tables = ({ type, tableData, loading = true }) => {
               {loading ? (
                 Array.from({ length: rows }).map((_, index) => (
                   <tr key={index} style={{ height: "55px" }}>
-                    <td>
-                      <Skeleton animation="wave" />
-                    </td>
-                    <td>
-                      <Skeleton animation="wave" />
-                    </td>
-                    <td>
-                      <Skeleton animation="wave" />
-                    </td>
-                    <td>
-                      <Skeleton animation="wave" />
-                    </td>
-                    <td>
-                      <Skeleton animation="wave" />
-                    </td>
-                    <td>
-                      <Skeleton animation="wave" />
-                    </td>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <td key={i}>
+                        <Skeleton
+                          variant="rectangular"
+                          animation="wave"
+                          sx={{
+                            height: 20,
+                            width: "100%",
+                            borderRadius: "6px",
+                          }}
+                        />
+                      </td>
+                    ))}
                   </tr>
                 ))
               ) : !paginatedData || paginatedData.length === 0 ? (

@@ -46,7 +46,7 @@ const Navbar = () => {
   };
 
   useEffect(() => {
-    axios.defaults.baseURL = "http://localhost:5002";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     axios.get("/get_all_projects").then((res) => {
       if (res.status === 200) {
         const data = res.data;
