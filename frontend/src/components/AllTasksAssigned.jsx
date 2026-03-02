@@ -24,9 +24,10 @@ const AllTasksAssigned = () => {
   const [expandedRemarksRow, setExpandedRemarksRow] = useState(null);
 
   useEffect(() => {
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     setLoading(true);
     axios
-      .get("http://localhost:5002/get_employee_names")
+      .get("/get_employee_names")
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
@@ -44,9 +45,7 @@ const AllTasksAssigned = () => {
     if (!selectedEmployee) return;
     setLoading(true);
     axios
-      .get(
-        `http://localhost:5002/tasks_assigned_to/${encodeURIComponent(selectedEmployee)}`,
-      )
+      .get(`/tasks_assigned_to/${encodeURIComponent(selectedEmployee)}`)
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
