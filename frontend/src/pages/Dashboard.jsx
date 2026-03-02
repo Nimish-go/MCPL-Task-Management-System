@@ -8,12 +8,17 @@ import {
   Tabs,
   Typography,
 } from "@mui/joy";
-import { Assignment, TaskSharp } from "@mui/icons-material";
+import { Assignment, TaskAlt, TaskSharp } from "@mui/icons-material";
 import DashboardTasksAssigned from "../components/DashboardTasksAssigned";
 import DashboardTasksUnderReview from "../components/DashboardTasksUnderReview";
+import AllTasksAssigned from "../components/AllTasksAssigned";
 
 const Dashboard = () => {
   const [tasksIndex, setTasksIndex] = useState(0);
+  const designation = sessionStorage.getItem("designation") || "";
+  const isDirector = designation.toUpperCase().includes("DIRECTOR")
+    ? true
+    : false;
 
   return (
     <div className="min-w-screen w-full overflow-x-hidden ">
@@ -43,20 +48,25 @@ const Dashboard = () => {
                 </ListItemDecorator>
                 Tasks Assigned By You
               </Tab>
+              {isDirector && (
+                <Tab color="primary" variant="soft" indicatorInset>
+                  <ListItemDecorator>
+                    <TaskAlt /> All Tasks Assigned
+                  </ListItemDecorator>
+                </Tab>
+              )}
             </TabList>
-            {tasksIndex === 0 && (
-              <TabPanel value={0}>
-                <DashboardTasksAssigned />
-              </TabPanel>
-            )}
-            {tasksIndex === 1 && (
-              <TabPanel value={1}>
-                <DashboardTasksUnderReview />
-              </TabPanel>
-            )}
+            <TabPanel value={0}>
+              <DashboardTasksAssigned />
+            </TabPanel>
+            <TabPanel value={1}>
+              <DashboardTasksUnderReview />
+            </TabPanel>
+            <TabPanel value={2}>
+              <AllTasksAssigned />
+            </TabPanel>
           </Tabs>
         </div>
-        <div className="w-full"></div>
       </div>
     </div>
   );

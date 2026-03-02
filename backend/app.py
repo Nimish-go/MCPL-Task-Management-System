@@ -109,6 +109,38 @@ def get_project_data(code):
     
     return jsonify({ "project_code": project_details[0], "project_name": project_details[1] }), 200
 
+@app.route("/tasks_assigned_to/<name>",methods=["GET"])
+def getEmployeeTasksAll(name):
+    empName = unquote(name)
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if name == "All":
+        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", assigned_to."EmpName", assigned_by."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
+                       FROM "ProjectHistory" ph
+                       JOIN "UserMaster" assigned_by ON ph."AssignedBy" = assigned_by."UserID"
+                       JOIN "UserMaster" assigned_to ON ph."UserID" = assigned_to."UserID"
+                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       WHERE ph."ChangeStatus?" = true ORDER BY ph."ProjectHistoryID" ASC """)
+    
+        tasksAll = [{ "id": row[0], "task_desc" : row[1], "assigned_to" : row[2], "assigned_by" : row[3], "project_details" : row[4]+" : "+row[5], "remarks" : row[6], "deadline" : row[7], "date_of_entry" : row[8], "status" : row[9] } for row in cursor.fetchall()]
+        return jsonify(tasksAll), 200
+    else:
+        print("Looking for ",name)
+        cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[name,])
+        user_id = cursor.fetchone()
+        
+        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", assigned_to."EmpName", assigned_by."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
+                       FROM "ProjectHistory" ph
+                       JOIN "UserMaster" assigned_by ON ph."AssignedBy" = assigned_by."UserID"
+                       JOIN "UserMaster" assigned_to ON ph."UserID" = assigned_to."UserID"
+                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       WHERE ph."ChangeStatus?" = true AND ph."UserID" = %s ORDER BY ph."ProjectHistoryID" ASC """,[user_id[0],])
+    
+        tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_to" : row[2], "assigned_by" : row[3], "project_details" : row[4]+" : "+row[5], "remarks" : row[6], "deadline" : row[7], "date_of_entry" : row[8], "status" : row[9] } for row in cursor.fetchall()]
+        return jsonify(tasks_assigned), 200
+
 @app.route("/get_employee_tasks/<name>",methods=["GET"])
 def getEmployeeTasks(name):
     empName = unquote(name)
@@ -161,12 +193,15 @@ def assignTask():
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    updatedTaskDesc = "Task Desc: "+taskDesc+". Current Status: Pending"+". Deadline: "+deadline
+    updatedRemarks = "Remarks: "+remarks
+    
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[assignBy,])
     assignBy_id = cursor.fetchone()
     
     cursor.execute(""" INSERT INTO "ProjectHistory"(
 	                "ProjectID", "AssignedBy", "UserID", "DateOfEntry","Event", "Remarks","ChangeStatus?", "EventDate", "WorkTypeID","TaskStatus","TargetDate")
-	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s); """,[projectCode, assignBy_id[0], assignTo, today, taskDesc, remarks, today, workType, targetDate])
+	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s); """,[projectCode, assignBy_id[0], assignTo, today, updatedTaskDesc, updatedRemarks, today, workType, targetDate])
     
     conn.commit()
     
@@ -227,6 +262,42 @@ def updateTaskAssigned():
         "message" : "Task Updated Successfully"
     }), 200
 
+@app.route("/update_tasks_under_review",methods=["PUT"])
+def updateTasksUnderReview():
+    formData = request.form
+    
+    taskDescUpdates = formData.get("taskDescUpdates")
+    status = formData.get("status")
+    remarksUpdates = formData.get("remarksUpdates")
+    taskId = formData.get("id")
+    editedBy = formData.get("editedBy")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "Event", "Remarks" FROM "ProjectHistory" WHERE "ProjectHistoryID" = %s """,[taskId,])
+    taskDetails = cursor.fetchone()
+    
+    newTaskDesc = taskDetails[0]+". (Edited by"+editedBy+"): "+taskDescUpdates
+    newRemarks = taskDetails[1]+". (Edited by"+editedBy+"): "+remarksUpdates
+    
+    if status == "Cleared":
+        cursor.execute(""" UPDATE "ProjectHistory" SET 
+                       "Event" = %s, "Remarks" = %s, "TaskStatus" = %s, "ChangeStatus?" = False WHERE "ProjectHistoryID" = %s """,[newTaskDesc, newRemarks, status, taskId])
+        conn.commit()
+        return jsonify({
+            "status" : "success",
+            "message" : "Task Updated Successfully."
+        }), 200
+    else:
+        cursor.execute(""" UPDATE "ProjectHistory" SET 
+                       "Event" = %s, "Remarks" = %s, "TaskStatus" = %s WHERE "ProjectHistoryID" = %s """,[newTaskDesc, newRemarks, status, taskId])
+        conn.commit()
+        return jsonify({
+            "status" : "success",
+            "message" : "Task Updated Successfully."
+        }), 200
+
 @app.route("/get_employee_names",methods=["GET"])
 def getEmpNames():
     conn = get_db_connection()
@@ -235,7 +306,7 @@ def getEmpNames():
     cursor.execute(""" SELECT "UserID", "EmpName" FROM "UserMaster" ORDER BY "EmpName" ASC """)
     employee_names = [{ "id": row[0], "name": row[1] }for row in cursor.fetchall()]
     
-    return jsonify(employee_names)
+    return jsonify(employee_names), 200
 
 @app.route("/project_history",methods=["POST"])
 def projectHistory():

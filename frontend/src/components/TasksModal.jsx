@@ -13,12 +13,15 @@ import {
   Skeleton,
 } from "@mui/joy";
 import React, { useEffect, useState } from "react";
+import EditModal from "./EditModal";
 const TasksModal = ({ open, onClose, taskData, name, loading }) => {
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(3);
   const [expandedRow, setExpandedRow] = useState(null);
   const [expandedRemarksRow, setExpandedRemarksRow] = useState(null);
   const [expandedProjectRow, setExpandedProjectRow] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [taskId, setTaskId] = useState(null);
 
   const startIndex = page * rows;
   const endIndex = startIndex + rows;
@@ -33,6 +36,11 @@ const TasksModal = ({ open, onClose, taskData, name, loading }) => {
     setExpandedRemarksRow(null);
     setExpandedProjectRow(null);
   }, [name]);
+
+  const handleEditModal = (id) => {
+    setOpenModal(true);
+    setTaskId(id);
+  };
 
   const getProjectCodeOnly = (text) => {
     if (!text) return "";
@@ -168,9 +176,9 @@ const TasksModal = ({ open, onClose, taskData, name, loading }) => {
                           <Chip variant="solid" color="danger">
                             Overdue
                           </Chip>
-                        ) : task.status === "Completed" ? (
+                        ) : task.status === "Cleared" ? (
                           <Chip variant="soft" color="success">
-                            Completed
+                            Cleared
                           </Chip>
                         ) : task.status === "Pending" ? (
                           <Chip variant="soft" color="warning">
@@ -207,7 +215,11 @@ const TasksModal = ({ open, onClose, taskData, name, loading }) => {
                           )}
                       </td>
                       <td>
-                        <Button color="primary" variant="soft">
+                        <Button
+                          color="primary"
+                          variant="soft"
+                          onClick={() => handleEditModal(task.id)}
+                        >
                           Edit
                         </Button>
                       </td>
@@ -275,6 +287,12 @@ const TasksModal = ({ open, onClose, taskData, name, loading }) => {
           </Box>
         </ModalDialog>
       </Modal>
+      <EditModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        taskId={taskId}
+        type="underReview"
+      />
     </div>
   );
 };
