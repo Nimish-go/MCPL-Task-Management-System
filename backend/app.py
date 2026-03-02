@@ -127,8 +127,8 @@ def getEmployeeTasksAll(name):
         tasksAll = [{ "id": row[0], "task_desc" : row[1], "assigned_to" : row[2], "assigned_by" : row[3], "project_details" : row[4]+" : "+row[5], "remarks" : row[6], "deadline" : row[7], "date_of_entry" : row[8], "status" : row[9] } for row in cursor.fetchall()]
         return jsonify(tasksAll), 200
     else:
-        print("Looking for ",name)
-        cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[name,])
+        print("Looking for ",empName)
+        cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[empName,])
         user_id = cursor.fetchone()
         
         cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", assigned_to."EmpName", assigned_by."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
