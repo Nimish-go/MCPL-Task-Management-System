@@ -7,6 +7,10 @@ import {
   Typography,
   Menu,
   Divider,
+  Avatar,
+  Box,
+  Button,
+  Link as JoyLink,
 } from "@mui/joy";
 import {
   ArrowDropDown,
@@ -22,6 +26,10 @@ import {
   Person,
   Key,
   Logout,
+  MeetingRoom,
+  Groups,
+  ArrowBack,
+  KeyboardArrowLeft,
 } from "@mui/icons-material";
 import TasksAssigned from "./TasksAssigned";
 import ProjectHistory from "./ProjectHistory";
@@ -31,8 +39,6 @@ const Navbar = () => {
   const location = useLocation();
 
   const navigate = useNavigate();
-
-  const [spin, setSpin] = useState(false);
   const [taskAssignOpen, setTaskAssignOpen] = useState(false);
   const [projHistoryOpen, setProjHistoryOpen] = useState(false);
   const [projectData, setProjectData] = useState([]);
@@ -43,6 +49,17 @@ const Navbar = () => {
   const logout = () => {
     sessionStorage.clear();
     navigate("/");
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "";
+
+    const words = name.trim().split(" ");
+    if (words.length === 1) {
+      return words[0][0].toUpperCase();
+    }
+
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
   };
 
   useEffect(() => {
@@ -78,11 +95,20 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div className="navbar-container bg-bg-navbar p-3 text-white">
+    <div className={`navbar-container bg-bg-navbar p-3 text-white`}>
       {location.pathname === "/" ? (
         <div className="navbar-container">
           <Typography level="h3" textAlign={"center"} color="#fff">
             Welcome to MCPL Task Management System
+          </Typography>
+        </div>
+      ) : location.pathname === "/admin_panel" ? (
+        <div className="navbar-container flex text-center justify-center items-center">
+          <JoyLink color="primary" variant="solid" href="/dashboard" mx={3}>
+            Go Back
+          </JoyLink>
+          <Typography level="h3" textAlign={"center"} color="#f5f5f5">
+            MCPL Task Management System Admin Mode On
           </Typography>
         </div>
       ) : (
@@ -183,13 +209,23 @@ const Navbar = () => {
               </li>
               {sessionStorage.getItem("role") === "SuperAdmin" ||
               sessionStorage.getItem("role") === "Admin" ? (
-                <li className="hover:text-hover-navbar text-white mr-3">
+                <li className="hover:text-hover-navbar text-white">
                   <Link to="/admin_panel">
                     <AdminPanelSettings /> Admin Panel
                   </Link>
                 </li>
               ) : (
                 <></>
+              )}
+              {sessionStorage
+                .getItem("designation")
+                .toUpperCase()
+                .includes("DIRECTOR") && (
+                <li className="hover:text-hover-navbar text-white ml-4">
+                  <Link to="/director_meetings">
+                    <Groups /> Director Meetings
+                  </Link>
+                </li>
               )}
               <li>
                 <Dropdown>
@@ -199,7 +235,7 @@ const Navbar = () => {
                       all: "unset",
                       color: "#fff",
                       mr: "0.5rem",
-                      p: 0,
+                      px: 0,
                       minHeight: "auto",
                       background: "transparent",
                       fontWeight: "normal",
@@ -212,22 +248,13 @@ const Navbar = () => {
                       textAlign: "center",
                       margin: "0, auto",
                     }}
-                    onClick={() => {
-                      setSpin(true);
-                      setTimeout(() => setSpin(false), 8000);
-                    }}
                   >
-                    <Settings
-                      className="settings-icon"
-                      sx={{
-                        "@keyframes spin": {
-                          from: { transform: "rotate(0deg)" },
-                          to: { transform: "rotate(180deg)" },
-                        },
-                        animation: spin ? "spin 0.8s ease-in-out" : "none",
-                      }}
-                    />
-                    <ArrowDropDown />
+                    <Box display={"flex"} ml={3}>
+                      <Avatar size="sm">
+                        {getInitials(sessionStorage.getItem("empName"))}
+                      </Avatar>
+                      <ArrowDropDown />
+                    </Box>
                   </MenuButton>
                   <Menu>
                     <MenuItem>

@@ -12,9 +12,11 @@ import { Assignment, TaskAlt, TaskSharp } from "@mui/icons-material";
 import DashboardTasksAssigned from "../components/DashboardTasksAssigned";
 import DashboardTasksUnderReview from "../components/DashboardTasksUnderReview";
 import AllTasksAssigned from "../components/AllTasksAssigned";
+import { useLocation } from "react-router-dom";
 
 const Dashboard = () => {
   const [tasksIndex, setTasksIndex] = useState(0);
+  const location = useLocation();
   const designation = sessionStorage.getItem("designation") || "";
   const isDirector = designation.toUpperCase().includes("DIRECTOR")
     ? true
@@ -23,7 +25,7 @@ const Dashboard = () => {
   return (
     <div className="min-w-screen w-full overflow-x-hidden ">
       <div className="navbar-container">
-        <Navbar />
+        <Navbar active={"/dashboard"} />
       </div>
       <div className="title text-center">
         <Typography level="h3">

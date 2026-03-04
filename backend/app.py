@@ -156,6 +156,31 @@ def getEmployeeTasks(name):
     
     return jsonify(tasks), 200
 
+@app.route("/getAdminPanelLists",methods=["GET"])
+def getAdminPanelLists():
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" 
+                   SELECT um."UserID", um."EmpName", dm."DesignationName", bm."BranchName" 
+                   FROM "UserMaster" um 
+                   JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID" 
+                   JOIN "BranchMaster" bm ON um."BranchID" = bm."BranchID" WHERE um."IsActive" = TRUE ORDER BY um."UserID" ASC; """)
+    
+    employees = [{"id" : row[0], "name" : row[1], "designation" : row[2], "branch" : row[3]}for row in cursor.fetchall()]
+    
+    cursor.execute(""" SELECT "ProjectID", "ProjectCode", "ProjectName" FROM "ProjectMaster" ORDER BY "ProjectID" ASC; """)
+    projects = [{"id" : row[0], "code" : row[1], "name" : row[2]}for row in cursor.fetchall()]
+    
+    cursor.execute(""" SELECT "WorkTypeID", "WorkType" FROM "WorkTypeMaster" ORDER BY "WorkTypeID" """)
+    workType = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
+    
+    return jsonify({
+        "employees" : employees,
+        "projects" : projects,
+        "workTypes" : workType
+    }), 200
 
 @app.route("/get_work_type",methods = ["GET"])
 def getWorkType():

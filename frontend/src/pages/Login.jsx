@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 import {
   Check,
+  GppGood,
   Key,
   LoginOutlined,
   Person,
@@ -24,8 +25,12 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    if (sessionStorage.length > 0) {
+      navigate("/dashboard");
+    }
   }, []);
 
   const [username, setUsername] = useState("");
@@ -37,8 +42,6 @@ const Login = () => {
   const [passType, setPassType] = useState("password");
   const [loading, setLoading] = useState(false);
   const [orgCodeLoading, setOrgCodeLoading] = useState(false);
-  const navigate = useNavigate();
-
   const [loginError, setLoginError] = useState(false);
 
   const toggleShowPass = () => {
@@ -92,6 +95,7 @@ const Login = () => {
         }
       })
       .catch((err) => {
+        setLoginError(true);
         console.error(err);
       });
   };
@@ -139,7 +143,7 @@ const Login = () => {
               <Alert
                 variant="soft"
                 color="success"
-                startDecorator={<Check />}
+                startDecorator={<GppGood />}
                 sx={{ my: 3 }}
               >
                 Organisation Code is Valid

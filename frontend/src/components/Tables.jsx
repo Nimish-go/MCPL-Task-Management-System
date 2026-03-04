@@ -157,7 +157,7 @@ const Tables = ({ type, tableData, loading = true }) => {
                     </td>
                     <td>
                       <Skeleton
-                        variant="rectangular"
+                        variant="text"
                         width={80}
                         height={24}
                         animation="wave"
