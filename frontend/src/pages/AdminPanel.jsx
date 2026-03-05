@@ -37,9 +37,10 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/"
     setLoading(true);
     axios
-      .get("http://localhost:5002/getAdminPanelLists")
+      .get("/getAdminPanelLists")
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
