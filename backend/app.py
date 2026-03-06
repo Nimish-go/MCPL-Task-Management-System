@@ -170,16 +170,55 @@ def getAdminPanelLists():
     
     employees = [{"id" : row[0], "name" : row[1], "designation" : row[2], "branch" : row[3]}for row in cursor.fetchall()]
     
-    cursor.execute(""" SELECT "ProjectID", "ProjectCode", "ProjectName" FROM "ProjectMaster" ORDER BY "ProjectID" ASC; """)
+    cursor.execute(""" SELECT "ProjectID", "ProjectCode", "ProjectName" FROM "ProjectMaster" ORDER BY "ProjectCode" ASC; """)
     projects = [{"id" : row[0], "code" : row[1], "name" : row[2]}for row in cursor.fetchall()]
     
-    cursor.execute(""" SELECT "WorkTypeID", "WorkType" FROM "WorkTypeMaster" ORDER BY "WorkTypeID" """)
+    cursor.execute(""" SELECT "WorkTypeID", "WorkType" FROM "WorkTypeMaster" ORDER BY "WorkType" ASC; """)
     workType = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
     
     return jsonify({
         "employees" : employees,
         "projects" : projects,
         "workTypes" : workType
+    }), 200
+
+@app.route("/markInactive/<name>",methods=["PUT"])
+def markInactive(name):
+    empName = unquote(name)
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" UPDATE "UserMaster" SET "IsActive" = FALSE WHERE "EmpName" = %s """,[empName,])
+    conn.commit()
+    
+    return jsonify({
+        "status" : "success",
+        "message": empName+" has been marked inactive."
+        }), 200
+
+@app.route("/addProject",methods=["POST"])
+def addProject():
+    data = request.form
+    projectCode = data.get("code")
+    projectName = data.get("name")
+    clientName = data.get("clientName")
+    clientAddress = data.get("clientAddress")
+    clientContact = data.get("clientContact")
+    organisationId = data.get("organisationId")
+    remarks = data.get("remarks")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" INSERT INTO "ProjectMaster"
+                   ("ProjectCode", "ProjectGUID", "OrganisationID", "ProjectName", "ClientName", "ClientAddress", "ClientContactInfo", "Remarks") 
+                   VALUES (%s, gen_random_uuid(), %s, %s, %s, %s, %s, %s) """,[projectCode, organisationId, projectName, clientName, clientAddress, clientContact, remarks])
+    conn.commit()
+    
+    return jsonify({
+        "status" : "success",
+        "message" : "Project Created Successfully."
     }), 200
 
 @app.route("/get_work_type",methods = ["GET"])
@@ -332,6 +371,22 @@ def getEmpNames():
     employee_names = [{ "id": row[0], "name": row[1] }for row in cursor.fetchall()]
     
     return jsonify(employee_names), 200
+
+@app.route("/getDesignationAndBranch",methods=["GET"])
+def getDesignationsAndBranch():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "DesignationID", "DesignationName" FROM "DesignationMaster" ORDER BY "DesignationName" ASC """)
+    designations = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
+    
+    cursor.execute(""" SELECT "BranchID", "BranchName" FROM "BranchMaster" ORDER BY "BranchName" ASC """)
+    branches = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
+    
+    return jsonify({
+        "designations" : designations,
+        "branches" : branches
+    }), 200
 
 @app.route("/project_history",methods=["POST"])
 def projectHistory():

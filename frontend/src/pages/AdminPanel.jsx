@@ -25,19 +25,26 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 import AdminPanelAdd from "../components/AdminPanelAdd";
+import MarkInactive from "../components/MarkInactive";
 
 const AdminPanel = () => {
   const [employees, setEmployees] = useState([]);
   const [workTypes, setWorkTypes] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [inactiveSwitch, setInactiveSwitch] = useState(null);
 
   const [type, setType] = useState("");
   const [open, setOpen] = useState(false);
+  const [inactiveModal, setInactiveModal] = useState(false);
+  const [inactiveEmployee, setInactiveEmployee] = useState("");
+
+  const [designation, setDesignation] = useState([]);
+  const [branch, setBranch] = useState([]);
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/"
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     setLoading(true);
     axios
       .get("/getAdminPanelLists")
@@ -53,7 +60,25 @@ const AdminPanel = () => {
         console.error(err);
       })
       .finally(() => setLoading(false));
+
+    axios
+      .get("/getDesignationAndBranch")
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setDesignation(data.designations);
+          setBranch(data.branches);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }, []);
+
+  const handleMarkInactive = (name) => {
+    setInactiveEmployee(name);
+    setInactiveModal(true);
+  };
 
   return (
     <div className="w-screen min-w-full h-screen overflow-y-auto">
@@ -119,16 +144,21 @@ const AdminPanel = () => {
                 color="primary"
                 variant="soft"
                 stickyHeader
-                sx={{ width: "100%", tableLayout: "fixed" }}
+                sx={{
+                  width: "100%",
+                  tableLayout: "fixed",
+                  justifyContent: "center",
+                  textAlign: "center",
+                }}
               >
                 <thead>
                   <tr>
-                    <th>Sr. No</th>
-                    <th>Employee Id</th>
-                    <th>Employee Name</th>
-                    <th>Designation</th>
-                    <th>Branch</th>
-                    <th>Mark Inactive</th>
+                    <th className="w-10">Sr. No</th>
+                    <th className="w-10">Employee Id</th>
+                    <th className="w-25">Employee Name</th>
+                    <th className="w-23">Designation</th>
+                    <th className="w-17">Branch</th>
+                    <th className="w-17">Mark Inactive</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -136,25 +166,46 @@ const AdminPanel = () => {
                     ? Array.from({ length: 8 }).map((_, index) => (
                         <tr key={index}>
                           <td>
-                            <Skeleton variant="text" width={30} />
+                            <Skeleton
+                              variant="text"
+                              width={30}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={80} />
+                            <Skeleton
+                              variant="text"
+                              width={80}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={140} />
+                            <Skeleton
+                              variant="text"
+                              width={140}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={120} />
+                            <Skeleton
+                              variant="text"
+                              width={120}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={100} />
+                            <Skeleton
+                              variant="text"
+                              width={100}
+                              animation="wave"
+                            />
                           </td>
                           <td>
                             <Skeleton
                               variant="rectangular"
                               width={120}
                               height={32}
+                              animation="wave"
                             />
                           </td>
                         </tr>
@@ -167,7 +218,24 @@ const AdminPanel = () => {
                           <td>{employee.designation}</td>
                           <td>{employee.branch}</td>
                           <td>
-                            <Switch variant="plain" color="danger" checked />
+                            <Box display={"flex"}>
+                              <Typography level="body-md" mx={1} color="danger">
+                                Mark as Inactive
+                              </Typography>
+                              <Switch
+                                variant="plain"
+                                color="danger"
+                                checked={inactiveSwitch === employee.name}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setInactiveSwitch(employee.name);
+                                    handleMarkInactive(employee.name);
+                                  } else {
+                                    setInactiveSwitch(null);
+                                  }
+                                }}
+                              />
+                            </Box>
                           </td>
                         </tr>
                       ))}
@@ -219,10 +287,10 @@ const AdminPanel = () => {
               >
                 <thead>
                   <tr>
-                    <th>Sr. No</th>
-                    <th>Project Id</th>
-                    <th>Project Code</th>
-                    <th>Project Name</th>
+                    <th className="w-10">Sr. No</th>
+                    <th className="w-10">Project Id</th>
+                    <th className="w-10">Project Code</th>
+                    <th className="w-70">Project Name</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -230,16 +298,32 @@ const AdminPanel = () => {
                     ? Array.from({ length: 8 }).map((_, index) => (
                         <tr key={index}>
                           <td>
-                            <Skeleton variant="text" width={30} />
+                            <Skeleton
+                              variant="text"
+                              width={30}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={80} />
+                            <Skeleton
+                              variant="text"
+                              width={80}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={140} />
+                            <Skeleton
+                              variant="text"
+                              width={140}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={120} />
+                            <Skeleton
+                              variant="text"
+                              width={120}
+                              animation="wave"
+                            />
                           </td>
                         </tr>
                       ))
@@ -309,13 +393,25 @@ const AdminPanel = () => {
                     ? Array.from({ length: 8 }).map((_, index) => (
                         <tr key={index}>
                           <td>
-                            <Skeleton variant="text" width={30} />
+                            <Skeleton
+                              variant="text"
+                              width={30}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={80} />
+                            <Skeleton
+                              variant="text"
+                              width={80}
+                              animation="wave"
+                            />
                           </td>
                           <td>
-                            <Skeleton variant="text" width={140} />
+                            <Skeleton
+                              variant="text"
+                              width={140}
+                              animation="wave"
+                            />
                           </td>
                         </tr>
                       ))
@@ -332,7 +428,21 @@ const AdminPanel = () => {
           </TabPanel>
         </Tabs>
       </Box>
-      <AdminPanelAdd type={type} open={open} onClose={() => setOpen(false)} />
+      <AdminPanelAdd
+        type={type}
+        open={open}
+        onClose={() => setOpen(false)}
+        designations={designation}
+        branches={branch}
+      />
+      <MarkInactive
+        open={inactiveModal}
+        onClose={() => {
+          setInactiveModal(false);
+          setInactiveSwitch(null);
+        }}
+        employeeName={inactiveEmployee}
+      />
     </div>
   );
 };

@@ -1,4 +1,9 @@
-import { AddCircle, CreateNewFolder, PersonAdd } from "@mui/icons-material";
+import {
+  AddCircle,
+  CreateNewFolder,
+  PersonAdd,
+  KeyboardArrowDown,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -11,14 +16,22 @@ import {
   Select,
   Typography,
 } from "@mui/joy";
-import React, { useState } from "react";
+import { selectClasses } from "@mui/material/Select";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
-const AdminPanelAdd = ({ open, onClose, type }) => {
-  //   const [projectName, setProjectName] = useState("");
-  //   const [projectCode, setProjectCode] = useState("");
-  //   const [clientName, setClientName] = useState("");
-  //   const [clientAddr, setClientAddr] = useState("");
-  //   const [clientContact, setClientContact] = useState("");
+const AdminPanelAdd = ({ open, onClose, type, designations, branches }) => {
+  // const [projectName, setProjectName] = useState("");
+  // const [projectCode, setProjectCode] = useState("");
+  // const [clientName, setClientName] = useState("");
+  // const [clientAddr, setClientAddr] = useState("");
+  // const [clientContact, setClientContact] = useState("");
+  // const [remarks, setRemarks] = useState("");
+
+  // const [employeeName, setEmployeeName] = useState("");
+  // const [employeeEmail, setEmployeeEmail] = useState("");
+  // const [dob, setDOB] = useState("");
+  // const [doj, setDOJ] = useState("");
 
   return (
     <Drawer variant="soft" anchor="right" open={open} onClose={onClose}>
@@ -33,7 +46,12 @@ const AdminPanelAdd = ({ open, onClose, type }) => {
                 : ""}
         </Typography>
         <ModalClose></ModalClose>
-        <Box textAlign={"center"} justifyContent={"center"} mx={"auto"}>
+        <Box
+          textAlign={"center"}
+          justifyContent={"center"}
+          mx={"auto"}
+          alignItems={"center"}
+        >
           {type === "project" ? (
             <>
               <FormControl>
@@ -102,14 +120,17 @@ const AdminPanelAdd = ({ open, onClose, type }) => {
               </Button>
             </>
           ) : type === "employee" ? (
-            <div className="text-center mx-2">
+            <div className="text-center m-5">
               <FormControl>
                 <FormLabel>Enter Employee Name</FormLabel>
+                <Input type="text" variant="soft" placeholder="Joe Stern" />
+              </FormControl>
+              <FormControl sx={{ mt: 3 }}>
+                <FormLabel>Enter Employee Email</FormLabel>
                 <Input
-                  type="text"
+                  type="email"
                   variant="soft"
-                  color="primary"
-                  placeholder="Joe Stern"
+                  placeholder="joestern@example.com"
                 />
               </FormControl>
               <FormControl sx={{ mt: 3 }}>
@@ -122,15 +143,35 @@ const AdminPanelAdd = ({ open, onClose, type }) => {
               </FormControl>
               <FormControl sx={{ mt: 3 }}>
                 <FormLabel>Enter Designation</FormLabel>
-                <Input type="text" variant="soft" placeholder="Mobile/Email" />
+                <Select variant="soft" placeholder="Analyst">
+                  {designations.map((designation) => (
+                    <Option value={designation.id}>{designation.name}</Option>
+                  ))}
+                </Select>
               </FormControl>
               <FormControl sx={{ mt: 3 }}>
                 <FormLabel>Enter Branch</FormLabel>
-                <Input type="text" variant="soft" placeholder="Remarks...." />
+                <Select variant="soft" placeholder="Director">
+                  {branches.map((branch) => (
+                    <Option value={branch.id}>{branch.name}</Option>
+                  ))}
+                </Select>
               </FormControl>
               <FormControl sx={{ mt: 3 }}>
                 <FormLabel>Enter Role</FormLabel>
-                <Select variant="soft" placeholder="Select Role">
+                <Select
+                  variant="soft"
+                  placeholder="Select Role"
+                  indicator={<KeyboardArrowDown />}
+                  sx={{
+                    [`& .${selectClasses.indicator}`]: {
+                      transition: "0.2s",
+                      [`&.${selectClasses.expanded}`]: {
+                        transform: "rotate(-180deg)",
+                      },
+                    },
+                  }}
+                >
                   <Option>User</Option>
                   <Option>Admin</Option>
                 </Select>
