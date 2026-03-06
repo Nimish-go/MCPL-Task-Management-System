@@ -40,7 +40,7 @@ const MarkInactive = ({ open, onClose, employeeName }) => {
 
   return (
     <Modal open={open} onClose={onClose}>
-      <ModalDialog variant="soft" color="danger" role="alertdialog">
+      <ModalDialog variant="outlined" color="danger" role="alertdialog">
         <DialogTitle level="title-sm">Mark Inactive</DialogTitle>
         <DialogContent>
           <Typography level="body-md">
