@@ -15,7 +15,7 @@ const MarkInactive = ({ open, onClose, employeeName }) => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastOpen, setToastOpen] = useState(false);
 
-  // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/"
+  axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/"
 
   const handleMarkInactive = (event) => {
     event.preventDefault();

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, date
@@ -69,6 +69,9 @@ def login():
     
     user = cursor.fetchone()
     
+    cursor.execute(""" SELECT "OrgCode" FROM "OrganisationMaster" WHERE "OrganisationID" = %s """,[org_id,])
+    org = cursor.fetchone()
+    
     if user:
         cursor.execute(""" SELECT "DesignationName" FROM "DesignationMaster" WHERE "DesignationID" = %s """,[user[3],])
     
@@ -79,7 +82,8 @@ def login():
             "empName": user[0],
             "role": user[2],
             "designation": designation[0],
-            "email": user[4]
+            "email": user[4],
+            "org_id" : org[0]
         }), 200
     else:
         return jsonify({
@@ -176,10 +180,14 @@ def getAdminPanelLists():
     cursor.execute(""" SELECT "WorkTypeID", "WorkType" FROM "WorkTypeMaster" ORDER BY "WorkType" ASC; """)
     workType = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
     
+    cursor.execute(""" SELECT "OrganisationID", "OrganisationName" FROM "OrganisationMaster" ORDER BY "OrganisationName" ASC """)
+    organisations = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
+    
     return jsonify({
         "employees" : employees,
         "projects" : projects,
-        "workTypes" : workType
+        "workTypes" : workType,
+        "organisations" : organisations
     }), 200
 
 @app.route("/markInactive/<name>",methods=["PUT"])
@@ -200,20 +208,23 @@ def markInactive(name):
 @app.route("/addProject",methods=["POST"])
 def addProject():
     data = request.form
-    projectCode = data.get("code")
-    projectName = data.get("name")
+    projectCode = data.get("projectCode")
+    projectName = data.get("projectName")
     clientName = data.get("clientName")
-    clientAddress = data.get("clientAddress")
+    clientAddress = data.get("clientAddr")
     clientContact = data.get("clientContact")
-    organisationId = data.get("organisationId")
     remarks = data.get("remarks")
+    org = data.get("org")
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    cursor.execute(""" SELECT "OrganisationID" FROM "OrganisationMaster" WHERE "OrgCode" = %s """,[org,])
+    org_id = cursor.fetchone()
+    
     cursor.execute(""" INSERT INTO "ProjectMaster"
                    ("ProjectCode", "ProjectGUID", "OrganisationID", "ProjectName", "ClientName", "ClientAddress", "ClientContactInfo", "Remarks") 
-                   VALUES (%s, gen_random_uuid(), %s, %s, %s, %s, %s, %s) """,[projectCode, organisationId, projectName, clientName, clientAddress, clientContact, remarks])
+                   VALUES (%s, gen_random_uuid(), %s, %s, %s, %s, %s, %s) """,[projectCode, org_id[0], projectName, clientName, clientAddress, clientContact, remarks])
     conn.commit()
     
     return jsonify({
@@ -221,7 +232,52 @@ def addProject():
         "message" : "Project Created Successfully."
     }), 200
 
-@app.route("/get_work_type",methods = ["GET"])
+@app.route("/addEmployee", methods=["POST"])
+def addEmployee():
+    data = request.form
+    employeeName = data.get("empName")
+    userName = employeeName.split(" ")[0]
+    employeeEmail = data.get("empEmail")
+    dob = data.get("dob")
+    doj = data.get("doj")
+    designation = data.get("designation")
+    org_code = data.get("organisation")
+    branch = data.get("branch")
+    userPwd = userName+"@7"
+    role = data.get("role")
+    
+    dob = datetime.strptime(dob, "%Y-%m-%d")
+    doj = datetime.strptime(doj,"%Y-%m-%d")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "OrganisationID" FROM "OrganisationMaster" WHERE "OrgCode" = %s """,[org_code,])
+    org = cursor.fetchone()
+    
+    cursor.execute(""" INSERT INTO "UserMaster"
+                   ("UserGUID", "EmpName", "UserEmail", "UserName", "UserPWD", "UserCategory", "DateOfBirth", "DateOfJoining", 
+                   "DesignationID", "BranchID", "OrganisationID")
+                   VALUES (gen_random_uuid(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",[employeeName, employeeEmail, userName, userPwd, role, dob, doj, designation, branch, org[0]])
+    conn.commit()
+    
+    return jsonify({ "status" : "success", "message" : "Employee Added Successfully to the database." }), 200
+
+@app.route("/addWorkType", methods=["POST"])
+def addWorkType():
+    data = request.form
+    workType = data.get("workType")
+    remarks = data.get("remarks")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" INSERT INTO "WorkTypeMaster"("WorkTypeMasterGUID", "WorkType", "Remarks") VALUES (gen_random_uuid(), %s, %s) """,[workType, remarks])
+    conn.commit()
+    
+    return jsonify({ "status" : "success", "message" : "Work Type Added Successfully to the database." }), 200
+
+@app.route("/get_work_type", methods=["GET"])
 def getWorkType():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -233,14 +289,6 @@ def getWorkType():
 
 @app.route("/assign_task",methods = ["POST"])
 def assignTask():
-    # formData.append("projectCode", selectedProjectCode);
-    # formData.append("projectName", projectName);
-    # formData.append("taskDesc", taskDescription);
-    # formData.append("workType", selectedWorkType);
-    # formData.append("assignTo", assignedToEmployee);
-    # formData.append("assignBy", assignedByEmployee);
-    # formData.append("remarks", remarks);
-    # formData.append("deadline", deadline);
     dateOfEntry = request.form.get("dateOfEntry")
     projectCode = request.form.get("projectCode")
     taskDesc = request.form.get("taskDesc")
@@ -253,11 +301,10 @@ def assignTask():
     targetDate = datetime.strptime(deadline, "%Y-%m-%d")
     today = datetime.strptime(dateOfEntry, "%Y-%m-%d")
     
-    
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    updatedTaskDesc = "Task Desc: "+taskDesc+". Current Status: Pending"+". Deadline: "+deadline
+    updatedTaskDesc = "Task Desc: "+taskDesc+". Current Status: Pending. Deadline: "+deadline
     updatedRemarks = "Remarks: "+remarks
     
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[assignBy,])

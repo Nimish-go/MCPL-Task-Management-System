@@ -104,8 +104,14 @@ const Navbar = () => {
         </div>
       ) : location.pathname === "/admin_panel" ? (
         <div className="navbar-container flex text-center justify-center items-center">
-          <JoyLink color="primary" variant="solid" href="/dashboard" mx={3}>
-            Go Back
+          <JoyLink
+            color="primary"
+            variant="soft"
+            underline="none"
+            href="/dashboard"
+            mx={3}
+          >
+            <ArrowBack /> Go Back
           </JoyLink>
           <Typography level="h3" textAlign={"center"} color="#f5f5f5">
             MCPL Task Management System Admin Mode On

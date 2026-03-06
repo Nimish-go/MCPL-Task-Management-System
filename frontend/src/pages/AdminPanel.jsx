@@ -42,6 +42,7 @@ const AdminPanel = () => {
   const [branch, setBranch] = useState([]);
 
   const [loading, setLoading] = useState(false);
+  const [organisations, setOrganisations] = useState([]);
 
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
@@ -54,6 +55,7 @@ const AdminPanel = () => {
           setEmployees(data.employees);
           setProjects(data.projects);
           setWorkTypes(data.workTypes);
+          setOrganisations(data.organisations);
         }
       })
       .catch((err) => {
@@ -366,7 +368,7 @@ const AdminPanel = () => {
               sx={{
                 height: "400px",
                 overflow: "auto",
-                width: "80%",
+                width: "50%",
                 mx: "auto",
               }}
             >
@@ -379,6 +381,7 @@ const AdminPanel = () => {
                   width: "100%",
                   tableLayout: "fixed",
                   textAlign: "center",
+                  mx: "auto",
                 }}
               >
                 <thead>
@@ -433,6 +436,7 @@ const AdminPanel = () => {
         open={open}
         onClose={() => setOpen(false)}
         designations={designation}
+        organisations={organisations}
         branches={branch}
       />
       <MarkInactive
