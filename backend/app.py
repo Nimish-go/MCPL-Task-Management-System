@@ -180,7 +180,7 @@ def getAdminPanelLists():
     cursor.execute(""" SELECT "WorkTypeID", "WorkType" FROM "WorkTypeMaster" ORDER BY "WorkType" ASC; """)
     workType = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
     
-    cursor.execute(""" SELECT "OrganisationID", "OrgName" FROM "OrganisationMaster" ORDER BY "OrganisationName" ASC """)
+    cursor.execute(""" SELECT "OrganisationID", "OrgName" FROM "OrganisationMaster" ORDER BY "OrgName" ASC """)
     organisations = [{"id" : row[0], "name" : row[1]}for row in cursor.fetchall()]
     
     return jsonify({
