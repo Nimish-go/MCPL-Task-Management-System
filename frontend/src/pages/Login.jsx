@@ -27,7 +27,7 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     if (sessionStorage.length > 0) {
       navigate("/dashboard");
     }
@@ -56,7 +56,7 @@ const Login = () => {
     event.preventDefault();
     setOrgCodeLoading(true);
     axios
-      .get(`http://localhost:5002/validate_org_code/${orgCode}`)
+      .get(`/validate_org_code/${orgCode}`)
       .then((res) => {
         const data = res.data;
         if (res.status === 200) {
@@ -82,7 +82,7 @@ const Login = () => {
     loginData.append("password", password);
     loginData.append("org_id", orgId);
     axios
-      .post("http://localhost:5002/login", loginData)
+      .post("/login", loginData)
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
