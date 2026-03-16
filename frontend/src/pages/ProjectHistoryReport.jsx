@@ -125,7 +125,7 @@ const ProjectHistoryReport = () => {
     event.preventDefault();
     setHistoryLoading(true);
     axios
-      .get("http://localhost:5002/getProjectHistory", {
+      .get("/getProjectHistory", {
         params: {
           projectCode: selectedProjectCode,
           dateFrom: fromDate,
