@@ -9,7 +9,7 @@ import TasksPerformedReport from "./pages/TasksPerformedReport";
 
 function App() {
   return (
-    <>
+    <div>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
@@ -20,10 +20,10 @@ function App() {
             path="/tasks_perform_report"
             element={<TasksPerformedReport />}
           />
-          <Route path="/directorMeetings" element={<DirectorMeetings />} />
+          <Route path="/director_meetings" element={<DirectorMeetings />} />
         </Routes>
       </BrowserRouter>
-    </>
+    </div>
   );
 }
 

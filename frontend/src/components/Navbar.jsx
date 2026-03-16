@@ -95,7 +95,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div className={`navbar-container bg-bg-navbar p-3 text-white`}>
+    <div className="navbar-container bg-bg-navbar p-3 text-white font-primary">
       {location.pathname === "/" ? (
         <div className="navbar-container">
           <Typography level="h3" textAlign={"center"} color="#fff">
@@ -113,7 +113,12 @@ const Navbar = () => {
           >
             <ArrowBack /> Go Back
           </JoyLink>
-          <Typography level="h3" textAlign={"center"} color="#f5f5f5">
+          <Typography
+            level="h3"
+            textAlign={"center"}
+            color="#f5f5f5"
+            fontFamily={"Open Sans, sans-serif"}
+          >
             MCPL Task Management System Admin Mode On
           </Typography>
         </div>
@@ -204,11 +209,11 @@ const Navbar = () => {
                     <ArrowDropDown />
                   </MenuButton>
                   <Menu>
-                    <MenuItem>
+                    <MenuItem onClick={() => navigate("/proj_hist_report")}>
                       <WorkHistory /> Project History Report
                     </MenuItem>
-                    <MenuItem>
-                      <Task /> Tasks Performed
+                    <MenuItem onClick={() => navigate("/tasks_perform_report")}>
+                      <Task /> Tasks Performed Report
                     </MenuItem>
                   </Menu>
                 </Dropdown>

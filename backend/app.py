@@ -105,7 +105,7 @@ def get_project_data(code):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectID" = %s """,[code,])
+    cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[code,])
     project_details = cursor.fetchone()
     
     if len(project_details) <= 0:
@@ -304,7 +304,7 @@ def assignTask():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    updatedTaskDesc = "Task Desc: "+taskDesc+". Current Status: Pending. Deadline: "+deadline
+    updatedTaskDesc = "Task Assigned: "+taskDesc+". Current Status: Pending. Deadline: "+deadline
     updatedRemarks = "Remarks: "+remarks
     
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[assignBy,])
@@ -325,6 +325,38 @@ def assignTask():
         "message" : "Task Assigned Successfully",
         "empEmail" : assignToEmailDetails
         }), 200
+
+@app.route("/getProjectHistory",methods=["GET"])
+def getProjectHistoryData():
+    
+    projectCode = request.args.get("projectCode")
+    date_from = request.args.get("dateFrom")
+    date_to = request.args.get("dateTo")
+    
+    print(projectCode)
+    print(date_from)
+    print(date_to)
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""  SELECT ph."ProjectHistoryID", ph."EventDate", um."EmpName", ph."Event", ph."Remarks", wm."WorkType", CASE WHEN ph."IsRework" = true THEN 'Rework' ELSE 'Not a Rework' END AS "IsRework"
+                        FROM "ProjectHistory" ph
+                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
+                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                        JOIN "WorkTypeMaster" wm ON ph."WorkTypeID" = wm."WorkTypeID"
+                        WHERE pm."ProjectCode" = %s
+                        AND ph."IsHistory" = true
+                        AND ph."EventDate" >= %s
+                        AND ph."EventDate" <= %s
+                        ORDER BY ph."EventDate" DESC """,[projectCode, date_from, date_to])
+    
+    project_hist = [{"id" : row[0], "eventDate" : row[1], "filledBy" : row[2], "desc" : row[3], "remarks" : row[4], "workType" : row[5], "isRework" : row[6] }for row in cursor.fetchall()]
+    
+    if len(project_hist) == 0:
+        return jsonify({ "status" : "error", "message" : "Selected Project "+projectCode+" History Not Found." }), 404
+    else:
+        return jsonify(project_hist), 200
 
 @app.route("/getTaskUpdates/<id>",methods={"GET"})
 def getTaskUpdates(id):
@@ -389,8 +421,8 @@ def updateTasksUnderReview():
     cursor.execute(""" SELECT "Event", "Remarks" FROM "ProjectHistory" WHERE "ProjectHistoryID" = %s """,[taskId,])
     taskDetails = cursor.fetchone()
     
-    newTaskDesc = taskDetails[0]+". (Edited by"+editedBy+"): "+taskDescUpdates
-    newRemarks = taskDetails[1]+". (Edited by"+editedBy+"): "+remarksUpdates
+    newTaskDesc = taskDetails[0]+". (Edited by "+editedBy+"): "+taskDescUpdates
+    newRemarks = taskDetails[1]+". (Edited by "+editedBy+"): "+remarksUpdates
     
     if status == "Cleared":
         cursor.execute(""" UPDATE "ProjectHistory" SET 
@@ -535,7 +567,7 @@ def dashboard_tasks_under_review(user):
     
     cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'), 
                         COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared') , 
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND "TargetDate" < CURRENT_DATE),
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE),
                         COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')
                         FROM "ProjectHistory" ph
                         JOIN "UserMaster" um ON ph."UserID" = um."UserID"

@@ -29,6 +29,7 @@ const Tables = ({ type, tableData, loading = true }) => {
   const [employeeTasks, setEmployeeTasks] = useState([]);
   const [showEmployeeTasks, setShowEmployeeTasks] = useState(false);
   const [employeeName, setEmployeeName] = useState("");
+  const [editModalType, setEditModalType] = useState("");
 
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(3);
@@ -213,6 +214,8 @@ const Tables = ({ type, tableData, loading = true }) => {
 
                   const dateOfEntry = new Date(task.dateOfEntry);
                   dateOfEntry.setHours(0, 0, 0, 0);
+
+                  const overdueDiff = deadline.getDay() - today.getDay();
                   // const diffInDays =
                   //   (today - dateOfEntry) / (1000 * 60 * 60 * 24);
 
@@ -272,8 +275,8 @@ const Tables = ({ type, tableData, loading = true }) => {
                       <td>
                         {isOverdue ? (
                           <Chip variant="solid" color="danger">
-                            Overdue by <br />
-                            {deadline.getDay() - today.getDay()} days
+                            Overdue by {overdueDiff}{" "}
+                            {overdueDiff > 1 ? "days" : "day"}
                           </Chip>
                         ) : task.status === "Completed" ? (
                           <Chip variant="soft" color="success">
@@ -319,8 +322,9 @@ const Tables = ({ type, tableData, loading = true }) => {
                           variant="outlined"
                           color="primary"
                           onClick={(e) => {
-                            setTaskId(e.target.id);
+                            setTaskId(task.id);
                             setEditModal(true);
+                            setEditModalType("assigned");
                           }}
                         >
                           Edit
@@ -520,6 +524,7 @@ const Tables = ({ type, tableData, loading = true }) => {
         taskId={taskId}
         open={editModal}
         onClose={() => setEditModal(false)}
+        type={editModalType}
       />
       <TasksModal
         open={showEmployeeTasks}

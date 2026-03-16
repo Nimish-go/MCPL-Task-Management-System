@@ -23,7 +23,7 @@ const Dashboard = () => {
     : false;
 
   return (
-    <div className="min-w-screen w-full overflow-x-hidden ">
+    <div className="min-w-screen w-full overflow-hidden ">
       <div className="navbar-container">
         <Navbar active={"/dashboard"} />
       </div>
@@ -33,9 +33,9 @@ const Dashboard = () => {
           {sessionStorage.getItem("designation")}
         </Typography>
       </div>
-      <div className="main min-w-screen w-full flex justify-between text-center items-center ml-1">
+      <div className="main min-w-screen w-full flex justify-between text-center items-center ml-1 overflow-hidden m-5">
         <div className="tasks-assigned-tasks-under-review w-full">
-          <Typography level="h3">Tasks</Typography>
+          <Typography level="h3">Task Section</Typography>
           <Tabs value={tasksIndex} onChange={(e, val) => setTasksIndex(val)}>
             <TabList>
               <Tab color="primary" variant="soft" indicatorInset>

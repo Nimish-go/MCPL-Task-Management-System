@@ -1,9 +1,14 @@
-import React from 'react'
+import React from "react";
+import Navbar from "../components/Navbar";
 
 const TasksPerformedReport = () => {
   return (
-    <div>TasksPerformedReport</div>
-  )
-}
+    <div>
+      <div className="navbar">
+        <Navbar />
+      </div>
+    </div>
+  );
+};
 
-export default TasksPerformedReport
+export default TasksPerformedReport;

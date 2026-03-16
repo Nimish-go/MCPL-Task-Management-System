@@ -13,7 +13,7 @@ const Toast = ({ status, message, open, onClose }) => {
             ? "danger"
             : "warning"
       }
-      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      anchorOrigin={{ vertical: "top", horizontal: "right" }}
       startDecorator={
         status === "success" ? (
           <Check />

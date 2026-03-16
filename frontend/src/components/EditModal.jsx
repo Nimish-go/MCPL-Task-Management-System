@@ -13,11 +13,13 @@ import {
   Skeleton,
   Stack,
   Textarea,
+  Typography,
 } from "@mui/joy";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Toast from "./Toast";
 import { useLocation } from "react-router-dom";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const EditModal = ({ open, onClose, taskId, type }) => {
   const [taskData, setTaskData] = useState({});
@@ -30,6 +32,20 @@ const EditModal = ({ open, onClose, taskId, type }) => {
   const [toastShow, setToastShow] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [statusUpdates, setStatusUpdates] = useState("");
+  const [loadingIndex, setLoadingIndex] = useState(0);
+
+  const loadingText = [
+    "Fetching task updates...",
+    "Analyzing task progress...",
+    "Synchronizing employee updates...",
+    "Reviewing task history...",
+    "Preparing task details...",
+    "Connecting to task server...",
+    "Optimizing task data...",
+    "Loading latest updates...",
+    "Finalizing task information...",
+    "Almost ready...",
+  ];
 
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
@@ -41,14 +57,38 @@ const EditModal = ({ open, onClose, taskId, type }) => {
         if (res.status === 200) {
           const data = res.data;
           setTaskData(data);
-          setLoading(false);
+          setToastStatus("success");
+          setToastMessage("Task Updates Loaded");
+          setToastShow(true);
         }
       })
       .catch((err) => {
         console.error(err);
+        setToastStatus("error");
+        setToastMessage("Something Went Wrong. Please Check The Console.");
+        setToastShow(true);
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [taskId, open]);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const interval = setInterval(() => {
+      setLoadingIndex((prev) => {
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * loadingText.length);
+        } while (randomIndex === prev);
+        return randomIndex;
+      });
+      console.log(loadingIndex);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleTasksUnderReviewUpdate = (event) => {
     event.preventDefault();
@@ -118,12 +158,22 @@ const EditModal = ({ open, onClose, taskId, type }) => {
           {type === "assigned" ? (
             <Stack>
               {loading ? (
-                <Skeleton variant="rectangular" animation="wave" />
+                <>
+                  <DotLottieReact
+                    src="https://lottie.host/ff324918-7d65-4e25-bc65-e53cbb3a9719/pI4WQn4Vaa.lottie"
+                    loop
+                    autoplay
+                    style={{ height: 200, width: 200, marginInline: "auto" }}
+                  />
+                  <Typography level="body-md" textAlign={"center"}>
+                    {loadingText[loadingIndex]}
+                  </Typography>
+                </>
               ) : (
                 <div className="text-center justify-center items-center m-[0 auto]">
                   <FormControl>
                     <FormLabel sx={{ textAlign: "justify" }}>
-                      {taskData.taskDesc}
+                      {"Task Updates: " + taskData.taskDesc}
                       <br />
                       {"Remarks: " + taskData.remarks}
                     </FormLabel>
@@ -156,7 +206,15 @@ const EditModal = ({ open, onClose, taskId, type }) => {
           ) : type === "underReview" ? (
             <Stack>
               {loading ? (
-                <Skeleton variant="rectangular" animation="wave" />
+                <>
+                  <DotLottieReact
+                    src="https://lottie.host/ff324918-7d65-4e25-bc65-e53cbb3a9719/pI4WQn4Vaa.lottie"
+                    loop
+                    autoplay
+                    style={{ height: 200, width: 200 }}
+                  />
+                  <Typography></Typography>
+                </>
               ) : (
                 <div className="text-center justify-center items-center m-[0 auto]">
                   <FormControl>

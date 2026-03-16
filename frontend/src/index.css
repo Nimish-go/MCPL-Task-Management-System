@@ -3,4 +3,5 @@
 @theme {
   --color-bg-navbar: #023047;
   --color-hover-navbar: #ffb703;
+  --font-primary: "Open Sans", sans-serif;
 }

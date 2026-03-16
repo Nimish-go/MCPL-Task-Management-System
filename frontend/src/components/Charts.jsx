@@ -1,89 +1,124 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
-import { Box, Option, Typography, Select } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { Skeleton } from "@mui/material";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const Charts = ({ chartData, loading }) => {
-  const [name, setName] = useState("");
+  const [loadingIndex, setLoadingIndex] = useState(0);
+  const loadingText = [
+    "Crunching task numbers...",
+    "Analyzing employee productivity...",
+    "Preparing task insights...",
+    "Gathering project statistics...",
+    "Calculating task distribution...",
+    "Loading performance metrics...",
+    "Organizing task data...",
+    "Fetching team task progress...",
+    "Building productivity charts...",
+    "Visualizing workload distribution...",
+  ];
 
-  const selectedData = chartData.find((emp) => emp.name === name);
+  useEffect(() => {
+    if (!loading) return;
 
-  const pieData = selectedData
-    ? [
-        {
-          id: selectedData.id,
-          value: selectedData.pending_count,
-          label: "Pending",
-          color: "yellow",
-        },
-        {
-          id: selectedData.id,
-          value: selectedData.completed_count,
-          label: "Completed",
-          color: "green",
-        },
-        {
-          id: selectedData.id,
-          value: selectedData.overdue_count,
-          label: "Overdue",
-          color: "red",
-        },
-        {
-          id: selectedData.id,
-          value: selectedData.reloaded_count,
-          label: "Reloaded",
-          color: "orange",
-        },
-      ]
-    : [];
+    const interval = setInterval(() => {
+      setLoadingIndex((prev) => {
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * loadingText.length);
+        } while (randomIndex === prev);
+        return randomIndex;
+      });
+      console.log(loadingIndex);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   return (
-    <Box sx={{ width: 400 }}>
-      {/* Loading State */}
+    <Box sx={{ width: "100%" }}>
       {loading ? (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Skeleton variant="rectangular" width={200} height={40} />
-          <Skeleton variant="circular" width={250} height={250} />
+        <Box
+          sx={{
+            gap: 4,
+            textAlign: "center",
+          }}
+        >
+          <DotLottieReact
+            src="https://lottie.host/69a6f85a-81d8-434a-aa6c-fac8bd63c4ca/PI6BQuDIXP.lottie"
+            loop
+            autoplay
+            style={{ height: 300, width: 300, marginInline: "auto" }}
+          />
+          <Typography level="body-md" textAlign={"center"}>
+            {loadingText[loadingIndex]}
+          </Typography>
         </Box>
       ) : chartData.length === 0 ? (
-        /* Empty State */
-        <Typography level="body-md" sx={{ mt: 2 }}>
-          No Data Available
-        </Typography>
+        <Typography level="body-md">No Data Available</Typography>
       ) : (
-        <>
-          {/* Dropdown */}
-          <Select
-            variant="soft"
-            color="primary"
-            placeholder="Select Employee"
-            value={name}
-            onChange={(e, newVal) => setName(newVal)}
-            sx={{ width: 250, mb: 2 }}
-          >
-            {chartData.map((task, index) => (
-              <Option key={index} value={task.name}>
-                {task.name}
-              </Option>
-            ))}
-          </Select>
+        <div className="flex flex-wrap justify-center gap-10">
+          {chartData.map((emp) => {
+            const pieData = [
+              {
+                id: 1,
+                value: emp.pending_count,
+                label: "Pending",
+                color: "#ffb703",
+              },
+              {
+                id: 2,
+                value: emp.completed_count,
+                label: "Completed",
+                color: "#52b69a",
+              },
+              {
+                id: 3,
+                value: emp.overdue_count,
+                label: "Overdue",
+                color: "#bf0603",
+              },
+              {
+                id: 4,
+                value: emp.reloaded_count,
+                label: "Reloaded",
+                color: "#e85d04",
+              },
+            ].filter((item) => item.value > 0);
 
-          {/* Pie Chart */}
-          {selectedData ? (
-            <PieChart
-              key={name}
-              series={[
-                {
-                  data: pieData,
-                },
-              ]}
-              width={400}
-              height={300}
-            />
-          ) : (
-            <Typography level="body-sm">Please select an employee</Typography>
-          )}
-        </>
+            return (
+              <Box
+                key={emp.id}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  p: 2,
+                  borderRadius: "15px",
+                  boxShadow: "sm",
+                  backgroundColor: "background.body",
+                }}
+              >
+                <Typography level="title-md" sx={{ mb: 1 }}>
+                  {emp.name}'s Task Counts
+                </Typography>
+
+                <PieChart
+                  series={[
+                    {
+                      data: pieData,
+                      innerRadius: 40,
+                      outerRadius: 100,
+                    },
+                  ]}
+                  width={300}
+                  height={250}
+                />
+              </Box>
+            );
+          })}
+        </div>
       )}
     </Box>
   );
