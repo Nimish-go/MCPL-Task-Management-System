@@ -18,6 +18,7 @@ import {
   Typography,
   Box,
   Skeleton,
+  IconButton,
 } from "@mui/joy";
 import {
   Download,
@@ -256,14 +257,15 @@ const ProjectHistoryReport = () => {
               <Typography level="title-lg" sx={{ mx: 5 }}>
                 {selectedProjectCode}'s History Data
               </Typography>
-              <Button
+              <IconButton
                 color="danger"
                 variant="soft"
                 hidden={downloadButton}
-                startDecorator={<DownloadRounded />}
                 sx={{ textAlign: "center" }}
                 onClick={downloadPDF}
-              />
+              >
+                <Download />
+              </IconButton>
             </div>
             <Box
               sx={{
