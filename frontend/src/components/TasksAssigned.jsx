@@ -24,7 +24,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   const [selectedProjectCode, setSelectedProjectCode] = useState("");
   const [projectName, setProjectName] = useState("");
   const [employeeData, setEmployeeData] = useState([]);
-  const [assignedToEmployee, setAssignedToEmployee] = useState("");
+  const [assignedToEmployee, setAssignedToEmployee] = useState(0);
   const [assignedByEmployee, setAssignedByEmployee] = useState(
     sessionStorage.getItem("empName"),
   );
@@ -58,172 +58,204 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   }, [projects, workTypes, employees, selectedProjectCode]);
 
   const resetForm = () => {
-    
+    setProjectName("");
+    setSelectedProjectCode("");
+    setDeadline("");
+    setTaskDescription("");
+    setRemarks("");
+    setSelectedWorkType("");
+    setAssignedToEmployee(0);
+  };
+
+  const validate = () => {
+    if (
+      !selectedProjectCode ||
+      !projectName ||
+      !selectedWorkType ||
+      !deadline ||
+      !taskDescription ||
+      !remarks ||
+      assignedToEmployee === 0
+    ) {
+      return false;
+    }
+    return true;
   };
 
   const assignTask = (event) => {
     event.preventDefault();
     setAssigning(true);
-    const formData = new FormData();
-    formData.append("dateOfEntry", today);
-    formData.append("projectCode", selectedProjectCode);
-    formData.append("taskDesc", taskDescription);
-    formData.append("workType", selectedWorkType);
-    formData.append("assignTo", assignedToEmployee);
-    formData.append("assignBy", assignedByEmployee);
-    formData.append("remarks", remarks);
-    formData.append("deadline", deadline);
-    axios
-      .post("/assign_task", formData)
-      .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setToastStatus(data.status);
-          setToastMessage(data.message);
-          setShowToast(true);
-          setAssigning(false);
-          const templateParams = {
-            to_email: data.empEmail.to_email,
-            to_name: data.empEmail.to_name,
-            from_name: assignedByEmployee,
-            from_email: sessionStorage.getItem("email"),
-            task_details: taskDescription,
-            project_code: selectedProjectCode,
-            project_name: projectName,
-          };
-          console.log(templateParams);
-          try {
-            sendEmail(templateParams);
-          } catch (err) {
-            setToastStatus("error");
-            setToastMessage("Something Went Wrong while sending email.");
+    if (!validate()) {
+      console.log("Not validate");
+      setAssigning(false);
+      setToastStatus("warning");
+      setToastMessage("Please Fill All fields.");
+      setShowToast(true);
+    } else {
+      console.log("Validate");
+      const formData = new FormData();
+      formData.append("dateOfEntry", today);
+      formData.append("projectCode", selectedProjectCode);
+      formData.append("taskDesc", taskDescription);
+      formData.append("workType", selectedWorkType);
+      formData.append("assignTo", assignedToEmployee);
+      formData.append("assignBy", assignedByEmployee);
+      formData.append("remarks", remarks);
+      formData.append("deadline", deadline);
+      axios
+        .post("/assign_task", formData)
+        .then((res) => {
+          if (res.status === 200) {
+            const data = res.data;
+            setToastStatus(data.status);
+            setToastMessage(data.message);
             setShowToast(true);
-            console.error(err);
+            const templateParams = {
+              to_email: data.empEmail.to_email,
+              to_name: data.empEmail.to_name,
+              from_name: assignedByEmployee,
+              from_email: sessionStorage.getItem("email"),
+              task_details: taskDescription,
+              project_code: selectedProjectCode,
+              project_name: projectName,
+            };
+            console.log(templateParams);
+            try {
+              sendEmail(templateParams);
+            } catch (err) {
+              setToastStatus("error");
+              setToastMessage("Something Went Wrong while sending email.");
+              setShowToast(true);
+              console.error(err);
+            }
           }
-        }
-      })
-      .catch((err) => {
-        setToastStatus("error");
-        setToastMessage("Something Went Wrong. Check Console for the same.");
-        setShowToast(true);
-        console.error(err);
-      });
+        })
+        .catch((err) => {
+          setToastStatus("error");
+          setToastMessage("Something Went Wrong. Check Console for the same.");
+          setShowToast(true);
+          console.error(err);
+        })
+        .finally(() => setAssigning(false));
+    }
   };
 
   return (
-    <Drawer open={open} onClose={onClose} anchor="right">
-      <Box sx={{ p: 3 }}>
-        <Typography level="h4" mb={2}>
-          Assign a Task
-        </Typography>
-        <ModalClose></ModalClose>
-        <Stack spacing={2}>
-          <FormControl>
-            <FormLabel>Date Of Entry</FormLabel>
-            <Input type="date" value={today} readOnly />
-          </FormControl>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <FormControl sx={{ flex: 1 }}>
-              <FormLabel>Project Code</FormLabel>
+    <>
+      <Drawer open={open} onClose={onClose} anchor="right">
+        <Box sx={{ p: 3 }}>
+          <Typography level="h4" mb={2}>
+            Assign a Task
+          </Typography>
+          <ModalClose></ModalClose>
+          <Stack spacing={2}>
+            <FormControl>
+              <FormLabel>Date Of Entry</FormLabel>
+              <Input type="date" value={today} readOnly />
+            </FormControl>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <FormControl sx={{ flex: 1 }}>
+                <FormLabel>Project Code</FormLabel>
+                <Select
+                  placeholder="Select Code"
+                  onChange={(e, newValue) => setSelectedProjectCode(newValue)}
+                >
+                  {projectData.map((project) => (
+                    <Option key={project.id} value={project.id}>
+                      {project.code}
+                    </Option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Assigning To</FormLabel>
+                <Select
+                  placeholder="Select Employee"
+                  onChange={(e, newValue) => setAssignedToEmployee(newValue)}
+                >
+                  {employeeData.map((employee) => (
+                    <Option key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </Option>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <FormControl>
+              <FormLabel>Project Name</FormLabel>
+              <Textarea
+                value={projectName}
+                minRows={3}
+                placeholder="Project 02...."
+                readOnly
+              ></Textarea>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Enter Task Decription</FormLabel>
+              <Textarea
+                placeholder="Task:........"
+                value={taskDescription}
+                minRows={3}
+                onChange={(e) => setTaskDescription(e.target.value)}
+              ></Textarea>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Select Work Type</FormLabel>
               <Select
-                placeholder="Select Code"
-                onChange={(e, newValue) => setSelectedProjectCode(newValue)}
+                placeholder="Select Work Type"
+                onChange={(e, newValue) => setSelectedWorkType(newValue)}
               >
-                {projectData.map((project) => (
-                  <Option key={project.id} value={project.id}>
-                    {project.code}
+                {workTypeData.map((workType) => (
+                  <Option key={workType.id} value={workType.id}>
+                    {workType.work_type}
                   </Option>
                 ))}
               </Select>
             </FormControl>
             <FormControl>
-              <FormLabel>Assigning To</FormLabel>
-              <Select
-                placeholder="Select Employee"
-                onChange={(e, newValue) => setAssignedToEmployee(newValue)}
-              >
-                {employeeData.map((employee) => (
-                  <Option key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </Option>
-                ))}
-              </Select>
+              <FormLabel>Assigned By</FormLabel>
+              <Input
+                readOnly
+                value={assignedByEmployee}
+                onChange={(e) => setAssignedByEmployee(e.target.value)}
+              />
             </FormControl>
-          </Box>
-          <FormControl>
-            <FormLabel>Project Name</FormLabel>
-            <Textarea
-              value={projectName}
-              minRows={3}
-              placeholder="Project 02...."
-              readOnly
-            ></Textarea>
-          </FormControl>
-          <FormControl>
-            <FormLabel>Enter Task Decription</FormLabel>
-            <Textarea
-              placeholder="Task:........"
-              value={taskDescription}
-              minRows={3}
-              onChange={(e) => setTaskDescription(e.target.value)}
-            ></Textarea>
-          </FormControl>
-          <FormControl>
-            <FormLabel>Select Work Type</FormLabel>
-            <Select
-              placeholder="Select Work Type"
-              onChange={(e, newValue) => setSelectedWorkType(newValue)}
+            <FormControl>
+              <FormLabel>Assign Deadline</FormLabel>
+              <Input
+                type="date"
+                onChange={(e) => setDeadline(e.target.value.toString())}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Remarks</FormLabel>
+              <Textarea
+                minRows={3}
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Remarks:......"
+              ></Textarea>
+            </FormControl>
+            <Button
+              size="md"
+              variant="soft"
+              color="primary"
+              loading={assigning}
+              startDecorator={<AddTask />}
+              onClick={assignTask}
             >
-              {workTypeData.map((workType) => (
-                <Option key={workType.id} value={workType.id}>
-                  {workType.work_type}
-                </Option>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <FormLabel>Assigned By</FormLabel>
-            <Input
-              readOnly
-              value={assignedByEmployee}
-              onChange={(e) => setAssignedByEmployee(e.target.value)}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Assign Deadline</FormLabel>
-            <Input
-              type="date"
-              onChange={(e) => setDeadline(e.target.value.toString())}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Remarks</FormLabel>
-            <Textarea
-              minRows={3}
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              placeholder="Remarks:......"
-            ></Textarea>
-          </FormControl>
-          <Button
-            size="md"
-            variant="soft"
-            color="primary"
-            loading={assigning}
-            startDecorator={<AddTask />}
-            onClick={assignTask}
-          >
-            Assign Task
-          </Button>
-        </Stack>
-      </Box>
+              Assign Task
+            </Button>
+          </Stack>
+        </Box>
+      </Drawer>
       <Toast
         open={showToast}
         status={toastStatus}
         message={toastMessage}
         onClose={() => setShowToast(false)}
       />
-    </Drawer>
+    </>
   );
 };
 

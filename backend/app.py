@@ -358,6 +358,38 @@ def getProjectHistoryData():
     else:
         return jsonify(project_hist), 200
 
+@app.route("/getEmployeeReport",methods=["GET"])
+def getEmployeeReportData():
+    params = request.args
+    empName = params.get("employeeName")
+    fromDate = params.get("from")
+    toDate = params.get("to")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""  SELECT ph."ProjectHistoryID", ph."EventDate", pm."ProjectCode", pm."ProjectName", ph."Event", ph."Remarks", wm."WorkType", CASE WHEN ph."IsRework" = true THEN 'Rework' ELSE 'Not a Rework' END AS "IsRework", ph."TimeSpent"
+                        FROM "ProjectHistory" ph
+                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
+                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                        JOIN "WorkTypeMaster" wm ON ph."WorkTypeID" = wm."WorkTypeID"
+                        WHERE um."EmpName" = %s
+                        AND ph."IsHistory" = FALSE
+                        AND ph."ChangeStatus?" = FALSE
+                        AND ph."EventDate" >= %s
+                        AND ph."EventDate" <= %s
+                        ORDER BY ph."EventDate" DESC """,[empName, fromDate, toDate])
+    
+    employeeReport = [{ "id" : row[0], "eventDate" : row[1],"projectDetails" : row[2]+" : "+row[3], "event" : row[4], "remarks" : row[5], "workType" : row[6], "isRework" : row[7], "timeSpent" : row[8] }for row in cursor.fetchall()]
+    
+    if(len(employeeReport) == 0):
+        return jsonify({
+            "status" : "NOT_FOUND",
+            "message" : empName+" Report not Found"
+        }), 404
+    else:
+        return jsonify(employeeReport), 200
+
 @app.route("/getTaskUpdates/<id>",methods={"GET"})
 def getTaskUpdates(id):
     conn = get_db_connection()

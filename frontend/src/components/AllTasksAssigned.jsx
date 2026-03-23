@@ -268,7 +268,7 @@ const AllTasksAssigned = () => {
                       {isOverdue ? (
                         <Chip variant="solid" color="danger">
                           Overdue by <br />
-                          {deadline.getDay() - today.getDay()} days
+                          {today.getDay() - deadline.getDay()} days
                         </Chip>
                       ) : task.status === "Completed" ? (
                         <Chip variant="soft" color="success">
