@@ -105,6 +105,8 @@ def get_project_data(code):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    print("Project Code: ",code)
+    
     cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[code,])
     project_details = cursor.fetchone()
     
@@ -611,6 +613,90 @@ def dashboard_tasks_under_review(user):
     # tasks_under_review = [{ "id" : row[0], "taskDesc" : row[1], "emp_name" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "status" : row[6], "deadline" : row[7], "date_of_entry" : row[8] } for row in cursor.fetchall() ]
     
     return jsonify(tasks_under_review), 200
+
+@app.route("/getDirectorMeetings",methods=["GET","POST"])
+def getDirectorMeetings():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "MeetingDate", "ParticipantDirectors", "ParticipantStaff", 
+                   "MeetingTitle", "MOMPoints", "CrucialDecisions", "Remarks" 
+                   FROM "DirectorMeetingMaster" ORDER BY "MeetingDate" DESC; """);
+    
+    directorMeetings = [{ "meetingDate" : row[0], 
+                         "participantDirectors" : row[1], 
+                         "participantStaff" : row[2],
+                         "meetingTitle" : row[3],
+                         "momPoints" : row[4],
+                         "crucialdecisions" : row[5],
+                         "remarks" : row[6] }for row in cursor.fetchall()]
+    
+    return jsonify(directorMeetings), 200
+
+@app.route("/getDirectors",methods=["GET"])
+def getDirectors():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""  SELECT um."UserID", um."EmpName"
+                        FROM "UserMaster" um 
+                        JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID"
+                        WHERE dm."DesignationName" LIKE '%DIRECTOR%'; """)
+    
+    directors = [{"id" : row[0], "name": row[1]} for row in cursor.fetchall()]
+    return jsonify(directors), 200
+
+@app.route("/getStaff", methods=["GET"])
+def getStaff():
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""  SELECT um."UserID", um."EmpName" FROM "UserMaster" um 
+                        JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID"
+                        WHERE dm."DesignationName" NOT LIKE '%DIRECTOR%' 
+                        ORDER BY um."EmpName" ASC; """)
+    
+    staff_present = [{"id" : row[0], "name" : row[1]} for row in cursor.fetchall()]
+    
+    return jsonify(staff_present), 200
+
+@app.route("/updateProfile/<id>",methods=["PUT"])
+def updateProfile(id):
+    formdata = request.form
+    username = formdata.get("username")
+    useremail = formdata.get("email")
+    usermobile = formdata.get("mobile")
+    if "+91" not in usermobile:
+        mobileNo = "+91 "+usermobile
+    else:
+        mobileNo = usermobile
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" UPDATE "UserMaster" 
+                   SET "UserName" = %s, "UserEmail" = %s, "UserMobile" = %s 
+                   WHERE "UserID" = %s """,[username, useremail, mobileNo, id])
+    
+    conn.commit()
+    
+    return jsonify(), 200
+
+@app.route("/getProfile/<name>",methods=["GET"])
+def getProfile(name):
+    empName = unquote(name)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""  SELECT um."UserID", um."UserName", bm."BranchName", um."UserEmail", um."UserCategory", um."UserMobile"
+                        FROM "UserMaster" um
+                        JOIN "BranchMaster" bm ON um."BranchID" = bm."BranchID"
+                        WHERE um."EmpName" = %s """,[empName,])
+    
+    row = cursor.fetchone()
+    user_details = { "id" : row[0], "username" : row[1], "branch" : row[2], "email" : row[3], "role" : row[4], "mobile" : row[5] }
+    
+    return jsonify(user_details), 200
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0",port = 5002, debug = True)

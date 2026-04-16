@@ -21,9 +21,9 @@ import { downloadReport } from "../hooks/downloadReport";
 import Toast from "../components/Toast";
 
 const TasksPerformedReport = () => {
-  // useEffect(() => {
-  //   axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
-  // }, []);
+  useEffect(() => {
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+  }, []);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -49,7 +49,7 @@ const TasksPerformedReport = () => {
   useEffect(() => {
     setEmployeeLoading(true);
     axios
-      .get("http://localhost:5002/get_employee_names")
+      .get("/get_employee_names")
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
@@ -65,11 +65,37 @@ const TasksPerformedReport = () => {
       .finally(() => setEmployeeLoading(false));
   }, []);
 
+  const formatString = (date) => {
+    const dateOfEntry = new Date(date);
+    const day = dateOfEntry.getDay();
+    const dayName = dateOfEntry.toLocaleDateString("en-IN", {
+      weekday: "short",
+    });
+    const month = dateOfEntry.toLocaleDateString("en-IN", { month: "short" });
+    const year = dateOfEntry.getFullYear();
+
+    const getOrdinal = (n) => {
+      if (n > 3 && n < 21) return "th";
+      switch (n % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    return `${dayName} ${day}${getOrdinal(day)} ${month} ${year}`;
+  };
+
   const search = (event) => {
     event.preventDefault();
     setReportLoading(true);
     axios
-      .get("http://localhost:5002/getEmployeeReport", {
+      .get("/getEmployeeReport", {
         params: {
           employeeName: selectedEmployee,
           from: fromDate,
@@ -122,7 +148,7 @@ const TasksPerformedReport = () => {
 
   const download = (event) => {
     event.preventDefault();
-    const pdfTitle = `Employee Report Of ${selectedEmployee} from ${fromDate} to ${toDate}`;
+    const pdfTitle = `Employee Report Of ${selectedEmployee} from ${formatString(fromDate)} to ${formatString(toDate)}`;
 
     downloadReport(reportData, "performed", pdfTitle);
   };
@@ -134,12 +160,12 @@ const TasksPerformedReport = () => {
       </div>
       <div className="main justify-center items-center text-center">
         <Typography level="h3">Tasks Performed Report</Typography>
-        <div className="flex justify-center items-center text-center">
+        <div className="flex justify-center items-center text-center mx-auto">
           <div className="shadow-lg box-border rounded-md m-3 p-5 w-3xl">
             <div className="title my-1">
               <Typography level="title-lg">Employee Task Report</Typography>
             </div>
-            <div className="form flex flex-col my-5">
+            <div className="form flex flex-col my-5 w-sm">
               <FormControl>
                 <FormLabel sx={{ textAlign: "center" }}>
                   Select Employee Name
@@ -154,8 +180,8 @@ const TasksPerformedReport = () => {
                   }
                 />
               </FormControl>
-              <div className="dates flex justify-center my-3">
-                <FormControl sx={{ mx: 3 }}>
+              <div className="dates flex justify-start items-start text-start my-3">
+                <FormControl>
                   <FormLabel>From</FormLabel>
                   <Input
                     type="date"
@@ -163,7 +189,7 @@ const TasksPerformedReport = () => {
                     onChange={(e) => setFromDate(e.target.value)}
                   />
                 </FormControl>
-                <FormControl>
+                <FormControl sx={{ mx: 3 }}>
                   <FormLabel>To</FormLabel>
                   <Input
                     type="date"
@@ -192,7 +218,7 @@ const TasksPerformedReport = () => {
               </div>
             </div>
           </div>
-          <div className="table-div w-full shadow-lg rounded-xl p-3">
+          <div className="table-div w-full shadow-lg rounded-xl p-3 mx-auto">
             <Typography level="title-lg" sx={{ mx: 5 }}>
               {title}
             </Typography>
@@ -217,15 +243,15 @@ const TasksPerformedReport = () => {
                 >
                   <thead>
                     <tr>
-                      <th className="w-14">Sr.No</th>
-                      <th className="w-14">Event Date</th>
-                      <th className="w-14">Task ID</th>
-                      <th className="w-14">Work Type</th>
-                      <th className="w-14">Project Details</th>
-                      <th className="w-14">Event Desc.</th>
-                      <th className="w-14">Time Spent</th>
-                      <th className="w-14">Is it a rework?</th>
-                      <th className="w-14">Remarks</th>
+                      <th className="w-5">Sr.No</th>
+                      <th className="w-10">Event Date</th>
+                      <th className="w-5">Task ID</th>
+                      <th className="w-10">Work Type</th>
+                      <th className="w-15">Project Details</th>
+                      <th className="w-15">Event Desc.</th>
+                      <th className="w-8">Time Spent</th>
+                      <th className="w-11">Is it a rework?</th>
+                      <th className="w-13">Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -308,7 +334,7 @@ const TasksPerformedReport = () => {
                         paginatedData.map((element, index) => (
                           <tr>
                             <td>{startIndex + index + 1}</td>
-                            <td>{element.eventDate}</td>
+                            <td>{formatString(element.eventDate)}</td>
                             <td>{element.id}</td>
                             <td>{element.workType}</td>
                             <td>{element.projectDetails}</td>

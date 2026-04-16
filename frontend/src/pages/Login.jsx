@@ -32,7 +32,7 @@ const Login = () => {
     if (sessionStorage.getItem("empName")) {
       navigate("/dashboard");
     }
-  }, []);
+  }, [navigate]);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -112,10 +112,10 @@ const Login = () => {
           {/* Animation */}
           <div className="flex w-full md:w-1/2 md:flex-2 justify-center">
             <DotLottieReact
-              src="https://lottie.host/dd0592d7-45b7-43b9-9eda-6eaefdf12b9d/n2rwX61ovC.lottie"
+              src="https://lottie.host/da195e13-e534-42c2-96b0-47981986cd4f/qt5oPHsj7k.lottie"
               style={{
-                maxWidth: 400,
-                height: 400,
+                width: 550,
+                height: 500,
               }}
               loop
               autoplay

@@ -11,6 +11,7 @@ import {
   Textarea,
   Input,
   Button,
+  Autocomplete,
 } from "@mui/joy";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -37,6 +38,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [projectCodeLoading, setProjectCodeLoading] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
   const location = useLocation();
@@ -48,13 +50,18 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
     setProjectData(projects);
     setWorkTypeData(workTypes);
     setEmployeeData(employees);
+    setProjectCodeLoading(true);
     if (!selectedProjectCode) return;
-    axios.get(`/get_project_data/${selectedProjectCode}`).then((res) => {
-      if (res.status === 200) {
-        const data = res.data;
-        setProjectName(data.project_name);
-      }
-    });
+    axios
+      .get(`/get_project_data/${selectedProjectCode}`)
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setProjectName(data.project_name);
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setProjectCodeLoading(false));
   }, [projects, workTypes, employees, selectedProjectCode]);
 
   const resetForm = () => {
@@ -156,16 +163,18 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
             <Box sx={{ display: "flex", gap: 2 }}>
               <FormControl sx={{ flex: 1 }}>
                 <FormLabel>Project Code</FormLabel>
-                <Select
-                  placeholder="Select Code"
-                  onChange={(e, newValue) => setSelectedProjectCode(newValue)}
-                >
-                  {projectData.map((project) => (
-                    <Option key={project.id} value={project.id}>
-                      {project.code}
-                    </Option>
-                  ))}
-                </Select>
+                <Autocomplete
+                  placeholder="Search Project Code"
+                  loading={projectCodeLoading}
+                  options={projectData}
+                  sx={{ width: 190 }}
+                  getOptionLabel={(option) => option.code}
+                  onChange={(event, newValue) => {
+                    setSelectedProjectCode(newValue?.code || "");
+                    setProjectName("Loading Project...");
+                  }}
+                  onAbort={(event) => setProjectName("")}
+                />
               </FormControl>
               <FormControl>
                 <FormLabel>Assigning To</FormLabel>

@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   Link as JoyLink,
+  ListItemButton,
 } from "@mui/joy";
 import {
   ArrowDropDown,
@@ -34,6 +35,7 @@ import {
 import TasksAssigned from "./TasksAssigned";
 import ProjectHistory from "./ProjectHistory";
 import axios from "axios";
+import SettingsModal from "./SettingsModal";
 
 const Navbar = () => {
   const location = useLocation();
@@ -45,6 +47,7 @@ const Navbar = () => {
   const [employeeData, setEmployeeData] = useState([]);
   const [workTypeData, setWorkTypeData] = useState([]);
   const [drawerType, setDrawerType] = useState("");
+  const [settingsModal, setSettingsModal] = useState(false);
 
   const logout = () => {
     sessionStorage.clear();
@@ -239,7 +242,30 @@ const Navbar = () => {
                 </li>
               )}
               <li>
-                <Dropdown>
+                <ListItemButton
+                  sx={{
+                    color: "#fff",
+                    mx: "1rem",
+                    px: 0,
+                    minHeight: "auto",
+                    background: "transparent",
+                    fontWeight: "normal",
+                    fontSize: "inherit",
+                    cursor: "pointer",
+                    "&:hover": {
+                      background: "transparent !important",
+                      color: "#f4d35e",
+                    },
+                    textAlign: "center",
+                    margin: "0, auto",
+                  }}
+                  onClick={() => setSettingsModal(true)}
+                >
+                  <Avatar size="sm" sx={{ cursor: "pointer" }}>
+                    {getInitials(sessionStorage.getItem("empName"))}
+                  </Avatar>
+                </ListItemButton>
+                {/* <Dropdown>
                   <MenuButton
                     variant="plain"
                     sx={{
@@ -260,21 +286,13 @@ const Navbar = () => {
                       margin: "0, auto",
                     }}
                   >
-                    <Box display={"flex"} ml={3}>
-                      <Avatar size="sm">
-                        {getInitials(sessionStorage.getItem("empName"))}
-                      </Avatar>
-                      <ArrowDropDown />
-                    </Box>
+                    
                   </MenuButton>
-                  <Menu>
+                  <Menu sx={{ p: 1 }}>
                     <MenuItem>
-                      <Person /> Profile Settings
+                      <Settings /> Settings
                     </MenuItem>
-                    <MenuItem>
-                      <Key /> Password Settings
-                    </MenuItem>
-                    <Divider sx={{ my: 3 }} orientation="horizontal" />
+                    <Divider sx={{ my: 2 }} orientation="horizontal" />
                     <MenuItem
                       variant="soft"
                       color="danger"
@@ -283,7 +301,7 @@ const Navbar = () => {
                       <Logout /> Logout
                     </MenuItem>
                   </Menu>
-                </Dropdown>
+                </Dropdown> */}
               </li>
             </ul>
           </div>
@@ -303,6 +321,10 @@ const Navbar = () => {
         projects={projectData}
         employees={employeeData}
         workTypes={workTypeData}
+      />
+      <SettingsModal
+        open={settingsModal}
+        onClose={() => setSettingsModal(false)}
       />
     </div>
   );
