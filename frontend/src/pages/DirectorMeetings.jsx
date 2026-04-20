@@ -40,13 +40,13 @@ const DirectorMeetings = () => {
     if (!designation.toUpperCase().includes("DIRECTOR")) {
       setAccessDenied(true);
     }
-    // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
   }, []);
 
   useEffect(() => {
     setLoadingMeeting(true);
     axios
-      .get("http://localhost:5002/getDirectorMeetings")
+      .get("/getDirectorMeetings")
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
