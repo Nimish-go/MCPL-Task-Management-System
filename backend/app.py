@@ -577,7 +577,7 @@ def dashboard_tasks_assigned(user):
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
                        WHERE ph."ChangeStatus?" = true AND ph."UserID" = %s ORDER BY ph."ProjectHistoryID" ASC """,[user_id[0],])
     
-    tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_to" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "deadline" : row[6], "date_of_entry" : row[7], "status" : row[8] } for row in cursor.fetchall()]
+    tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_by" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "deadline" : row[6], "date_of_entry" : row[7], "status" : row[8] } for row in cursor.fetchall()]
     
     return jsonify(tasks_assigned), 200
 
@@ -614,25 +614,6 @@ def dashboard_tasks_under_review(user):
     
     return jsonify(tasks_under_review), 200
 
-@app.route("/getDirectorMeetings",methods=["GET","POST"])
-def getDirectorMeetings():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute(""" SELECT "MeetingDate", "ParticipantDirectors", "ParticipantStaff", 
-                   "MeetingTitle", "MOMPoints", "CrucialDecisions", "Remarks" 
-                   FROM "DirectorMeetingMaster" ORDER BY "MeetingDate" DESC; """);
-    
-    directorMeetings = [{ "meetingDate" : row[0], 
-                         "participantDirectors" : row[1], 
-                         "participantStaff" : row[2],
-                         "meetingTitle" : row[3],
-                         "momPoints" : row[4],
-                         "crucialdecisions" : row[5],
-                         "remarks" : row[6] }for row in cursor.fetchall()]
-    
-    return jsonify(directorMeetings), 200
-
 @app.route("/getDirectors",methods=["GET"])
 def getDirectors():
     conn = get_db_connection()
@@ -641,10 +622,42 @@ def getDirectors():
     cursor.execute("""  SELECT um."UserID", um."EmpName"
                         FROM "UserMaster" um 
                         JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID"
-                        WHERE dm."DesignationName" LIKE '%DIRECTOR%'; """)
+                        WHERE dm."DesignationCode" LIKE '%DIR%'; """)
     
     directors = [{"id" : row[0], "name": row[1]} for row in cursor.fetchall()]
     return jsonify(directors), 200
+
+
+# @app.route("/addDirectorMeetingRecord", methods=["POST"])
+# def addDirectorMeetingRecord():
+    
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
+    
+#     cursor.execute(""" INSERT INTO "DirectorMeetingMaster"
+#                    ("MeetingDate", "MeetingTitle", "NextMeetingDate", 
+#                    "CrucialDecisions", "ParticipantDirectors", "ParticipantStaff", 
+#                    "MOMPoints", "Remarks", "isEdited", "MeetingAgenda", "AgendaPoints")
+#                    VALUES (%s, %s, %s, ) """)
+    
+#     return jsonify(), 200
+
+@app.route("/getDirectorMeetings",methods=["GET"])
+def getDirectorMeetings():
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "MeetingId", "MeetingDate", "ParticipantDirectors", "ParticipantStaff", 
+                   "MOMPoints", "CrucialDecisions", "MeetingTitle", "Remarks", "MeetingAgenda" 
+                   FROM "DirectorMeetingMaster" ORDER BY "MeetingDate" ASC; """)
+    
+    directorMeetings = [{"id": row[0], "meetingDate": row[1], "directors": row[2], 
+                        "staff": row[3], "mom": row[4], "crucialDecisions": row[5], 
+                        "meetingTitle" : row[6], "remarks": row[7], "agenda": row[8]}
+                       for row in cursor.fetchall()]
+    
+    return jsonify(directorMeetings), 200
 
 @app.route("/getStaff", methods=["GET"])
 def getStaff():
@@ -652,12 +665,12 @@ def getStaff():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("""  SELECT um."UserID", um."EmpName" FROM "UserMaster" um 
+    cursor.execute("""  SELECT um."UserID", um."EmpName", dm."DesignationName" FROM "UserMaster" um 
                         JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID"
-                        WHERE dm."DesignationName" NOT LIKE '%DIRECTOR%' 
+                        WHERE dm."DesignationCode" NOT LIKE '%DIR%' 
                         ORDER BY um."EmpName" ASC; """)
     
-    staff_present = [{"id" : row[0], "name" : row[1]} for row in cursor.fetchall()]
+    staff_present = [{"id" : row[0], "name" : row[1], "designation" : row[2]} for row in cursor.fetchall()]
     
     return jsonify(staff_present), 200
 

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
 import {
   Box,
   Button,
+  Chip,
   ListItemDecorator,
   Skeleton,
   Switch,
@@ -14,33 +14,52 @@ import {
   Typography,
 } from "@mui/joy";
 import {
-  AddBusiness,
   AddCircle,
   CreateNewFolder,
   Engineering,
   FolderCopy,
-  Groups2,
   Groups3,
   PersonAdd,
+  Warning,
 } from "@mui/icons-material";
 import axios from "axios";
 import AdminPanelAdd from "../components/AdminPanelAdd";
 import MarkInactive from "../components/MarkInactive";
+import Navbar from "../components/Navbar";
+
+const SIDEBAR_W = 68; // collapsed sidebar width
+
+const thStyle = {
+  padding: "12px 16px",
+  textAlign: "left",
+  color: "rgba(255,255,255,0.85)",
+  fontWeight: 700,
+  fontSize: "0.72rem",
+  letterSpacing: "0.05em",
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+  borderRight: "1px solid rgba(255,255,255,0.1)",
+};
+
+const tdStyle = {
+  padding: "11px 16px",
+  fontSize: "0.82rem",
+  color: "#1e293b",
+  verticalAlign: "middle",
+  borderBottom: "1px solid #f0f2f8",
+};
 
 const AdminPanel = () => {
   const [employees, setEmployees] = useState([]);
   const [workTypes, setWorkTypes] = useState([]);
   const [projects, setProjects] = useState([]);
   const [inactiveSwitch, setInactiveSwitch] = useState(null);
-
   const [type, setType] = useState("");
   const [open, setOpen] = useState(false);
   const [inactiveModal, setInactiveModal] = useState(false);
   const [inactiveEmployee, setInactiveEmployee] = useState("");
-
   const [designation, setDesignation] = useState([]);
   const [branch, setBranch] = useState([]);
-
   const [loading, setLoading] = useState(false);
   const [organisations, setOrganisations] = useState([]);
 
@@ -58,23 +77,18 @@ const AdminPanel = () => {
           setOrganisations(data.organisations);
         }
       })
-      .catch((err) => {
-        console.error(err);
-      })
+      .catch(console.error)
       .finally(() => setLoading(false));
 
     axios
       .get("/getDesignationAndBranch")
       .then((res) => {
         if (res.status === 200) {
-          const data = res.data;
-          setDesignation(data.designations);
-          setBranch(data.branches);
+          setDesignation(res.data.designations);
+          setBranch(res.data.branches);
         }
       })
-      .catch((err) => {
-        console.error(err);
-      });
+      .catch(console.error);
   }, []);
 
   const handleMarkInactive = (name) => {
@@ -82,355 +96,645 @@ const AdminPanel = () => {
     setInactiveModal(true);
   };
 
-  return (
-    <div className="w-screen min-w-full h-screen overflow-y-auto">
-      <div className="navbar-container">
-        <Navbar />
-      </div>
-      <Box sx={{ width: "95%", mx: "auto", mt: 3 }}>
-        <Tabs defaultValue={0}>
-          {/* TAB HEADERS */}
-          <TabList>
-            <Tab value={0}>
-              <ListItemDecorator>
-                <Groups3 />
-              </ListItemDecorator>{" "}
-              Employees
-            </Tab>
-            <Tab value={1}>
-              <ListItemDecorator>
-                <FolderCopy />
-              </ListItemDecorator>{" "}
-              Projects
-            </Tab>
-            <Tab value={2}>
-              <ListItemDecorator>
-                <Engineering />
-              </ListItemDecorator>{" "}
-              Work Types
-            </Tab>
-          </TabList>
+  const SectionHeader = ({ title, buttonLabel, buttonIcon, onAdd }) => (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        mb: 3,
+        pb: 2,
+        borderBottom: "2px solid #f0f2f8",
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            width: 4,
+            height: 28,
+            borderRadius: "4px",
+            background: "linear-gradient(180deg, #1976d2, #42a5f5)",
+          }}
+        />
+        <Typography level="title-lg" sx={{ fontWeight: 700, color: "#0f1b35" }}>
+          {title}
+        </Typography>
+        <Chip size="sm" variant="soft" color="primary" sx={{ fontWeight: 600 }}>
+          {title === "Active Employees"
+            ? employees.length
+            : title === "All Projects"
+              ? projects.length
+              : workTypes.length}{" "}
+          records
+        </Chip>
+      </Box>
+      <Button
+        variant="solid"
+        color="primary"
+        startDecorator={buttonIcon}
+        onClick={onAdd}
+        sx={{
+          borderRadius: "10px",
+          fontWeight: 600,
+          fontSize: "0.85rem",
+          background: "linear-gradient(135deg, #1565c0, #1976d2)",
+          boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+          "&:hover": {
+            background: "linear-gradient(135deg, #0d47a1, #1565c0)",
+            boxShadow: "0 6px 16px rgba(25,118,210,0.4)",
+          },
+        }}
+      >
+        {buttonLabel}
+      </Button>
+    </Box>
+  );
 
-          {/* ================= EMPLOYEES TAB ================= */}
-          <TabPanel value={0}>
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              mb={2}
+  const skeletonRows = (cols) =>
+    Array.from({ length: 8 }).map((_, i) => (
+      <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}>
+        {Array.from({ length: cols }).map((_, j) => (
+          <td key={j} style={tdStyle}>
+            <Skeleton variant="text" animation="wave" height={20} />
+          </td>
+        ))}
+      </tr>
+    ));
+
+  const TableWrapper = ({ children }) => (
+    <Box
+      sx={{
+        borderRadius: "14px",
+        border: "1px solid #e8ecf4",
+        overflow: "hidden",
+        boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+      }}
+    >
+      <Box sx={{ overflowX: "auto", maxHeight: 480, overflowY: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            tableLayout: "fixed",
+          }}
+        >
+          {children}
+        </table>
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Box
+      sx={{
+        ml: `${SIDEBAR_W}px`, // offset for collapsed sidebar
+        minHeight: "100vh",
+        backgroundColor: "#f4f6fb",
+      }}
+    >
+      <Navbar />
+      {/* Page Header */}
+      <Box
+        sx={{
+          background:
+            "linear-gradient(135deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
+          px: { xs: 3, md: 5 },
+          py: 3,
+          mb: 0,
+        }}
+      >
+        <Typography
+          level="h4"
+          sx={{ color: "#fff", fontWeight: 800, letterSpacing: "-0.02em" }}
+        >
+          Admin Panel
+        </Typography>
+        <Typography
+          level="body-sm"
+          sx={{ color: "rgba(255,255,255,0.65)", mt: 0.5 }}
+        >
+          Manage employees, projects and work types
+        </Typography>
+      </Box>
+
+      {/* Main Content */}
+      <Box sx={{ px: { xs: 2, md: 4 }, py: 4 }}>
+        <Box
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "20px",
+            boxShadow: "0 4px 32px rgba(0,0,0,0.07)",
+            border: "1px solid #e8ecf4",
+            overflow: "hidden",
+          }}
+        >
+          <Tabs defaultValue={0}>
+            <TabList
+              sx={{
+                px: 3,
+                pt: 2,
+                gap: 1,
+                backgroundColor: "transparent",
+                borderBottom: "2px solid #f0f2f8",
+                "& .MuiTab-root": {
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  borderRadius: "10px 10px 0 0",
+                  color: "#64748b",
+                  border: "none",
+                  py: 1.2,
+                  px: 2.5,
+                  transition: "all 0.2s ease",
+                  "&:hover": { backgroundColor: "#f0f4ff", color: "#1976d2" },
+                  "&.Mui-selected": {
+                    color: "#1976d2",
+                    backgroundColor: "#e8f0fe",
+                    fontWeight: 700,
+                  },
+                },
+              }}
             >
-              <Typography level="title-lg">Active Employees</Typography>
-              <Button
-                variant="solid"
-                color="primary"
-                sx={{ mx: 3 }}
-                onClick={() => {
+              <Tab value={0} disableIndicator>
+                <ListItemDecorator sx={{ mr: 0.5 }}>
+                  <Groups3 sx={{ fontSize: "1rem" }} />
+                </ListItemDecorator>
+                Employees
+              </Tab>
+              <Tab value={1} disableIndicator>
+                <ListItemDecorator sx={{ mr: 0.5 }}>
+                  <FolderCopy sx={{ fontSize: "1rem" }} />
+                </ListItemDecorator>
+                Projects
+              </Tab>
+              <Tab value={2} disableIndicator>
+                <ListItemDecorator sx={{ mr: 0.5 }}>
+                  <Engineering sx={{ fontSize: "1rem" }} />
+                </ListItemDecorator>
+                Work Types
+              </Tab>
+            </TabList>
+
+            {/* ── Employees Tab ───────────────────────────────── */}
+            <TabPanel value={0} sx={{ p: 3 }}>
+              <SectionHeader
+                title="Active Employees"
+                buttonLabel="Add An Employee"
+                buttonIcon={<PersonAdd sx={{ fontSize: "1rem" }} />}
+                onAdd={() => {
                   setType("employee");
                   setOpen(true);
                 }}
-              >
-                <PersonAdd sx={{ mr: 1 }} /> Add An Employee
-              </Button>
-            </Box>
-
-            <Box
-              sx={{
-                height: "400px",
-                overflow: "auto",
-                width: "80%",
-                mx: "auto",
-              }}
-            >
-              <Table
-                borderAxis="yBetween"
-                color="primary"
-                variant="soft"
-                stickyHeader
-                sx={{
-                  width: "100%",
-                  tableLayout: "fixed",
-                  justifyContent: "center",
-                  textAlign: "center",
-                }}
-              >
+              />
+              <TableWrapper>
                 <thead>
-                  <tr>
-                    <th className="w-10">Sr. No</th>
-                    <th className="w-10">Employee Id</th>
-                    <th className="w-25">Employee Name</th>
-                    <th className="w-23">Designation</th>
-                    <th className="w-17">Branch</th>
-                    <th className="w-17">Mark Inactive</th>
+                  <tr
+                    style={{
+                      background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                    }}
+                  >
+                    {[
+                      "#",
+                      "Employee ID",
+                      "Employee Name",
+                      "Designation",
+                      "Branch",
+                      "Mark Inactive",
+                    ].map((h, i, arr) => (
+                      <th
+                        key={h}
+                        style={{
+                          ...thStyle,
+                          borderRight:
+                            i < arr.length - 1 ? thStyle.borderRight : "none",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {loading
-                    ? Array.from({ length: 8 }).map((_, index) => (
-                        <tr key={index}>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={30}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={80}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={140}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={120}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={100}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="rectangular"
-                              width={120}
-                              height={32}
-                              animation="wave"
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    : employees.map((employee, index) => (
-                        <tr key={employee.id}>
-                          <td>{index + 1}</td>
-                          <td>{employee.id}</td>
-                          <td>{employee.name}</td>
-                          <td>{employee.designation}</td>
-                          <td>{employee.branch}</td>
-                          <td>
-                            <Box display={"flex"}>
-                              <Typography level="body-md" mx={1} color="danger">
-                                Mark as Inactive
-                              </Typography>
-                              <Switch
-                                variant="plain"
-                                color="danger"
-                                checked={inactiveSwitch === employee.name}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setInactiveSwitch(employee.name);
-                                    handleMarkInactive(employee.name);
-                                  } else {
-                                    setInactiveSwitch(null);
-                                  }
+                  {loading ? (
+                    skeletonRows(6)
+                  ) : employees.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={tdStyle}>
+                        <Box sx={{ textAlign: "center", py: 6 }}>
+                          <Typography
+                            level="title-sm"
+                            sx={{ color: "#90a4ae" }}
+                          >
+                            No employees found
+                          </Typography>
+                        </Box>
+                      </td>
+                    </tr>
+                  ) : (
+                    employees.map((employee, index) => (
+                      <tr
+                        key={employee.id}
+                        style={{
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#f0f4ff")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            index % 2 === 0 ? "#fff" : "#fafbff")
+                        }
+                      >
+                        <td style={tdStyle}>
+                          <Box
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: "50%",
+                              backgroundColor: "#e8f0fe",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                color: "#1976d2",
+                              }}
+                            >
+                              {index + 1}
+                            </Typography>
+                          </Box>
+                        </td>
+                        <td style={tdStyle}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              fontWeight: 600,
+                              color: "#1976d2",
+                            }}
+                          >
+                            #{employee.id}
+                          </Typography>
+                        </td>
+                        <td style={tdStyle}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1.5,
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #1565c0, #42a5f5)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                                boxShadow: "0 2px 6px rgba(25,118,210,0.25)",
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  color: "#fff",
+                                  fontSize: "0.72rem",
+                                  fontWeight: 700,
                                 }}
-                              />
+                              >
+                                {employee.name?.charAt(0).toUpperCase()}
+                              </Typography>
                             </Box>
-                          </td>
-                        </tr>
-                      ))}
+                            <Typography
+                              sx={{ fontSize: "0.82rem", fontWeight: 500 }}
+                            >
+                              {employee.name}
+                            </Typography>
+                          </Box>
+                        </td>
+                        <td style={tdStyle}>
+                          <Chip
+                            size="sm"
+                            sx={{
+                              backgroundColor: "#f0f4ff",
+                              color: "#1565c0",
+                              fontWeight: 600,
+                              fontSize: "0.72rem",
+                              border: "1px solid #c5cae9",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            {employee.designation}
+                          </Chip>
+                        </td>
+                        <td style={tdStyle}>
+                          <Typography
+                            sx={{ fontSize: "0.82rem", color: "#475569" }}
+                          >
+                            {employee.branch}
+                          </Typography>
+                        </td>
+                        <td style={tdStyle}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Switch
+                              variant="plain"
+                              color="danger"
+                              size="sm"
+                              checked={inactiveSwitch === employee.name}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setInactiveSwitch(employee.name);
+                                  handleMarkInactive(employee.name);
+                                } else {
+                                  setInactiveSwitch(null);
+                                }
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                color:
+                                  inactiveSwitch === employee.name
+                                    ? "#c62828"
+                                    : "#94a3b8",
+                                transition: "color 0.2s ease",
+                              }}
+                            >
+                              {inactiveSwitch === employee.name
+                                ? "Marking..."
+                                : "Mark Inactive"}
+                            </Typography>
+                          </Box>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
-              </Table>
-            </Box>
-          </TabPanel>
+              </TableWrapper>
+            </TabPanel>
 
-          {/* ================= PROJECTS TAB ================= */}
-          <TabPanel value={1}>
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography level="title-lg">All Projects</Typography>
-              <Button
-                variant="solid"
-                color="primary"
-                sx={{ mx: 3 }}
-                onClick={() => {
+            {/* ── Projects Tab ────────────────────────────────── */}
+            <TabPanel value={1} sx={{ p: 3 }}>
+              <SectionHeader
+                title="All Projects"
+                buttonLabel="Add Project"
+                buttonIcon={<CreateNewFolder sx={{ fontSize: "1rem" }} />}
+                onAdd={() => {
                   setType("project");
                   setOpen(true);
                 }}
-              >
-                <CreateNewFolder sx={{ mr: 1 }} /> Add Project
-              </Button>
-            </Box>
-
-            <Box
-              sx={{
-                height: "400px",
-                overflow: "auto",
-                width: "80%",
-                mx: "auto",
-              }}
-            >
-              <Table
-                borderAxis="yBetween"
-                color="primary"
-                variant="soft"
-                stickyHeader
-                sx={{
-                  width: "100%",
-                  tableLayout: "fixed",
-                  textAlign: "center",
-                }}
-              >
+              />
+              <TableWrapper>
                 <thead>
-                  <tr>
-                    <th className="w-10">Sr. No</th>
-                    <th className="w-10">Project Id</th>
-                    <th className="w-10">Project Code</th>
-                    <th className="w-70">Project Name</th>
+                  <tr
+                    style={{
+                      background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                    }}
+                  >
+                    {["#", "Project ID", "Project Code", "Project Name"].map(
+                      (h, i, arr) => (
+                        <th
+                          key={h}
+                          style={{
+                            ...thStyle,
+                            borderRight:
+                              i < arr.length - 1 ? thStyle.borderRight : "none",
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
                 <tbody>
-                  {loading
-                    ? Array.from({ length: 8 }).map((_, index) => (
-                        <tr key={index}>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={30}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={80}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={140}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={120}
-                              animation="wave"
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    : projects.map((project, index) => (
-                        <tr key={project.id}>
-                          <td>{index + 1}</td>
-                          <td>{project.id}</td>
-                          <td>{project.code}</td>
-                          <td>{project.name}</td>
-                        </tr>
-                      ))}
+                  {loading ? (
+                    skeletonRows(4)
+                  ) : projects.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} style={tdStyle}>
+                        <Box sx={{ textAlign: "center", py: 6 }}>
+                          <Typography
+                            level="title-sm"
+                            sx={{ color: "#90a4ae" }}
+                          >
+                            No projects found
+                          </Typography>
+                        </Box>
+                      </td>
+                    </tr>
+                  ) : (
+                    projects.map((project, index) => (
+                      <tr
+                        key={project.id}
+                        style={{
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#f0f4ff")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            index % 2 === 0 ? "#fff" : "#fafbff")
+                        }
+                      >
+                        <td style={tdStyle}>
+                          <Box
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: "50%",
+                              backgroundColor: "#e8f0fe",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                color: "#1976d2",
+                              }}
+                            >
+                              {index + 1}
+                            </Typography>
+                          </Box>
+                        </td>
+                        <td style={tdStyle}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              fontWeight: 600,
+                              color: "#1976d2",
+                            }}
+                          >
+                            #{project.id}
+                          </Typography>
+                        </td>
+                        <td style={tdStyle}>
+                          <Chip
+                            size="sm"
+                            sx={{
+                              backgroundColor: "#e8f5e9",
+                              color: "#2e7d32",
+                              fontWeight: 700,
+                              fontSize: "0.72rem",
+                              border: "1px solid #a5d6a7",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            {project.code}
+                          </Chip>
+                        </td>
+                        <td style={tdStyle}>
+                          <Typography
+                            sx={{ fontSize: "0.82rem", fontWeight: 500 }}
+                          >
+                            {project.name}
+                          </Typography>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
-              </Table>
-            </Box>
-          </TabPanel>
+              </TableWrapper>
+            </TabPanel>
 
-          {/* ================= WORK TYPES TAB ================= */}
-          <TabPanel value={2}>
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography level="title-lg">Work Types</Typography>
-              <Button
-                variant="solid"
-                color="primary"
-                sx={{ mx: 3 }}
-                onClick={() => {
+            {/* ── Work Types Tab ──────────────────────────────── */}
+            <TabPanel value={2} sx={{ p: 3 }}>
+              <SectionHeader
+                title="Work Types"
+                buttonLabel="Add Work Type"
+                buttonIcon={<AddCircle sx={{ fontSize: "1rem" }} />}
+                onAdd={() => {
                   setType("workType");
                   setOpen(true);
                 }}
-              >
-                <AddCircle sx={{ mr: 1 }} /> Add Work Type
-              </Button>
-            </Box>
-
-            <Box
-              sx={{
-                height: "400px",
-                overflow: "auto",
-                width: "50%",
-                mx: "auto",
-              }}
-            >
-              <Table
-                borderAxis="yBetween"
-                color="primary"
-                variant="soft"
-                stickyHeader
-                sx={{
-                  width: "100%",
-                  tableLayout: "fixed",
-                  textAlign: "center",
-                  mx: "auto",
-                }}
-              >
+              />
+              <TableWrapper>
                 <thead>
-                  <tr>
-                    <th className="w-10">Sr. No</th>
-                    <th className="w-10">Work Type Id</th>
-                    <th className="w-33">Work Type</th>
+                  <tr
+                    style={{
+                      background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                    }}
+                  >
+                    {["#", "Work Type ID", "Work Type"].map((h, i, arr) => (
+                      <th
+                        key={h}
+                        style={{
+                          ...thStyle,
+                          borderRight:
+                            i < arr.length - 1 ? thStyle.borderRight : "none",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {loading
-                    ? Array.from({ length: 8 }).map((_, index) => (
-                        <tr key={index}>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={30}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={80}
-                              animation="wave"
-                            />
-                          </td>
-                          <td>
-                            <Skeleton
-                              variant="text"
-                              width={140}
-                              animation="wave"
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    : workTypes.map((workType, index) => (
-                        <tr key={workType.id}>
-                          <td>{index + 1}</td>
-                          <td>{workType.id}</td>
-                          <td>{workType.name}</td>
-                        </tr>
-                      ))}
+                  {loading ? (
+                    skeletonRows(3)
+                  ) : workTypes.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} style={tdStyle}>
+                        <Box sx={{ textAlign: "center", py: 6 }}>
+                          <Typography
+                            level="title-sm"
+                            sx={{ color: "#90a4ae" }}
+                          >
+                            No work types found
+                          </Typography>
+                        </Box>
+                      </td>
+                    </tr>
+                  ) : (
+                    workTypes.map((workType, index) => (
+                      <tr
+                        key={workType.id}
+                        style={{
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#f0f4ff")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            index % 2 === 0 ? "#fff" : "#fafbff")
+                        }
+                      >
+                        <td style={tdStyle}>
+                          <Box
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: "50%",
+                              backgroundColor: "#e8f0fe",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                color: "#1976d2",
+                              }}
+                            >
+                              {index + 1}
+                            </Typography>
+                          </Box>
+                        </td>
+                        <td style={tdStyle}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              fontWeight: 600,
+                              color: "#1976d2",
+                            }}
+                          >
+                            #{workType.id}
+                          </Typography>
+                        </td>
+                        <td style={tdStyle}>
+                          <Chip
+                            size="sm"
+                            sx={{
+                              backgroundColor: "#fff8e1",
+                              color: "#e65100",
+                              fontWeight: 600,
+                              fontSize: "0.72rem",
+                              border: "1px solid #ffcc80",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            {workType.name}
+                          </Chip>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
-              </Table>
-            </Box>
-          </TabPanel>
-        </Tabs>
+              </TableWrapper>
+            </TabPanel>
+          </Tabs>
+        </Box>
       </Box>
+
       <AdminPanelAdd
         type={type}
         open={open}
@@ -447,7 +751,7 @@ const AdminPanel = () => {
         }}
         employeeName={inactiveEmployee}
       />
-    </div>
+    </Box>
   );
 };
 

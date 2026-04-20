@@ -24,6 +24,7 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 import AddDirectorMeetingRecords from "../components/AddDirectorMeetingRecords";
+import ViewPastMeetings from "../components/ViewPastMeetings";
 
 const DirectorMeetings = () => {
   const [accessDenied, setAccessDenied] = useState(null);
@@ -43,7 +44,17 @@ const DirectorMeetings = () => {
   }, []);
 
   useEffect(() => {
-    axios.get("http://localhost:5002/");
+    setLoadingMeeting(true);
+    axios
+      .get("http://localhost:5002/getDirectorMeetings")
+      .then((res) => {
+        if (res.status === 200) {
+          const data = res.data;
+          setMeetingData(data);
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoadingMeeting(false));
   }, []);
 
   return (
@@ -67,8 +78,8 @@ const DirectorMeetings = () => {
             Schedule Next Meeting.
           </Button>
         </div>
-        <div className="flex justify-center items-center text-center my-1">
-          <Tabs color="primary">
+        <div className="flex justify-center items-center text-center my-1 overflow-x-hidden w-screen">
+          <Tabs color="primary" sx={{ width: "80%" }}>
             <TabList>
               <Tab indicatorInset value={0}>
                 <TableViewTwoTone /> View Past Meeting Records
@@ -78,10 +89,13 @@ const DirectorMeetings = () => {
               </Tab>
             </TabList>
             <TabPanel value={0}>
-              <></>
+              <ViewPastMeetings
+                meetingData={meetingData}
+                isLoading={lodingMeeting}
+              />
             </TabPanel>
             <TabPanel value={1}>
-              <AddDirectorMeetingRecords />
+              <AddDirectorMeetingRecords meetingData={meetingData} />
             </TabPanel>
           </Tabs>
         </div>

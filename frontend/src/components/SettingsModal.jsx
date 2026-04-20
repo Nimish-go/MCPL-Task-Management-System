@@ -49,9 +49,7 @@ const SettingsModal = ({ open, onClose }) => {
     // user_details = [{ "id" : row[0], "username" : row[1], "branch" : row[2], "email" : row[3], "role" : row[4], "mobile" : row[5] }]
     setLoading(true);
     axios
-      .get(
-        `/getProfile/${sessionStorage.getItem("empName")}`,
-      )
+      .get(`/getProfile/${sessionStorage.getItem("empName")}`)
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
@@ -227,7 +225,7 @@ const SettingsModal = ({ open, onClose }) => {
               {loading && (
                 <div className="flex flex-col justify-center items-center text-center">
                   <DotLottieReact
-                    src="https://lottie.host/0172602b-3675-4631-b9ae-bc4f514d0d25/8IxR5xfvpC.lottie"
+                    src="https://lottie.host/876ba248-54ac-48d0-a9dc-67747bd5b80a/0QJm3EJB8I.lottie"
                     loop
                     autoplay
                     className="h-100 w-100"
