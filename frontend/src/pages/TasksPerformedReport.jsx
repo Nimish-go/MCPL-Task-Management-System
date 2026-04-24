@@ -11,14 +11,62 @@ import {
   Input,
   Option,
   Select,
-  Skeleton,
-  Table,
   Typography,
 } from "@mui/joy";
+import { Skeleton } from "@mui/material";
 import axios from "axios";
-import { Download, Search, Visibility } from "@mui/icons-material";
+import {
+  Download,
+  SearchOutlined,
+  AssignmentOutlined,
+  CalendarToday,
+  PersonOutline,
+  ChevronLeft,
+  ChevronRight,
+  FileDownloadOutlined,
+} from "@mui/icons-material";
 import { downloadReport } from "../hooks/downloadReport";
 import Toast from "../components/Toast";
+
+// ─── Shared label style (matches Tables section dividers) ─────────────────
+const SectionDivider = ({ label }) => (
+  <div className="flex items-center gap-2 mb-4">
+    <span className="text-[0.65rem] font-extrabold tracking-widest uppercase text-indigo-400 whitespace-nowrap">
+      {label}
+    </span>
+    <hr className="flex-1 border-t border-indigo-100" />
+  </div>
+);
+
+// ─── Column header ─────────────────────────────────────────────────────────
+const Th = ({ children, className = "" }) => (
+  <th className={`px-3.5 py-3 text-left ${className}`}>
+    <span className="text-[0.65rem] font-extrabold tracking-widest uppercase text-indigo-200 whitespace-nowrap">
+      {children}
+    </span>
+  </th>
+);
+
+// ─── Expandable text cell ──────────────────────────────────────────────────
+const ExpandCell = ({ text, expanded, onToggle, minWords = 4 }) => {
+  if (!text) return <span className="text-gray-400">—</span>;
+  const words = text.trim().split(/\s+/);
+  const needsExpand = words.length > minWords;
+  const preview = needsExpand ? words.slice(0, minWords).join(" ") + "…" : text;
+  return (
+    <span className="text-[0.8rem] leading-snug text-slate-700">
+      {expanded ? text : preview}
+      {needsExpand && (
+        <button
+          onClick={onToggle}
+          className="ml-1 text-[0.7rem] font-bold text-indigo-500 hover:underline"
+        >
+          {expanded ? "Less ▲" : "More ▼"}
+        </button>
+      )}
+    </span>
+  );
+};
 
 const TasksPerformedReport = () => {
   useEffect(() => {
@@ -34,16 +82,12 @@ const TasksPerformedReport = () => {
   const [toDate, setToDate] = useState(today);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
-  const [chartData, setChartData] = useState([]);
-
   const [toastStatus, setToastStatus] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [toastShow, setToastShow] = useState(false);
-
-  const [title, setTitle] = useState("Employee Report");
-
+  const [title, setTitle] = useState("");
   const [page, setPage] = useState(0);
-  const [rows, setRows] = useState(3);
+  const [rows, setRows] = useState(5);
   const [expandedRows, setExpandedRows] = useState({});
 
   useEffect(() => {
@@ -51,417 +95,579 @@ const TasksPerformedReport = () => {
     axios
       .get("/get_employee_names")
       .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setEmployees(data);
-        }
+        if (res.status === 200) setEmployees(res.data);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         setToastStatus("error");
-        setToastMessage("Something Went Wrong. Please Check the Console.");
+        setToastMessage("Failed to load employees.");
         setToastShow(true);
       })
       .finally(() => setEmployeeLoading(false));
   }, []);
 
   const formatString = (date) => {
-    const dateOfEntry = new Date(date);
-    const day = dateOfEntry.getDay();
-    const dayName = dateOfEntry.toLocaleDateString("en-IN", {
-      weekday: "short",
-    });
-    const month = dateOfEntry.toLocaleDateString("en-IN", { month: "short" });
-    const year = dateOfEntry.getFullYear();
-
+    const d = new Date(date);
+    const day = d.getDate();
     const getOrdinal = (n) => {
       if (n > 3 && n < 21) return "th";
-      switch (n % 10) {
-        case 1:
-          return "st";
-        case 2:
-          return "nd";
-        case 3:
-          return "rd";
-        default:
-          return "th";
-      }
+      return ["th", "st", "nd", "rd"][n % 10] ?? "th";
     };
-
-    return `${dayName} ${day}${getOrdinal(day)} ${month} ${year}`;
+    return d.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
-  const search = (event) => {
-    event.preventDefault();
+  const search = (e) => {
+    e.preventDefault();
     setReportLoading(true);
+    setPage(0);
     axios
       .get("/getEmployeeReport", {
-        params: {
-          employeeName: selectedEmployee,
-          from: fromDate,
-          to: toDate,
-        },
+        params: { employeeName: selectedEmployee, from: fromDate, to: toDate },
       })
       .then((res) => {
         if (res.status === 200) {
-          const data = res.data;
-          setReportData(data);
-          setTitle(
-            `${selectedEmployee}'s Report from ${fromDate} to ${toDate}`,
-          );
+          setReportData(res.data);
+          setTitle(`${selectedEmployee}'s Report · ${fromDate} → ${toDate}`);
         }
       })
       .catch((err) => {
-        if (err.response.status === 404) {
-          setToastStatus("error");
-          setToastMessage(`${selectedEmployee}'s Report came Empty.`);
-          setToastShow(true);
-        } else {
-          console.error(err);
-          setToastStatus("error");
-          setToastMessage("Something Went Wrong. Please Check the Console.");
-          setToastShow(true);
-        }
+        const msg =
+          err.response?.status === 404
+            ? `No records found for ${selectedEmployee}.`
+            : "Something went wrong. Check the console.";
+        setToastStatus("error");
+        setToastMessage(msg);
+        setToastShow(true);
       })
       .finally(() => setReportLoading(false));
   };
 
-  const startIndex = page * rows;
-  const endIndex = startIndex + rows;
-  const paginatedData = reportData.slice(startIndex, endIndex);
-
-  const totalPages = Math.ceil(reportData.length / rows);
-
-  const getFirstThreeWords = (text) => {
-    if (!text) return "";
-
-    const words = text.trim().split(/\s+/);
-    return words.length > 3 ? words.slice(0, 3).join(" ") + "..." : text;
-  };
-
-  const toggleExpand = (index) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
-
-  const download = (event) => {
-    event.preventDefault();
+  const download = (e) => {
+    e.preventDefault();
     const pdfTitle = `Employee Report Of ${selectedEmployee} from ${formatString(fromDate)} to ${formatString(toDate)}`;
-
     downloadReport(reportData, "performed", pdfTitle);
   };
 
+  const toggleExpand = (index) =>
+    setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
+
+  const startIndex = page * rows;
+  const paginatedData = reportData.slice(startIndex, startIndex + rows);
+  const totalPages = Math.ceil(reportData.length / rows);
+
+  const todayDisplay = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
-    <div className="w-screen overflow-x-hidden h-screen">
-      <div className="navbar">
-        <Navbar />
-      </div>
-      <div className="main justify-center items-center text-center">
-        <Typography level="h3">Tasks Performed Report</Typography>
-        <div className="flex justify-center items-center text-center mx-auto">
-          <div className="shadow-lg box-border rounded-md m-3 p-5 w-3xl">
-            <div className="title my-1">
-              <Typography level="title-lg">Employee Task Report</Typography>
-            </div>
-            <div className="form flex flex-col my-5 w-sm">
-              <FormControl>
-                <FormLabel sx={{ textAlign: "center" }}>
-                  Select Employee Name
-                </FormLabel>
-                <Autocomplete
-                  placeholder="Enter Employee Name"
-                  options={employees}
-                  loading={employeeLoading}
-                  getOptionLabel={(employee) => employee.name}
-                  onChange={(e, newValue) =>
-                    setSelectedEmployee(newValue?.name || "")
-                  }
-                />
-              </FormControl>
-              <div className="dates flex justify-start items-start text-start my-3">
-                <FormControl>
-                  <FormLabel>From</FormLabel>
-                  <Input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                  />
-                </FormControl>
-                <FormControl sx={{ mx: 3 }}>
-                  <FormLabel>To</FormLabel>
-                  <Input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                  />
-                </FormControl>
-              </div>
-              <div className="button flex justify-center items-center text-center m-1">
-                <Button
-                  color="primary"
-                  variant="solid"
-                  onClick={search}
-                  loading={reportLoading}
-                >
-                  Search Database for Employee Report
-                </Button>
-                <IconButton
-                  color="danger"
-                  variant="soft"
-                  sx={{ mx: 3 }}
-                  onClick={download}
-                >
-                  <Download />
-                </IconButton>
-              </div>
-            </div>
-          </div>
-          <div className="table-div w-full shadow-lg rounded-xl p-3 mx-auto">
-            <Typography level="title-lg" sx={{ mx: 5 }}>
-              {title}
-            </Typography>
-            <Box
+    <div className="min-h-screen bg-[#f5f6ff] w-screen min-w-full">
+      <Navbar />
+
+      {/* ── Hero Header (matches Dashboard) ── */}
+      <Box
+        sx={{
+          background:
+            "linear-gradient(135deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
+          px: { xs: 3, md: 6 },
+          py: 4,
+          mb: 0,
+        }}
+      >
+        <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <AssignmentOutlined
+              sx={{ color: "rgba(255,255,255,0.7)", fontSize: 20 }}
+            />
+            <Typography
               sx={{
-                maxHeight: "350px",
-                overflowY: "auto",
-                mt: 2,
+                color: "rgba(255,255,255,0.7)",
+                fontSize: "0.85rem",
+                fontWeight: 500,
               }}
             >
-              {reportData.length > 0 ? (
-                <Table
-                  stickyHeader
-                  hoverRow
-                  variant="soft"
-                  borderAxis="bothBetween"
+              Reports
+            </Typography>
+          </div>
+          <Typography
+            level="h3"
+            sx={{
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: { xs: "1.6rem", md: "2rem" },
+              letterSpacing: "-0.02em",
+              mb: 1,
+            }}
+          >
+            Tasks Performed Report
+          </Typography>
+          <div className="flex items-center gap-1.5 text-white/60 text-sm">
+            <CalendarToday sx={{ fontSize: 14 }} />
+            {todayDisplay}
+          </div>
+        </Box>
+      </Box>
+
+      {/* ── Main Content ── */}
+      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 4 }, py: 4 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 items-start">
+          {/* ── Left: Filter Panel ── */}
+          <Box
+            sx={{
+              bgcolor: "#fff",
+              borderRadius: "16px",
+              border: "1px solid #e8eaff",
+              boxShadow: "0 4px 24px rgba(99,102,241,0.07)",
+              p: 3,
+              position: "sticky",
+              top: 16,
+            }}
+          >
+            <SectionDivider label="Search Filters" />
+
+            <FormControl sx={{ mb: 2.5 }}>
+              <FormLabel
+                sx={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color: "text.secondary",
+                  mb: 0.75,
+                }}
+              >
+                Employee
+              </FormLabel>
+              <Autocomplete
+                placeholder="Select employee…"
+                options={employees}
+                loading={employeeLoading}
+                getOptionLabel={(e) => e.name}
+                onChange={(_, v) => setSelectedEmployee(v?.name || "")}
+                startDecorator={
+                  <PersonOutline sx={{ fontSize: 16, color: "#94a3b8" }} />
+                }
+                sx={{
+                  borderRadius: "8px",
+                  "--Input-focusedThickness": "1.5px",
+                }}
+              />
+            </FormControl>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <FormControl>
+                <FormLabel
                   sx={{
-                    tableLayout: "fixed",
-                    width: "100%",
-                    cursor: "pointer",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: "text.secondary",
+                    mb: 0.75,
                   }}
                 >
-                  <thead>
-                    <tr>
-                      <th className="w-5">Sr.No</th>
-                      <th className="w-10">Event Date</th>
-                      <th className="w-5">Task ID</th>
-                      <th className="w-10">Work Type</th>
-                      <th className="w-15">Project Details</th>
-                      <th className="w-15">Event Desc.</th>
-                      <th className="w-8">Time Spent</th>
-                      <th className="w-11">Is it a rework?</th>
-                      <th className="w-13">Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportLoading
-                      ? Array.from({ length: rows }).map((_, index) => (
-                          <tr key={index} style={{ height: "55px" }}>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                width={80}
-                                height={24}
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                            <td>
-                              <Skeleton
-                                variant="text"
-                                level="body-md"
-                                animation="wave"
-                              />
-                            </td>
-                          </tr>
-                        ))
-                      : //   <th className="w-14">Sr.No</th>
-                        // <th className="w-14">Event Date</th>
-                        // <th className="w-14">Task ID</th>
-                        // <th className="w-14">Project Details</th>
-                        // <th className="w-14">Event Desc.</th>
-                        // <th className="w-14">Is it a rework?</th>
-                        // <th className="w-14">Remarks</th>
-                        paginatedData.map((element, index) => (
-                          <tr>
-                            <td>{startIndex + index + 1}</td>
-                            <td>{formatString(element.eventDate)}</td>
-                            <td>{element.id}</td>
-                            <td>{element.workType}</td>
-                            <td>{element.projectDetails}</td>
-                            <td>
-                              {expandedRows[index]
-                                ? element.event
-                                : getFirstThreeWords(element.event)}
+                  From
+                </FormLabel>
+                <Input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  sx={{
+                    borderRadius: "8px",
+                    "--Input-focusedThickness": "1.5px",
+                  }}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel
+                  sx={{
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: "text.secondary",
+                    mb: 0.75,
+                  }}
+                >
+                  To
+                </FormLabel>
+                <Input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  sx={{
+                    borderRadius: "8px",
+                    "--Input-focusedThickness": "1.5px",
+                  }}
+                />
+              </FormControl>
+            </div>
 
-                              {element.event &&
-                                element.event.split(" ").length > 3 && (
-                                  <Button
-                                    size="sm"
-                                    variant="plain"
-                                    sx={{ ml: 1 }}
-                                    onClick={() => toggleExpand(index)}
-                                  >
-                                    {expandedRows[index]
-                                      ? "See Less"
-                                      : "Read More"}
-                                  </Button>
-                                )}
-                            </td>
-                            <td>{element.timeSpent}</td>
-                            <td>
-                              <Chip
-                                color={
-                                  element.isRework === "Rework"
-                                    ? "danger"
-                                    : "primary"
-                                }
-                                variant="soft"
-                              >
-                                {element.isRework}
-                              </Chip>
-                            </td>
-                            <td>
-                              {expandedRows[index]
-                                ? element.remarks
-                                : getFirstThreeWords(element.remarks)}
-
-                              {element.remarks &&
-                                element.remarks.split(" ").length > 3 && (
-                                  <Button
-                                    size="sm"
-                                    variant="plain"
-                                    sx={{ ml: 1 }}
-                                    onClick={() => toggleExpand(index)}
-                                  >
-                                    {expandedRows[index]
-                                      ? "See Less"
-                                      : "Read More"}
-                                  </Button>
-                                )}
-                            </td>
-                          </tr>
-                        ))}
-                  </tbody>
-                </Table>
-              ) : !selectedEmployee ? (
-                <Typography level="title-lg">
-                  Please Select Employee Name
-                </Typography>
-              ) : (
-                <Typography level="title-lg">
-                  No Employee Record Data Found.
-                </Typography>
-              )}
-            </Box>
-            <Box
+            <Button
+              fullWidth
+              loading={reportLoading}
+              onClick={search}
+              disabled={!selectedEmployee}
+              startDecorator={
+                !reportLoading && <SearchOutlined sx={{ fontSize: 18 }} />
+              }
               sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mt: 2,
-                p: 1.5,
-                borderRadius: "md",
-                backgroundColor: "background.level1",
+                background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                color: "#fff",
+                fontWeight: 700,
+                borderRadius: "10px",
+                height: 42,
+                boxShadow: "0 4px 14px rgba(21,101,192,0.3)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #0f1b35 0%, #1565c0 100%)",
+                },
+                "&:disabled": { opacity: 0.5 },
+                mb: 2,
               }}
             >
-              {/* Rows Per Page */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography level="body-sm">Rows per page:</Typography>
+              {reportLoading ? "Searching…" : "Search Report"}
+            </Button>
+
+            {reportData.length > 0 && (
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={download}
+                startDecorator={<FileDownloadOutlined sx={{ fontSize: 18 }} />}
+                sx={{
+                  borderRadius: "10px",
+                  height: 40,
+                  fontWeight: 600,
+                  borderColor: "#e0e2f0",
+                  color: "#64748b",
+                  "&:hover": { bgcolor: "#f5f6ff" },
+                }}
+              >
+                Download PDF
+              </Button>
+            )}
+
+            {/* Stats */}
+            {reportData.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-indigo-50">
+                <SectionDivider label="Summary" />
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    {
+                      label: "Total Tasks",
+                      value: reportData.length,
+                      color: "#1976d2",
+                      bg: "#e8f0fe",
+                    },
+                    {
+                      label: "Reworks",
+                      value: reportData.filter((r) => r.isRework === "Rework")
+                        .length,
+                      color: "#c62828",
+                      bg: "#fce4ec",
+                    },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-xl p-3 text-center"
+                      style={{ background: s.bg }}
+                    >
+                      <div
+                        className="text-xl font-extrabold tabular-nums"
+                        style={{ color: s.color }}
+                      >
+                        {s.value}
+                      </div>
+                      <div
+                        className="text-[0.68rem] font-semibold mt-0.5"
+                        style={{ color: s.color + "cc" }}
+                      >
+                        {s.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Box>
+
+          {/* ── Right: Table Panel ── */}
+          <Box
+            sx={{
+              bgcolor: "#fff",
+              borderRadius: "16px",
+              border: "1px solid #e8eaff",
+              boxShadow: "0 4px 24px rgba(99,102,241,0.07)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Table header bar */}
+            <div className="px-5 py-4 border-b border-indigo-50">
+              <SectionDivider label="Results" />
+              {title ? (
+                <Typography
+                  level="title-sm"
+                  sx={{ fontWeight: 700, color: "#0f1b35" }}
+                >
+                  {title}
+                </Typography>
+              ) : (
+                <Typography
+                  level="body-sm"
+                  sx={{ color: "text.tertiary", fontStyle: "italic" }}
+                >
+                  Select an employee and date range, then click Search.
+                </Typography>
+              )}
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table
+                className="w-full border-collapse"
+                style={{ tableLayout: "fixed", minWidth: 780 }}
+              >
+                <colgroup>
+                  <col style={{ width: 48 }} />
+                  <col style={{ width: 100 }} />
+                  <col style={{ width: 72 }} />
+                  <col style={{ width: 100 }} />
+                  <col style={{ width: 130 }} />
+                  <col />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 120 }} />
+                </colgroup>
+                <thead>
+                  <tr
+                    style={{
+                      background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                    }}
+                  >
+                    <Th>#</Th>
+                    <Th>Date</Th>
+                    <Th>Task ID</Th>
+                    <Th>Work Type</Th>
+                    <Th>Project</Th>
+                    <Th>Description</Th>
+                    <Th>Time</Th>
+                    <Th>Rework?</Th>
+                    <Th>Remarks</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportLoading ? (
+                    Array.from({ length: rows }).map((_, i) => (
+                      <tr
+                        key={i}
+                        className={i % 2 === 0 ? "bg-white" : "bg-[#fafbff]"}
+                      >
+                        {Array.from({ length: 9 }).map((_, j) => (
+                          <td key={j} className="px-3.5 py-3">
+                            <Skeleton
+                              variant="text"
+                              animation="wave"
+                              height={16}
+                              sx={{ borderRadius: "4px", bgcolor: "#eef0fb" }}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan={9}>
+                        <div className="flex flex-col items-center justify-center py-16 gap-2">
+                          <AssignmentOutlined
+                            sx={{ fontSize: 40, color: "#c7caed" }}
+                          />
+                          <span className="text-sm text-gray-400 font-medium">
+                            {selectedEmployee
+                              ? "No records found for the selected range."
+                              : "Select an employee to view their report."}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedData.map((row, i) => (
+                      <tr
+                        key={i}
+                        className={`${i % 2 === 0 ? "bg-white" : "bg-[#fafbff]"} hover:bg-indigo-50/40 transition-colors duration-150`}
+                      >
+                        {/* # */}
+                        <td className="px-3.5 py-2.5">
+                          <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center">
+                            <span className="text-[0.68rem] font-bold text-indigo-500">
+                              {startIndex + i + 1}
+                            </span>
+                          </div>
+                        </td>
+                        {/* Date */}
+                        <td className="px-3.5 py-2.5">
+                          <div className="flex items-center gap-1 text-[0.75rem] text-slate-500">
+                            <CalendarToday sx={{ fontSize: 11 }} />
+                            {formatString(row.eventDate)}
+                          </div>
+                        </td>
+                        {/* Task ID */}
+                        <td className="px-3.5 py-2.5">
+                          <span className="text-xs font-bold font-mono text-indigo-500">
+                            #{row.id}
+                          </span>
+                        </td>
+                        {/* Work Type */}
+                        <td className="px-3.5 py-2.5 text-[0.8rem] text-slate-600">
+                          {row.workType}
+                        </td>
+                        {/* Project */}
+                        <td className="px-3.5 py-2.5 text-[0.8rem] text-slate-600 truncate">
+                          {row.projectDetails}
+                        </td>
+                        {/* Description */}
+                        <td className="px-3.5 py-2.5">
+                          <ExpandCell
+                            text={row.event}
+                            expanded={!!expandedRows[i]}
+                            onToggle={() => toggleExpand(i)}
+                          />
+                        </td>
+                        {/* Time */}
+                        <td className="px-3.5 py-2.5 text-[0.8rem] text-slate-600">
+                          {row.timeSpent}
+                        </td>
+                        {/* Rework */}
+                        <td className="px-3.5 py-2.5">
+                          <Chip
+                            size="sm"
+                            variant="soft"
+                            color={
+                              row.isRework === "Rework" ? "danger" : "success"
+                            }
+                            sx={{ fontWeight: 700, fontSize: "0.68rem" }}
+                          >
+                            {row.isRework}
+                          </Chip>
+                        </td>
+                        {/* Remarks */}
+                        <td className="px-3.5 py-2.5">
+                          <ExpandCell
+                            text={row.remarks}
+                            expanded={!!expandedRows[i]}
+                            onToggle={() => toggleExpand(i)}
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-5 py-3 border-t border-indigo-50 bg-[#fafbff] flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 font-medium">
+                  Rows per page
+                </span>
                 <Select
                   size="sm"
                   value={rows}
-                  onChange={(e, newValue) => {
-                    setRows(newValue);
+                  onChange={(_, v) => {
+                    setRows(v);
                     setPage(0);
                   }}
-                  sx={{ width: 80 }}
+                  sx={{
+                    width: 68,
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    borderRadius: "8px",
+                    bgcolor: "#fff",
+                    border: "1px solid #e0e2f0",
+                    "--Select-focusedThickness": "1px",
+                  }}
                 >
-                  <Option value={3} selected>
-                    3
-                  </Option>
-                  <Option value={5}>5</Option>
-                  <Option value={6}>6</Option>
+                  {[3, 5, 10].map((n) => (
+                    <Option key={n} value={n}>
+                      {n}
+                    </Option>
+                  ))}
                 </Select>
-              </Box>
+              </div>
 
-              {/* Page Controls */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Button
+              {reportData.length > 0 && (
+                <span className="text-xs text-gray-400 tabular-nums">
+                  {startIndex + 1}–
+                  {Math.min(startIndex + rows, reportData.length)} of{" "}
+                  {reportData.length}
+                </span>
+              )}
+
+              <div className="flex items-center gap-2">
+                <IconButton
                   size="sm"
                   variant="outlined"
                   disabled={page === 0}
-                  onClick={() => setPage((prev) => prev - 1)}
+                  onClick={() => setPage((p) => p - 1)}
+                  sx={{
+                    borderRadius: "8px",
+                    borderColor: "#e0e2f0",
+                    "&:hover:not(:disabled)": { bgcolor: "#eef0fe" },
+                  }}
                 >
-                  Prev
-                </Button>
+                  <ChevronLeft sx={{ fontSize: 18 }} />
+                </IconButton>
 
-                <Typography level="body-sm">
-                  Page {page + 1} of {totalPages}
-                </Typography>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    // Show pages around current
+                    const offset = Math.max(
+                      0,
+                      Math.min(page - 2, totalPages - 5),
+                    );
+                    const p = i + offset;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-7 h-7 rounded-lg text-xs font-semibold transition-all ${
+                          p === page
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                            : "text-gray-400 hover:bg-indigo-50"
+                        }`}
+                      >
+                        {p + 1}
+                      </button>
+                    );
+                  })}
+                </div>
 
-                <Button
+                <IconButton
                   size="sm"
                   variant="outlined"
                   disabled={page + 1 >= totalPages}
-                  onClick={() => setPage((prev) => prev + 1)}
+                  onClick={() => setPage((p) => p + 1)}
+                  sx={{
+                    borderRadius: "8px",
+                    borderColor: "#e0e2f0",
+                    "&:hover:not(:disabled)": { bgcolor: "#eef0fe" },
+                  }}
                 >
-                  Next
-                </Button>
-              </Box>
-            </Box>
-          </div>
+                  <ChevronRight sx={{ fontSize: 18 }} />
+                </IconButton>
+              </div>
+            </div>
+          </Box>
         </div>
-      </div>
+      </Box>
+
       <Toast
         status={toastStatus}
         message={toastMessage}
