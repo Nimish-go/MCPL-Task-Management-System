@@ -211,7 +211,7 @@ const tdStyle = {
 // ─── Main Component ────────────────────────────────────────────────────────
 const Tables = ({ type, tableData, loading = true }) => {
   useEffect(() => {
-    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
   }, []);
 
   const [expandedRow, setExpandedRow] = useState(null);
