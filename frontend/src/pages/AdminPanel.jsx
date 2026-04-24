@@ -26,6 +26,7 @@ import axios from "axios";
 import AdminPanelAdd from "../components/AdminPanelAdd";
 import MarkInactive from "../components/MarkInactive";
 import Navbar from "../components/Navbar";
+import AccessDenied from "../components/AccessDenied";
 
 const SIDEBAR_W = 68; // collapsed sidebar width
 
@@ -62,8 +63,12 @@ const AdminPanel = () => {
   const [branch, setBranch] = useState([]);
   const [loading, setLoading] = useState(false);
   const [organisations, setOrganisations] = useState([]);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
+    if (!sessionStorage.getItem("role").toUpperCase().includes("ADMIN")) {
+      setAccessDenied(true);
+    }
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     setLoading(true);
     axios
@@ -750,6 +755,14 @@ const AdminPanel = () => {
           setInactiveSwitch(null);
         }}
         employeeName={inactiveEmployee}
+      />
+      <AccessDenied
+        open={accessDenied}
+        onClose={() => {
+          setAccessDenied(false);
+          navigate("/dashboard");
+        }}
+        location={"Admin Panel"}
       />
     </Box>
   );

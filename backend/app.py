@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, session
+import json
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, date
@@ -107,6 +108,11 @@ def get_project_data(code):
     
     print("Project Code: ",code)
     
+    if code == "All":
+        cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" ORDER BY "ProjectCode" ASC; """)
+        projects = [{"code" : row[0], "name" : row[1]}for row in cursor.fetchall()]
+        return jsonify(projects), 200
+    
     cursor.execute(""" SELECT "ProjectCode", "ProjectName" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[code,])
     project_details = cursor.fetchone()
     
@@ -147,16 +153,17 @@ def getEmployeeTasksAll(name):
         tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_to" : row[2], "assigned_by" : row[3], "project_details" : row[4]+" : "+row[5], "remarks" : row[6], "deadline" : row[7], "date_of_entry" : row[8], "status" : row[9] } for row in cursor.fetchall()]
         return jsonify(tasks_assigned), 200
 
-@app.route("/get_employee_tasks/<name>",methods=["GET"])
-def getEmployeeTasks(name):
-    empName = unquote(name)
+@app.route("/get_employee_tasks",methods=["GET"])
+def getEmployeeTasks():
+    empName = request.args.get("employee_name")
+    assignerName = request.args.get("assigner_name")
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
-                       WHERE ph."ChangeStatus?" = true AND ph."UserID" IN (SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s) ORDER BY ph."ProjectHistoryID" ASC """,[empName,])
+                       WHERE ph."ChangeStatus?" = true AND ph."UserID" IN (SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s) AND ph."AssignedBy" IN (SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s) ORDER BY ph."ProjectHistoryID" ASC """,[empName,assignerName])
     
     tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
     
@@ -299,22 +306,35 @@ def assignTask():
     assignBy = request.form.get("assignBy")
     remarks = request.form.get("remarks")
     deadline = request.form.get("deadline")
-    
+    taskType = request.form.get("taskType")
+    meeting_id = request.form.get("meetingId")
     targetDate = datetime.strptime(deadline, "%Y-%m-%d")
     today = datetime.strptime(dateOfEntry, "%Y-%m-%d")
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    updatedTaskDesc = "Task Assigned: "+taskDesc+". Current Status: Pending. Deadline: "+deadline
-    updatedRemarks = "Remarks: "+remarks
+    if "From Director Meeting" not in taskDesc:
+        updatedTaskDesc = f"Task Desc: {taskDesc}. Deadline: {targetDate}."
+    if remarks:
+        updatedRemarks = "Remarks: "+remarks
+    else:
+        updatedRemarks = "No Remarks Entered By Assignee."
     
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[assignBy,])
     assignBy_id = cursor.fetchone()
     
-    cursor.execute(""" INSERT INTO "ProjectHistory"(
-	                "ProjectID", "AssignedBy", "UserID", "DateOfEntry","Event", "Remarks","ChangeStatus?", "EventDate", "WorkTypeID","TaskStatus","TargetDate")
-	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s); """,[projectCode, assignBy_id[0], assignTo, today, updatedTaskDesc, updatedRemarks, today, workType, targetDate])
+    cursor.execute(""" SELECT "ProjectID" FROM "ProjectMaster" WHERE "ProjectCode" = %s """,[projectCode,])
+    projectId = cursor.fetchone()
+    
+    if meeting_id:
+        cursor.execute(""" INSERT INTO "ProjectHistory"(
+	                "ProjectID", "AssignedBy", "UserID", "DateOfEntry","Event", "Remarks","ChangeStatus?", "EventDate", "WorkTypeID","TaskStatus","TargetDate","TaskType","MeetingId")
+	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s,%s,%s); """,[projectId[0], assignBy_id[0], assignTo, today, updatedTaskDesc, updatedRemarks, today, workType, targetDate, taskType,meeting_id])
+    else:
+        cursor.execute(""" INSERT INTO "ProjectHistory"(
+	                "ProjectID", "AssignedBy", "UserID", "DateOfEntry","Event", "Remarks","ChangeStatus?", "EventDate", "WorkTypeID","TaskStatus","TargetDate","TaskType")
+	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s,%s); """,[projectId[0], assignBy_id[0], assignTo, today, updatedTaskDesc, updatedRemarks, today, workType, targetDate, taskType])
     
     conn.commit()
     
@@ -628,19 +648,45 @@ def getDirectors():
     return jsonify(directors), 200
 
 
-# @app.route("/addDirectorMeetingRecord", methods=["POST"])
-# def addDirectorMeetingRecord():
+@app.route("/addDirectorMeetingRecord", methods=["POST"])
+def addDirectorMeetingRecord():
     
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-#     cursor.execute(""" INSERT INTO "DirectorMeetingMaster"
-#                    ("MeetingDate", "MeetingTitle", "NextMeetingDate", 
-#                    "CrucialDecisions", "ParticipantDirectors", "ParticipantStaff", 
-#                    "MOMPoints", "Remarks", "isEdited", "MeetingAgenda", "AgendaPoints")
-#                    VALUES (%s, %s, %s, ) """)
+    data = request.form
+    meetingDate = data.get("meetingDate")
+    meetingTitle = data.get("meetingTitle")
+    agenda = data.get("agenda");
+    agendaPoints = data.get("agendaPoints")
+    mom = data.get("mom");
+    crucialDecisions = data.get("crucialDecisions")
+    remarks = data.get("remarks")
+    directorsPresent = data.get("directorsPresent")
+    staffPresent = data.get("staffPresent")
+    actionPoints = data.get("actionPoints")
+    # payload.append("meetingDate", meetingDate);
+    # payload.append("meetingTitle", meetingTitle);
+    # payload.append("agenda", agenda);
+    # payload.append("agendaPoints", agendaPoints);
+    # payload.append("mom", mom);
+    # payload.append("crucialDecisions", crucialDecisions);
+    # payload.append("remarks", remarks);
+    # payload.append("directorsPresent", presentDirectors);
+    # payload.append("staffPresent", presentStaff);
     
-#     return jsonify(), 200
+    
+    cursor.execute(""" INSERT INTO "DirectorMeetingMaster"
+                   ("MeetingDate", "MeetingTitle", 
+                   "CrucialDecisions", "ParticipantDirectors", "ParticipantStaff", 
+                   "MOMPoints", "Remarks", "IsEdited", "MeetingAgenda", "AgendaPoints", "ActionPoints")
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING "MeetingId" """, [meetingDate, meetingTitle, crucialDecisions, directorsPresent, staffPresent, mom, remarks, False, agenda, agendaPoints, actionPoints])
+    meetingId = cursor.fetchone()[0]
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    return jsonify({ "status" : "success", "message" : "Meeting Record Saved.", "meetingId" : meetingId }), 200
 
 @app.route("/getDirectorMeetings",methods=["GET"])
 def getDirectorMeetings():

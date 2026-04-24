@@ -60,7 +60,14 @@ const NavItem = ({ icon, label, to, active, expanded, onClick }) => (
       minHeight: 44,
     }}
   >
-    <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center", color: active ? "#fff" : "rgba(255,255,255,0.75)" }}>
+    <Box
+      sx={{
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        color: active ? "#fff" : "rgba(255,255,255,0.75)",
+      }}
+    >
       {icon}
     </Box>
     <Typography
@@ -105,8 +112,22 @@ const NavGroup = ({ icon, label, expanded, children }) => {
           minHeight: 44,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, overflow: "hidden" }}>
-          <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center", color: "rgba(255,255,255,0.75)" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              color: "rgba(255,255,255,0.75)",
+            }}
+          >
             {icon}
           </Box>
           <Typography
@@ -125,8 +146,18 @@ const NavGroup = ({ icon, label, expanded, children }) => {
           </Typography>
         </Box>
         {expanded && (
-          <Box sx={{ color: "rgba(255,255,255,0.5)", flexShrink: 0, display: "flex" }}>
-            {open ? <ExpandLess sx={{ fontSize: "1rem" }} /> : <ExpandMore sx={{ fontSize: "1rem" }} />}
+          <Box
+            sx={{
+              color: "rgba(255,255,255,0.5)",
+              flexShrink: 0,
+              display: "flex",
+            }}
+          >
+            {open ? (
+              <ExpandLess sx={{ fontSize: "1rem" }} />
+            ) : (
+              <ExpandMore sx={{ fontSize: "1rem" }} />
+            )}
           </Box>
         )}
       </Box>
@@ -170,10 +201,19 @@ const SubNavItem = ({ icon, label, onClick }) => (
       my: 0.3,
     }}
   >
-    <Box sx={{ color: "rgba(255,255,255,0.6)", display: "flex", flexShrink: 0 }}>
+    <Box
+      sx={{ color: "rgba(255,255,255,0.6)", display: "flex", flexShrink: 0 }}
+    >
       {icon}
     </Box>
-    <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: "0.82rem", fontWeight: 500, whiteSpace: "nowrap" }}>
+    <Typography
+      sx={{
+        color: "rgba(255,255,255,0.75)",
+        fontSize: "0.82rem",
+        fontWeight: 500,
+        whiteSpace: "nowrap",
+      }}
+    >
       {label}
     </Typography>
   </Box>
@@ -213,15 +253,33 @@ const Navbar = () => {
 
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
-    axios.get("/get_all_projects").then((res) => { if (res.status === 200) setProjectData(res.data); });
-    axios.get("/get_work_type").then((res) => { if (res.status === 200) setWorkTypeData(res.data); }).catch(console.error);
-    axios.get("/get_employee_names").then((res) => { if (res.status === 200) setEmployeeData(res.data); }).catch(console.error);
+    axios.get("/get_all_projects").then((res) => {
+      if (res.status === 200) setProjectData(res.data);
+    });
+    axios
+      .get("/get_work_type")
+      .then((res) => {
+        if (res.status === 200) setWorkTypeData(res.data);
+      })
+      .catch(console.error);
+    axios
+      .get("/get_employee_names")
+      .then((res) => {
+        if (res.status === 200) setEmployeeData(res.data);
+      })
+      .catch(console.error);
   }, []);
 
   // Don't show sidebar on login page
   if (location.pathname === "/") {
     return (
-      <Box sx={{ textAlign: "center", p: 3, background: "linear-gradient(135deg, #0f1b35, #1565c0)" }}>
+      <Box
+        sx={{
+          textAlign: "center",
+          p: 3,
+          background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+        }}
+      >
         <Typography level="h4" sx={{ color: "#fff", fontWeight: 700 }}>
           Welcome to MCPL Task Management System
         </Typography>
@@ -241,13 +299,16 @@ const Navbar = () => {
           left: 0,
           height: "100vh",
           width: expanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED,
-          background: "linear-gradient(180deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
+          background:
+            "linear-gradient(180deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
           transition: "width 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
           zIndex: 1200,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-          boxShadow: expanded ? "4px 0 24px rgba(0,0,0,0.25)" : "2px 0 8px rgba(0,0,0,0.15)",
+          boxShadow: expanded
+            ? "4px 0 24px rgba(0,0,0,0.25)"
+            : "2px 0 8px rgba(0,0,0,0.15)",
         }}
       >
         {/* Logo */}
@@ -261,7 +322,9 @@ const Navbar = () => {
             borderBottom: "1px solid rgba(255,255,255,0.1)",
             minHeight: 68,
             overflow: "hidden",
+            cursor: "pointer",
           }}
+          onClick={() => setExpanded(!expanded)}
         >
           <Box
             sx={{
@@ -290,10 +353,19 @@ const Navbar = () => {
               whiteSpace: "nowrap",
             }}
           >
-            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.9rem", lineHeight: 1.2 }}>
+            <Typography
+              sx={{
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: "0.9rem",
+                lineHeight: 1.2,
+              }}
+            >
               MCPL Task
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
+            <Typography
+              sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}
+            >
               Management System
             </Typography>
           </Box>
@@ -314,9 +386,16 @@ const Navbar = () => {
         )}
 
         {/* Nav Items */}
-        <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", pt: 1.5, pb: 2,
-          "&::-webkit-scrollbar": { width: 0 },
-        }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            pt: 1.5,
+            pb: 2,
+            "&::-webkit-scrollbar": { width: 0 },
+          }}
+        >
           <NavItem
             icon={<SpaceDashboard sx={{ fontSize: "1.2rem" }} />}
             label="Dashboard"
@@ -338,12 +417,18 @@ const Navbar = () => {
             <SubNavItem
               icon={<History sx={{ fontSize: "1rem" }} />}
               label="Project History"
-              onClick={() => { setProjHistoryOpen(true); setDrawerType("history"); }}
+              onClick={() => {
+                setProjHistoryOpen(true);
+                setDrawerType("history");
+              }}
             />
             <SubNavItem
               icon={<Task sx={{ fontSize: "1rem" }} />}
               label="Tasks Performed"
-              onClick={() => { setProjHistoryOpen(true); setDrawerType("performed"); }}
+              onClick={() => {
+                setProjHistoryOpen(true);
+                setDrawerType("performed");
+              }}
             />
           </NavGroup>
 
@@ -428,10 +513,14 @@ const Navbar = () => {
               whiteSpace: "nowrap",
             }}
           >
-            <Typography sx={{ color: "#fff", fontSize: "0.82rem", fontWeight: 600 }}>
+            <Typography
+              sx={{ color: "#fff", fontSize: "0.82rem", fontWeight: 600 }}
+            >
               {empName}
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>
+            <Typography
+              sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}
+            >
               {designation}
             </Typography>
           </Box>
@@ -439,7 +528,12 @@ const Navbar = () => {
       </Box>
 
       {/* Page offset so content doesn't go under sidebar */}
-      <Box sx={{ ml: `${SIDEBAR_COLLAPSED}px`, transition: "margin-left 0.28s cubic-bezier(0.4,0,0.2,1)" }} />
+      <Box
+        sx={{
+          ml: `${SIDEBAR_COLLAPSED}px`,
+          transition: "margin-left 0.28s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      />
 
       <TasksAssigned
         open={taskAssignOpen}
@@ -456,7 +550,10 @@ const Navbar = () => {
         employees={employeeData}
         workTypes={workTypeData}
       />
-      <SettingsModal open={settingsModal} onClose={() => setSettingsModal(false)} />
+      <SettingsModal
+        open={settingsModal}
+        onClose={() => setSettingsModal(false)}
+      />
     </>
   );
 };

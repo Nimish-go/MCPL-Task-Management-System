@@ -226,14 +226,19 @@ const Tables = ({ type, tableData, loading = true }) => {
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(5);
 
-  const fetchEmployeeTasks = (name) => {
+  const fetchEmployeeTasks = (name, assignerName) => {
     if (!name) return;
     setEmployeeTasks([]);
     setEmployeeName(name);
     setShowEmployeeTasks(true);
     setEmployeeTasksLoading(true);
     axios
-      .get(`/get_employee_tasks/${encodeURIComponent(name)}`)
+      .get(`http://localhost:5002/get_employee_tasks`, {
+        params: {
+          employee_name: name,
+          assigner_name: assignerName,
+        },
+      })
       .then((res) => {
         if (res.status === 200) {
           setEmployeeTasks(res.data);
@@ -664,7 +669,12 @@ const Tables = ({ type, tableData, loading = true }) => {
                       backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff",
                       cursor: "pointer",
                     }}
-                    onClick={() => fetchEmployeeTasks(task.name)}
+                    onClick={() =>
+                      fetchEmployeeTasks(
+                        task.name,
+                        sessionStorage.getItem("empName"),
+                      )
+                    }
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.backgroundColor = "#f0f4ff")
                     }

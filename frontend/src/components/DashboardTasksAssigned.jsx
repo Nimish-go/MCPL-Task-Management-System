@@ -22,9 +22,15 @@ const DashboardTasksAssigned = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const today = new Date();
+
   const pending = tasksData.filter((t) => t.status === "Pending").length;
   const completed = tasksData.filter((t) => t.status === "Completed").length;
   const reloaded = tasksData.filter((t) => t.status === "Reloaded").length;
+  const overdue = tasksData.filter(
+    (t) =>
+      t.status === "Pending" && t.deadline < today.toISOString().split("T")[0],
+  ).length;
   const total = tasksData.length;
 
   return (
@@ -54,8 +60,14 @@ const DashboardTasksAssigned = () => {
             {
               label: "Reloaded",
               value: reloaded,
-              color: "#6D28D9",
-              bg: "#EDE9FE",
+              color: "#991B1B",
+              bg: "#FEE2E2",
+            },
+            {
+              label: "Overdue",
+              value: overdue,
+              color: "#7F1D1D",
+              bg: "#FECACA",
             },
           ].map((stat) => (
             <Box
