@@ -230,22 +230,23 @@ const AddDirectorMeetingRecords = ({
   };
 
   useEffect(() => {
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
     axios
-      .get("http://localhost:5002/getDirectors")
+      .get("/getDirectors")
       .then((res) => {
         if (res.status === 200)
           setDirectors(res.data.map((d) => ({ ...d, present: true })));
       })
       .catch(console.error);
     axios
-      .get("http://localhost:5002/getStaff")
+      .get("/getStaff")
       .then((res) => {
         if (res.status === 200)
           setEmployees(res.data.map((e) => ({ ...e, present: false })));
       })
       .catch(console.error);
     axios
-      .get("http://localhost:5002/get_project_data/All")
+      .get("/get_project_data/All")
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
