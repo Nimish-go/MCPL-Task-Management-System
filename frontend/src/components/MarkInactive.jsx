@@ -20,13 +20,14 @@ const MarkInactive = ({ open, onClose, employeeName }) => {
   const handleMarkInactive = (event) => {
     event.preventDefault();
     axios
-      .put(`/markInactive/${encodeURIComponent(employeeName)}`)
+      .put(`/markInactive/${employeeName}`)
       .then((res) => {
         if (res.status === 200) {
           setToastStatus(res.data.status);
           setToastMessage(res.data.message);
           setToastOpen(true);
           onClose();
+          window.location.reload();
         }
       })
       .catch((err) => {

@@ -233,7 +233,7 @@ const Tables = ({ type, tableData, loading = true }) => {
     setShowEmployeeTasks(true);
     setEmployeeTasksLoading(true);
     axios
-      .get(`http://localhost:5002/get_employee_tasks`, {
+      .get(`/get_employee_tasks`, {
         params: {
           employee_name: name,
           assigner_name: assignerName,
