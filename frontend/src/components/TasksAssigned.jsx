@@ -83,6 +83,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   const { sendEmail } = useEmail();
 
   useEffect(() => {
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
     setProjectData(projects);
     setWorkTypeData(workTypes);
     setEmployeeData(employees);
@@ -92,7 +93,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
       return;
     }
     axios
-      .get(`http://localhost:5002/get_project_data/${selectedProjectCode}`)
+      .get(`/get_project_data/${selectedProjectCode}`)
       .then((res) => {
         if (res.status === 200) setProjectName(res.data.project_name);
       })
@@ -140,7 +141,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
     formData.append("taskType", "General Task");
 
     axios
-      .post("http://localhost:5002/assign_task", formData)
+      .post("/assign_task", formData)
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
