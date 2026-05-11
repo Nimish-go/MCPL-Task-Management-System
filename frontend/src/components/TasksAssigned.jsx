@@ -173,6 +173,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
       .finally(() => {
         setAssigning(false);
         resetForm();
+        window.location.reload();
       });
   };
 
@@ -264,6 +265,10 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
                   placeholder="e.g. PRJ-001"
                   loading={projectCodeLoading}
                   options={projectData}
+                  value={
+                    projectData.find((p) => p.code === selectedProjectCode) ||
+                    null
+                  }
                   getOptionLabel={(opt) => opt.code}
                   onChange={(_, val) => {
                     setSelectedProjectCode(val?.code || "");
@@ -282,6 +287,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
                   placeholder="Select employee"
                   onChange={(_, v) => setAssignedToEmployee(v)}
                   sx={inputSx}
+                  value={assignedToEmployee || null}
                 >
                   {employeeData.map((e) => (
                     <Option key={e.id} value={e.id}>
@@ -346,6 +352,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
                 <Select
                   placeholder="Select type"
                   onChange={(_, v) => setSelectedWorkType(v)}
+                  value={selectedWorkType || null}
                   sx={inputSx}
                 >
                   {workTypeData.map((w) => (
@@ -365,6 +372,7 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
                 <Input
                   type="date"
                   slotProps={{ input: { min: today } }}
+                  value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                   sx={inputSx}
                 />

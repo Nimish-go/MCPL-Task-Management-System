@@ -28,6 +28,7 @@ import AdminPanelAdd from "../components/AdminPanelAdd";
 import MarkInactive from "../components/MarkInactive";
 import Navbar from "../components/Navbar";
 import AccessDenied from "../components/AccessDenied";
+import { useNavigate } from "react-router-dom";
 
 const SIDEBAR_W = 68; // collapsed sidebar width
 
@@ -65,6 +66,8 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [organisations, setOrganisations] = useState([]);
   const [accessDenied, setAccessDenied] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!sessionStorage.getItem("role").toUpperCase().includes("ADMIN")) {
@@ -744,9 +747,7 @@ const AdminPanel = () => {
               </TableWrapper>
             </TabPanel>
 
-            <TabPanel value={3} sx={{ p: 3 }}>
-              
-            </TabPanel>
+            <TabPanel value={3} sx={{ p: 3 }}></TabPanel>
           </Tabs>
         </Box>
       </Box>

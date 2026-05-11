@@ -807,7 +807,12 @@ const SettingsModal = ({ open, onClose }) => {
         </ModalDialog>
       </Modal>
 
-      <Toast open={toastOpen} message={toastMessage} status={toastStatus} />
+      <Toast
+        open={toastOpen}
+        message={toastMessage}
+        status={toastStatus}
+        onClose={() => setToastOpen(false)}
+      />
       <LogoutConfirm
         open={logoutConfirm}
         onClose={() => setLogoutConfirm(false)}

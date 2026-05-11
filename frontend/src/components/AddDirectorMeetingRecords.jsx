@@ -1215,7 +1215,12 @@ const AddDirectorMeetingRecords = ({
         </Button>
       </Box>
 
-      <Toast open={toast} status={toastStatus} message={toastMessage} />
+      <Toast
+        open={toast}
+        status={toastStatus}
+        message={toastMessage}
+        onClose={() => setToast(false)}
+      />
     </Box>
   );
 };
