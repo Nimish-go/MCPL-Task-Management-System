@@ -55,13 +55,20 @@ const SettingsModal = ({ open, onClose }) => {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [enteredOtp, setEnteredOtp] = useState("");
+  const [otpVerifying, setOtpVerifying] = useState(false);
 
   useEffect(() => {
-    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
     if (!open) return;
     setLoading(true);
     axios
-      .get(`/getProfile/${sessionStorage.getItem("empName")}`)
+      .get(
+        `http://localhost:5002/getProfile/${sessionStorage.getItem("empName")}`,
+      )
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
@@ -69,6 +76,7 @@ const SettingsModal = ({ open, onClose }) => {
           setUserId(data.id);
           setEmail(data.email);
           setUserMobile(data.mobile);
+          setOtp(data.otp);
         }
       })
       .catch(console.error)
@@ -90,7 +98,7 @@ const SettingsModal = ({ open, onClose }) => {
     formData.append("email", email);
     formData.append("mobile", userMobile);
     axios
-      .put(`/updateProfile/${userId}`, formData)
+      .put(`http://localhost:5002/updateProfile/${userId}`, formData)
       .then((res) => {
         if (res.status === 200) {
           setToastStatus("success");
@@ -111,6 +119,68 @@ const SettingsModal = ({ open, onClose }) => {
   const empName = sessionStorage.getItem("empName") || "User";
   const designation = sessionStorage.getItem("designation") || "";
   const role = sessionStorage.getItem("role") || "";
+
+  const sendOTP = async () => {
+    const formData = new FormData();
+
+    formData.append("email", sessionStorage.getItem("email").toString());
+
+    if (newPassword === confirmNewPassword) {
+      await axios
+        .post("http://localhost:5002/sendEmail", formData)
+        .then((res) => {
+          if (res.status === 200) {
+            const data = res.data;
+            setToastMessage(data.message);
+            setToastStatus(data.status);
+            setToastOpen(open);
+            setPasswordChangeState(true);
+            setOtp(data.otp);
+          }
+        })
+        .catch((err) => {
+          setToastMessage("Somethind Went Wrong. Please Check the Console.");
+          setToastStatus("error");
+          setToastOpen(true);
+          console.error(err.response.data.errorText);
+        });
+    }
+  };
+
+  const verifyOTP = async () => {
+    setOtpVerifying(true);
+    if (enteredOtp === otp) {
+      setToastMessage("OTP Entered is Correct.");
+      setToastStatus("success");
+      setToastOpen(true);
+      const formData = new FormData();
+      formData.append("email", sessionStorage.getItem("email").toString());
+      formData.append("newPass", newPassword);
+      await axios
+        .post("http://localhost:5002/updatePass", formData)
+        .then((res) => {
+          if (res.status === 200) {
+            const data = res.data;
+            setToastMessage(data.message);
+            setToastStatus(data.status);
+            setToastOpen(true);
+          }
+        })
+        .catch((err) => {
+          setToastMessage("Something Went Wrong. Please Check the Console.");
+          setToastStatus("error");
+          setToastOpen(true);
+          console.error(err);
+        })
+        .finally(() => setOtpVerifying(false));
+    } else {
+      setToastMessage(
+        "Entered OTP is incorrect. Please Check the Email Once More.",
+      );
+      setToastStatus("warning");
+      setToastOpen(true);
+    }
+  };
 
   return (
     <>
@@ -604,8 +674,18 @@ const SettingsModal = ({ open, onClose }) => {
                 {activeTab === "password" && !loading && (
                   <Box sx={{ maxWidth: 380 }}>
                     {[
-                      { label: "New Password", disabled: false },
-                      { label: "Confirm New Password", disabled: false },
+                      {
+                        label: "New Password",
+                        disabled: false,
+                        value: newPassword,
+                        onChange: (e) => setNewPassword(e.target.value),
+                      },
+                      {
+                        label: "Confirm New Password",
+                        disabled: false,
+                        value: confirmNewPassword,
+                        onChange: (e) => setConfirmNewPassword(e.target.value),
+                      },
                     ].map((field) => (
                       <FormControl key={field.label} sx={{ mb: 2 }}>
                         <FormLabel
@@ -633,6 +713,8 @@ const SettingsModal = ({ open, onClose }) => {
                               boxShadow: "0 0 0 3px rgba(2,143,188,0.15)",
                             },
                           }}
+                          value={field.value}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                     ))}
@@ -654,6 +736,7 @@ const SettingsModal = ({ open, onClose }) => {
                             "linear-gradient(135deg, #0ea5e9, #028FB9)",
                         },
                       }}
+                      onClick={sendOTP}
                     >
                       Send OTP to Email
                     </Button>
@@ -676,7 +759,7 @@ const SettingsModal = ({ open, onClose }) => {
                         OTP Verification
                       </FormLabel>
                       <Input
-                        type="password"
+                        type="text"
                         placeholder="Enter OTP sent to your email"
                         sx={{
                           bgcolor: passwordChangeState
@@ -690,6 +773,8 @@ const SettingsModal = ({ open, onClose }) => {
                           color: "#e0e8f0",
                           fontSize: 13.5,
                         }}
+                        value={enteredOtp}
+                        onChange={(e) => setEnteredOtp(e.target.value)}
                       />
                     </FormControl>
 
@@ -711,6 +796,8 @@ const SettingsModal = ({ open, onClose }) => {
                           ? "0 4px 12px rgba(5,150,105,0.3)"
                           : "none",
                       }}
+                      loading={otpVerifying}
+                      onClick={verifyOTP}
                     >
                       Verify & Update Password
                     </Button>

@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, session
+import requests
 import json
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -7,6 +8,7 @@ import psycopg2
 import psycopg2.extras
 import os
 from urllib.parse import unquote
+import random
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -756,6 +758,67 @@ def getProfile(name):
     user_details = { "id" : row[0], "username" : row[1], "branch" : row[2], "email" : row[3], "role" : row[4], "mobile" : row[5] }
     
     return jsonify(user_details), 200
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def sendOTPEmail(email):
+    otp = generate_otp()
+    
+    payload = {
+        "service_id" : "service_7pvvf5q",
+        "template_id" : "template_19z9h3n",
+        "user_id" : "OwPNSSva-FXe5igPJ",
+        "template_params" : {
+            "email" : email,
+            "otp" : otp,
+            "system" : "MCPL Task Management System"
+        }
+    }
+    
+    headers = {
+        "Content-Type" : "application/json"
+    }
+    
+    response = requests.post("https://api.emailjs.com/api/v1.0/email/send",json=payload, headers=headers)
+    
+    return {
+        "otp" : otp,
+        "response" : response
+    }
+
+@app.route("/sendEmail", methods=["POST"])
+def sendEmail():
+    data = request.form
+    email = data.get("email")
+    
+    resp = sendOTPEmail(email=email)
+    
+    if resp["response"].status_code == 200:
+        return jsonify({"otp" : resp["otp"], 
+                        "message" : "OTP Sent Successfully", 
+                        "status" : "success"}), 200
+    else:
+        return jsonify({"message" : "Something Went Wrong. Please Check the Server Console.",
+                        "status" : "error", 
+                        "errorText" : resp["response"].text}), 500
+    
+@app.route("/updatePass",methods=["POST"])
+def updatePass():
+    data = request.form;
+    email = data.get("email")
+    newPass = data.get("newPass")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "UserEmail" = %s """,[email,])
+    id = cursor.fetchone()
+    
+    cursor.execute(""" UPDATE "UserMaster" SET "UserPWD" = %s WHERE "UserID" = %s """,[newPass, id])
+    conn.commit()
+    
+    return jsonify({ "status" : "success", "message" : "Password Changed Successfully." }), 200
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0",port = 5002, debug = True)

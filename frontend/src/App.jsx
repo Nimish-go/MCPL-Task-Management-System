@@ -1,6 +1,7 @@
 import {
   BrowserRouter,
   Navigate,
+  Outlet,
   Route,
   Routes,
   useNavigate,
@@ -17,6 +18,8 @@ import { useState } from "react";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
+import LeaveManagement from "./pages/LeaveManagement";
+import Navbar from "./components/Navbar";
 
 function App() {
   const empName = sessionStorage.getItem("empName");
@@ -39,6 +42,7 @@ function App() {
             element={<TasksPerformedReport />}
           />
           <Route path="/director_meetings" element={<DirectorMeetings />} />
+          <Route path="/leave_management" element={<LeaveManagement />} />
         </Routes>
       </BrowserRouter>
     </div>

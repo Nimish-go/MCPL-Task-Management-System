@@ -15,6 +15,7 @@ import {
 } from "@mui/joy";
 import {
   AddCircle,
+  CalendarToday,
   CreateNewFolder,
   Engineering,
   FolderCopy,
@@ -276,6 +277,12 @@ const AdminPanel = () => {
                   <Engineering sx={{ fontSize: "1rem" }} />
                 </ListItemDecorator>
                 Work Types
+              </Tab>
+              <Tab value={3} disableIndicator>
+                <ListItemDecorator sx={{ mr: 0.5 }}>
+                  <CalendarToday sx={{ fontSize: "1rem" }} />
+                </ListItemDecorator>
+                Leave Management
               </Tab>
             </TabList>
 
@@ -735,6 +742,10 @@ const AdminPanel = () => {
                   )}
                 </tbody>
               </TableWrapper>
+            </TabPanel>
+
+            <TabPanel value={3} sx={{ p: 3 }}>
+              
             </TabPanel>
           </Tabs>
         </Box>

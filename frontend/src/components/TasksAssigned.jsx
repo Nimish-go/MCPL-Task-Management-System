@@ -200,7 +200,8 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
         }}
       >
         {/* ── Gradient Header ── */}
-        <div className="relative overflow-hidden px-6 pt-6 pb-5 bg-gradient-to-br from-indigo-500 to-violet-500 shrink-0">
+        {/* linear-gradient(135deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%) */}
+        <div className="relative overflow-hidden px-6 pt-6 pb-5 bg-gradient-to-br from-[#0f1b35] to-[#1565c0] shrink-0">
           {/* Decorative circles */}
           <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
           <div className="absolute -bottom-5 right-16 w-16 h-16 rounded-full bg-white/[0.07] pointer-events-none" />

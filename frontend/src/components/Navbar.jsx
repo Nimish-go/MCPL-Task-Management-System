@@ -10,6 +10,7 @@ import {
   Box,
   ListItemButton,
   Divider,
+  Button,
 } from "@mui/joy";
 import {
   SpaceDashboard,
@@ -25,6 +26,7 @@ import {
   ExpandMore,
   ExpandLess,
   ChevronRight,
+  CalendarToday,
 } from "@mui/icons-material";
 import TasksAssigned from "./TasksAssigned";
 import ProjectHistory from "./ProjectHistory";
@@ -238,11 +240,23 @@ const Navbar = () => {
   const [workTypeData, setWorkTypeData] = useState([]);
   const [drawerType, setDrawerType] = useState("");
   const [settingsModal, setSettingsModal] = useState(false);
+  const [theme, setTheme] = useState("light");
 
-  const logout = () => {
-    sessionStorage.clear();
-    navigate("/");
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const isActive = (path) => location.pathname === path;
   const designation = sessionStorage.getItem("designation") || "";
@@ -372,7 +386,7 @@ const Navbar = () => {
         </Box>
 
         {/* Admin Panel back button */}
-        {location.pathname === "/admin_panel" && (
+        {location.pathname !== "/dashboard" && (
           <Box sx={{ px: 1, pt: 2 }}>
             <NavItem
               icon={<ArrowBack sx={{ fontSize: "1.1rem" }} />}
@@ -468,6 +482,13 @@ const Navbar = () => {
               expanded={expanded}
             />
           )}
+          <NavItem
+            icon={<CalendarToday sx={{ fontSize: "1.2rem" }} />}
+            label="Leave Management"
+            to="/leave_management"
+            active={isActive("/leave_management")}
+            expanded={expanded}
+          />
         </Box>
 
         {/* Divider */}
