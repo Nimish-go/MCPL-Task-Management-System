@@ -62,13 +62,11 @@ const SettingsModal = ({ open, onClose }) => {
   const [otpVerifying, setOtpVerifying] = useState(false);
 
   useEffect(() => {
-    // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
     if (!open) return;
     setLoading(true);
     axios
-      .get(
-        `http://localhost:5002/getProfile/${sessionStorage.getItem("empName")}`,
-      )
+      .get(`/getProfile/${sessionStorage.getItem("empName")}`)
       .then((res) => {
         if (res.status === 200) {
           const data = res.data;
@@ -98,7 +96,7 @@ const SettingsModal = ({ open, onClose }) => {
     formData.append("email", email);
     formData.append("mobile", userMobile);
     axios
-      .put(`http://localhost:5002/updateProfile/${userId}`, formData)
+      .put(`/updateProfile/${userId}`, formData)
       .then((res) => {
         if (res.status === 200) {
           setToastStatus("success");
@@ -127,7 +125,7 @@ const SettingsModal = ({ open, onClose }) => {
 
     if (newPassword === confirmNewPassword) {
       await axios
-        .post("http://localhost:5002/sendEmail", formData)
+        .post("/sendEmail", formData)
         .then((res) => {
           if (res.status === 200) {
             const data = res.data;
@@ -139,7 +137,7 @@ const SettingsModal = ({ open, onClose }) => {
           }
         })
         .catch((err) => {
-          setToastMessage("Somethind Went Wrong. Please Check the Console.");
+          setToastMessage("Something Went Wrong. Please Check the Console.");
           setToastStatus("error");
           setToastOpen(true);
           console.error(err.response.data.errorText);
@@ -157,7 +155,7 @@ const SettingsModal = ({ open, onClose }) => {
       formData.append("email", sessionStorage.getItem("email").toString());
       formData.append("newPass", newPassword);
       await axios
-        .post("http://localhost:5002/updatePass", formData)
+        .post("/updatePass", formData)
         .then((res) => {
           if (res.status === 200) {
             const data = res.data;
