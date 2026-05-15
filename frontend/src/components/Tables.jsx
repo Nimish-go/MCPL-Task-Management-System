@@ -320,9 +320,9 @@ const Tables = ({ type, tableData, loading = true }) => {
               >
                 {[
                   "#",
-                  "Task ID",
                   "Date",
                   "Assigned By",
+                  "Project Details",
                   "Description",
                   "Status",
                   "Deadline",
@@ -400,17 +400,6 @@ const Tables = ({ type, tableData, loading = true }) => {
                           </Typography>
                         </Box>
                       </td>
-                      <td style={tdStyle}>
-                        <Typography
-                          sx={{
-                            fontSize: "0.8rem",
-                            fontWeight: 600,
-                            color: "#1976d2",
-                          }}
-                        >
-                          #{task.id}
-                        </Typography>
-                      </td>
                       <td
                         style={{
                           ...tdStyle,
@@ -450,6 +439,13 @@ const Tables = ({ type, tableData, loading = true }) => {
                             {task.assigned_by}
                           </Typography>
                         </Box>
+                      </td>
+                      <td style={tdStyle}>
+                        <Typography
+                          sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}
+                        >
+                          {task.project_details}
+                        </Typography>
                       </td>
                       <td style={tdStyle}>
                         <Typography

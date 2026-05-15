@@ -13,7 +13,6 @@ const LeaveManagement = () => {
         <div className="lottie">
           <DotLottieReact
             src="https://lottie.host/9407d68b-42d6-4463-a95a-c44fd254f3f3/fSWzDbxuS0.lottie"
-            loop
             autoplay
             className="w-125 h-125 flex items-center justify-center text-center"
           />
