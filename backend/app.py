@@ -593,13 +593,41 @@ def dashboard_tasks_assigned(user):
     cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[decodedUser,])
     user_id = cursor.fetchone()
     
-    cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", um."EmpName", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus"
-                       FROM "ProjectHistory" ph
-                       JOIN "UserMaster" um ON ph."AssignedBy" = um."UserID"
-                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
-                       WHERE ph."ChangeStatus?" = true AND ph."UserID" = %s ORDER BY ph."ProjectHistoryID" ASC """,[user_id[0],])
+    cursor.execute("""
+        SELECT 
+            ph."ProjectHistoryID",
+            ph."Event",
+            um."EmpName",
+            pm."ProjectCode",
+            pm."ProjectName",
+            ph."Remarks",
+            ph."TargetDate",
+            ph."DateOfEntry",
+            ph."TaskStatus",
+
+            (
+                SELECT COUNT(*)
+                FROM "ProjectHistory"
+                WHERE "UserID" = %s
+                AND "TaskStatus" = 'Cleared'
+                AND "ChangeStatus?" = false
+            ) AS completed_tasks_count
+
+        FROM "ProjectHistory" ph
+
+        JOIN "UserMaster" um 
+            ON ph."AssignedBy" = um."UserID"
+
+        JOIN "ProjectMaster" pm 
+            ON ph."ProjectID" = pm."ProjectID"
+
+        WHERE ph."ChangeStatus?" = true
+        AND ph."UserID" = %s
+
+        ORDER BY ph."ProjectHistoryID" ASC
+    """, [user_id[0], user_id[0]])
     
-    tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_by" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "deadline" : row[6], "date_of_entry" : row[7], "status" : row[8] } for row in cursor.fetchall()]
+    tasks_assigned = [{ "id": row[0], "task_desc" : row[1], "assigned_by" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "deadline" : row[6], "date_of_entry" : row[7], "status" : row[8], "completed_tasks_count" : row[9] } for row in cursor.fetchall()]
     
     return jsonify(tasks_assigned), 200
 
@@ -621,13 +649,13 @@ def dashboard_tasks_under_review(user):
     if not user_id:
         return jsonify({"message" : "User Not Found"}), 404
     
-    cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'), 
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared') , 
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE),
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')
+    cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND ph."ChangeStatus?" = TRUE), 
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared' AND ph."ChangeStatus?" = FALSE) , 
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE AND ph."ChangeStatus?" = TRUE),
+                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' AND ph."ChangeStatus?" = TRUE)
                         FROM "ProjectHistory" ph
                         JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                        WHERE ph."AssignedBy" = %s AND ph."IsHistory" = FALSE AND ph."ChangeStatus?" = TRUE
+                        WHERE ph."AssignedBy" = %s AND ph."IsHistory" = FALSE
                         GROUP BY um."EmpName";  """, [user_id[0],])
     
     tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]

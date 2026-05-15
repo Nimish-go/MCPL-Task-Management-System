@@ -25,7 +25,8 @@ const DashboardTasksAssigned = () => {
   const today = new Date();
 
   const pending = tasksData.filter((t) => t.status === "Pending").length;
-  const completed = tasksData.filter((t) => t.status === "Completed").length;
+  const completed =
+    tasksData.length > 0 ? tasksData[0].completed_tasks_count : 0;
   const reloaded = tasksData.filter((t) => t.status === "Reloaded").length;
   const overdue = tasksData.filter(
     (t) =>
