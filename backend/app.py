@@ -649,14 +649,24 @@ def dashboard_tasks_under_review(user):
     if not user_id:
         return jsonify({"message" : "User Not Found"}), 404
     
-    cursor.execute("""  SELECT um."EmpName", COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND ph."ChangeStatus?" = TRUE), 
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared' AND ph."ChangeStatus?" = FALSE) , 
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE AND ph."ChangeStatus?" = TRUE),
-                        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' AND ph."ChangeStatus?" = TRUE)
-                        FROM "ProjectHistory" ph
-                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                        WHERE ph."AssignedBy" = %s AND ph."IsHistory" = FALSE
-                        GROUP BY um."EmpName";  """, [user_id[0],])
+    cursor.execute("""
+    SELECT 
+        um."EmpName",
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."ChangeStatus?" = TRUE)                                    AS pending_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared'  AND ph."ChangeStatus?" = FALSE)                                   AS cleared_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE AND ph."ChangeStatus?" = TRUE) AS overdue_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' AND ph."ChangeStatus?" = TRUE)                                    AS reloaded_count
+    FROM "ProjectHistory" ph
+    JOIN "UserMaster" um ON ph."UserID" = um."UserID"
+    WHERE ph."AssignedBy" = %s
+      AND ph."IsHistory" = FALSE
+    GROUP BY um."EmpName"
+    HAVING
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."ChangeStatus?" = TRUE)                                    > 0
+     OR COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared'  AND ph."ChangeStatus?" = FALSE)                                   > 0
+     OR COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE AND ph."ChangeStatus?" = TRUE) > 0
+     OR COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' AND ph."ChangeStatus?" = TRUE)                                    > 0;
+""", [user_id[0]])
     
     tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]
     

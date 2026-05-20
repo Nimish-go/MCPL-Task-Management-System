@@ -26,7 +26,7 @@ const DashboardTasksUnderReview = () => {
   }, []);
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <Tabs
         value={tabIndex}
         onChange={(e, val) => setTabIndex(val)}
@@ -35,20 +35,23 @@ const DashboardTasksUnderReview = () => {
         <TabList
           sx={{
             mb: 2.5,
-            gap: 1,
+            gap: 0.5,
             backgroundColor: "#f4f6fb",
             borderRadius: "12px",
             p: 0.5,
-            width: "fit-content",
+            // Full-width on mobile so both tabs share the space equally
+            width: { xs: "100%", sm: "fit-content" },
             "& .MuiTab-root": {
               borderRadius: "10px",
               fontWeight: 600,
-              fontSize: "0.825rem",
+              fontSize: { xs: "0.78rem", md: "0.825rem" },
               color: "#64748b",
               border: "none",
-              px: 2,
+              px: { xs: 1.5, md: 2 },
               py: 1,
               minHeight: "unset",
+              // Fill available width equally on mobile
+              flex: { xs: 1, sm: "unset" },
               transition: "all 0.2s ease",
               "&.Mui-selected": {
                 backgroundColor: "#fff",
@@ -59,14 +62,14 @@ const DashboardTasksUnderReview = () => {
           }}
         >
           <Tab value={0} disableIndicator>
-            <ListItemDecorator sx={{ mr: 0.5 }}>
-              <TableChart sx={{ fontSize: "0.9rem" }} />
+            <ListItemDecorator sx={{ mr: { xs: 0.3, md: 0.5 } }}>
+              <TableChart sx={{ fontSize: { xs: "0.85rem", md: "0.9rem" } }} />
             </ListItemDecorator>
             Tabular View
           </Tab>
           <Tab value={1} disableIndicator>
-            <ListItemDecorator sx={{ mr: 0.5 }}>
-              <PieChart sx={{ fontSize: "0.9rem" }} />
+            <ListItemDecorator sx={{ mr: { xs: 0.3, md: 0.5 } }}>
+              <PieChart sx={{ fontSize: { xs: "0.85rem", md: "0.9rem" } }} />
             </ListItemDecorator>
             Chart View
           </Tab>

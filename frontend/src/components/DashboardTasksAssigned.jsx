@@ -34,59 +34,48 @@ const DashboardTasksAssigned = () => {
   ).length;
   const total = tasksData.length;
 
+  const stats = [
+    { label: "Total",     value: total,     color: "#1976d2", bg: "#e8f0fe" },
+    { label: "Pending",   value: pending,   color: "#e65100", bg: "#fff3e0" },
+    { label: "Completed", value: completed, color: "#2e7d32", bg: "#e8f5e9" },
+    { label: "Reloaded",  value: reloaded,  color: "#991B1B", bg: "#FEE2E2" },
+    { label: "Overdue",   value: overdue,   color: "#7F1D1D", bg: "#FECACA" },
+  ];
+
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Summary Pills */}
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+      {/* Summary Pills — 2-col grid on mobile, flex-wrap on larger */}
       {!loading && total > 0 && (
-        <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-          {[
-            {
-              label: "Total Tasks",
-              value: total,
-              color: "#1976d2",
-              bg: "#e8f0fe",
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, auto)",
+              md: "repeat(5, auto)",
             },
-            {
-              label: "Pending",
-              value: pending,
-              color: "#e65100",
-              bg: "#fff3e0",
-            },
-            {
-              label: "Completed",
-              value: completed,
-              color: "#2e7d32",
-              bg: "#e8f5e9",
-            },
-            {
-              label: "Reloaded",
-              value: reloaded,
-              color: "#991B1B",
-              bg: "#FEE2E2",
-            },
-            {
-              label: "Overdue",
-              value: overdue,
-              color: "#7F1D1D",
-              bg: "#FECACA",
-            },
-          ].map((stat) => (
+            gap: { xs: 1, sm: 1.5, md: 2 },
+            mb: { xs: 2, md: 3 },
+          }}
+        >
+          {stats.map((stat) => (
             <Box
               key={stat.label}
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1.5,
-                px: 2.5,
-                py: 1.5,
+                gap: 1,
+                px: { xs: 1.5, md: 2.5 },
+                py: { xs: 1.2, md: 1.5 },
                 borderRadius: "12px",
                 backgroundColor: stat.bg,
                 border: `1px solid ${stat.color}22`,
+                justifyContent: { xs: "center", sm: "flex-start" },
               }}
             >
               <Typography
                 sx={{
-                  fontSize: "1.5rem",
+                  fontSize: { xs: "1.25rem", md: "1.5rem" },
                   fontWeight: 800,
                   color: stat.color,
                   lineHeight: 1,
@@ -95,7 +84,11 @@ const DashboardTasksAssigned = () => {
                 {stat.value}
               </Typography>
               <Typography
-                sx={{ fontSize: "0.8rem", color: stat.color, fontWeight: 600 }}
+                sx={{
+                  fontSize: { xs: "0.72rem", md: "0.8rem" },
+                  color: stat.color,
+                  fontWeight: 600,
+                }}
               >
                 {stat.label}
               </Typography>

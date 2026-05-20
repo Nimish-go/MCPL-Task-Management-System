@@ -15,6 +15,7 @@ import DashboardTasksAssigned from "../components/DashboardTasksAssigned";
 import DashboardTasksUnderReview from "../components/DashboardTasksUnderReview";
 import AllTasksAssigned from "../components/AllTasksAssigned";
 import { useLocation } from "react-router-dom";
+import { useMediaQuery } from "@mui/material";
 
 const Dashboard = () => {
   const [tasksIndex, setTasksIndex] = useState(0);
@@ -22,6 +23,7 @@ const Dashboard = () => {
   const designation = sessionStorage.getItem("designation") || "";
   const empName = sessionStorage.getItem("empName") || "User";
   const isDirector = designation.toUpperCase().includes("DIRECTOR");
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -38,18 +40,17 @@ const Dashboard = () => {
       <Box
         sx={{
           background: "linear-gradient(135deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
-          px: { xs: 3, md: 6 },
-          py: 4,
-          mb: 0,
+          px: { xs: 2.5, sm: 4, md: 6 },
+          py: { xs: 3, md: 4 },
         }}
       >
         <Box sx={{ maxWidth: 1200, mx: "auto" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
-            <WavingHand sx={{ color: "#ffd54f", fontSize: "1.6rem" }} />
+            <WavingHand sx={{ color: "#ffd54f", fontSize: { xs: "1.3rem", md: "1.6rem" } }} />
             <Typography
               sx={{
                 color: "rgba(255,255,255,0.75)",
-                fontSize: "0.95rem",
+                fontSize: { xs: "0.82rem", md: "0.95rem" },
                 fontWeight: 400,
                 letterSpacing: "0.04em",
               }}
@@ -62,7 +63,7 @@ const Dashboard = () => {
             sx={{
               color: "#fff",
               fontWeight: 800,
-              fontSize: { xs: "1.6rem", md: "2rem" },
+              fontSize: { xs: "1.3rem", sm: "1.6rem", md: "2rem" },
               letterSpacing: "-0.02em",
             }}
           >
@@ -86,11 +87,11 @@ const Dashboard = () => {
       </Box>
 
       {/* Main Content */}
-      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 4 }, py: 4 }}>
+      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 1.5, sm: 2, md: 4 }, py: { xs: 2, md: 4 } }}>
         <Box
           sx={{
             backgroundColor: "#fff",
-            borderRadius: "20px",
+            borderRadius: { xs: "14px", md: "20px" },
             boxShadow: "0 4px 32px rgba(0,0,0,0.07)",
             overflow: "hidden",
             border: "1px solid #e8ecf4",
@@ -99,7 +100,7 @@ const Dashboard = () => {
           {/* Section Title Bar */}
           <Box
             sx={{
-              px: 3,
+              px: { xs: 2, md: 3 },
               py: 2.5,
               borderBottom: "1px solid #f0f2f8",
               display: "flex",
@@ -113,6 +114,7 @@ const Dashboard = () => {
                 height: 28,
                 borderRadius: "4px",
                 background: "linear-gradient(180deg, #1976d2, #42a5f5)",
+                flexShrink: 0,
               }}
             />
             <Typography
@@ -130,20 +132,26 @@ const Dashboard = () => {
           >
             <TabList
               sx={{
-                px: 3,
-                pt: 2,
-                gap: 1,
+                px: { xs: 1.5, md: 3 },
+                pt: { xs: 1.5, md: 2 },
+                gap: { xs: 0.5, md: 1 },
                 backgroundColor: "transparent",
                 borderBottom: "2px solid #f0f2f8",
+                overflowX: "auto",
+                flexWrap: "nowrap",
+                "&::-webkit-scrollbar": { height: 0 },
                 "& .MuiTab-root": {
                   fontWeight: 600,
-                  fontSize: "0.875rem",
+                  fontSize: { xs: "0.78rem", md: "0.875rem" },
                   borderRadius: "10px 10px 0 0",
                   color: "#64748b",
                   border: "none",
-                  py: 1.2,
-                  px: 2.5,
+                  py: { xs: 1, md: 1.2 },
+                  px: { xs: 1.5, md: 2.5 },
                   transition: "all 0.2s ease",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  minWidth: "fit-content",
                   "&:hover": { backgroundColor: "#f0f4ff", color: "#1976d2" },
                   "&.Mui-selected": {
                     color: "#1976d2",
@@ -155,22 +163,22 @@ const Dashboard = () => {
             >
               <Tab value={0} disableIndicator>
                 <ListItemDecorator sx={{ mr: 0.5 }}>
-                  <TaskSharp sx={{ fontSize: "1rem" }} />
+                  <TaskSharp sx={{ fontSize: { xs: "0.85rem", md: "1rem" } }} />
                 </ListItemDecorator>
-                Tasks Assigned To You
+                {isMobile ? "To You" : "Tasks Assigned To You"}
               </Tab>
               <Tab value={1} disableIndicator>
                 <ListItemDecorator sx={{ mr: 0.5 }}>
-                  <Assignment sx={{ fontSize: "1rem" }} />
+                  <Assignment sx={{ fontSize: { xs: "0.85rem", md: "1rem" } }} />
                 </ListItemDecorator>
-                Tasks Assigned By You
+                {isMobile ? "By You" : "Tasks Assigned By You"}
               </Tab>
               {isDirector && (
                 <Tab value={2} disableIndicator>
                   <ListItemDecorator sx={{ mr: 0.5 }}>
-                    <TaskAlt sx={{ fontSize: "1rem" }} />
+                    <TaskAlt sx={{ fontSize: { xs: "0.85rem", md: "1rem" } }} />
                   </ListItemDecorator>
-                  All Tasks Assigned
+                  {isMobile ? "All Tasks" : "All Tasks Assigned"}
                 </Tab>
               )}
             </TabList>
