@@ -456,7 +456,7 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5 }) => {
                         borderRight: "none",
                       }}
                     >
-                      {formatDate(task.deadline)}
+                      {task.deadline === "" || task.deadline === null || task.deadline === undefined ? "No Deadline was set." : formatDate(task.deadline)}
                     </td>
                     <td
                       style={{

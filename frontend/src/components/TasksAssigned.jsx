@@ -112,11 +112,11 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   };
 
   const validate = () =>
-    selectedProjectCode &&
-    projectName &&
-    selectedWorkType &&
-    deadline &&
-    taskDescription &&
+    selectedProjectCode != "" &&
+    projectName != "" &&
+    selectedWorkType != "" &&
+    deadline != "" &&
+    taskDescription != "" &&
     assignedToEmployee !== 0;
 
   const assignTask = (event) => {
