@@ -26,7 +26,7 @@ import EditModal from "./EditModal";
 
 // ─── Shared colour map ────────────────────────────────────────────────────────
 const C = {
-  pending: { solid: "#e65100", bg: "#fff8e1", border: "#ffcc80" },
+  pending: { solid: "#ffbd00", bg: "#fff8e1", border: "#ffcc80" },
   completed: { solid: "#2e7d32", bg: "#e8f5e9", border: "#a5d6a7" },
   overdue: { solid: "#c62828", bg: "#fce4ec", border: "#ef9a9a" },
   reloaded: { solid: "#6a1b9a", bg: "#f3e5f5", border: "#ce93d8" },
