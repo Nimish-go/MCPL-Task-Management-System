@@ -661,15 +661,18 @@ def dashboard_tasks_under_review(user):
     cursor.execute("""
     SELECT 
         um."EmpName",
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' )                                    AS pending_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared')                                   AS cleared_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE) AS overdue_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')                                    AS reloaded_count
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' 
+      AND ph."ChangeStatus?" = TRUE)                                    AS pending_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared' 
+      AND ph."ChangeStatus?" = FALSE)                                   AS cleared_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE 
+      AND ph."ChangeStatus?" = TRUE) AS overdue_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' 
+      AND ph."ChangeStatus?" = TRUE)                                    AS reloaded_count
     FROM "ProjectHistory" ph
     JOIN "UserMaster" um ON ph."UserID" = um."UserID"
     WHERE ph."AssignedBy" = %s
       AND ph."IsHistory" = FALSE
-      AND ph."ChangeStatus?" = TRUE
     GROUP BY um."EmpName"
 """, [user_id[0]])
     
