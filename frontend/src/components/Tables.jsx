@@ -25,7 +25,6 @@ const StatusChip = ({ status, deadline }) => {
     const diffDays = Math.round((today - dl) / (1000 * 60 * 60 * 24));
     return (
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Warning sx={{ fontSize: "0.85rem", color: "#c62828" }} />
         <Typography
           sx={{
             fontSize: "0.72rem",
@@ -39,6 +38,7 @@ const StatusChip = ({ status, deadline }) => {
             whiteSpace: "nowrap",
           }}
         >
+          <Warning sx={{ fontSize: "0.85rem", color: "#c62828" }} />
           Overdue {diffDays}d
         </Typography>
       </Box>
@@ -46,12 +46,32 @@ const StatusChip = ({ status, deadline }) => {
   }
 
   const map = {
-    Completed: { bg: "#e8f5e9", color: "#2e7d32", border: "#a5d6a7", icon: <CheckCircle sx={{ fontSize: "0.8rem" }} /> },
-    Pending:   { bg: "#fff8e1", color: "#e65100", border: "#ffcc80", icon: <HourglassEmpty sx={{ fontSize: "0.8rem" }} /> },
-    Reloaded:  { bg: "#fce4ec", color: "#c62828", border: "#ef9a9a", icon: <Refresh sx={{ fontSize: "0.8rem" }} /> },
+    Completed: {
+      bg: "#e8f5e9",
+      color: "#2e7d32",
+      border: "#a5d6a7",
+      icon: <CheckCircle sx={{ fontSize: "0.8rem" }} />,
+    },
+    Pending: {
+      bg: "#fff8e1",
+      color: "#e65100",
+      border: "#ffcc80",
+      icon: <HourglassEmpty sx={{ fontSize: "0.8rem" }} />,
+    },
+    Reloaded: {
+      bg: "#fce4ec",
+      color: "#c62828",
+      border: "#ef9a9a",
+      icon: <Refresh sx={{ fontSize: "0.8rem" }} />,
+    },
   };
 
-  const s = map[status] || { bg: "#f0f0f0", color: "#555", border: "#ccc", icon: null };
+  const s = map[status] || {
+    bg: "#f0f0f0",
+    color: "#555",
+    border: "#ccc",
+    icon: null,
+  };
   return (
     <Box
       sx={{
@@ -75,7 +95,15 @@ const StatusChip = ({ status, deadline }) => {
 };
 
 // ─── Pagination Bar ───────────────────────────────────────────────────────────
-const PaginationBar = ({ page, totalPages, rows, setRows, setPage, total, startIndex }) => (
+const PaginationBar = ({
+  page,
+  totalPages,
+  rows,
+  setRows,
+  setPage,
+  total,
+  startIndex,
+}) => (
   <Box
     sx={{
       display: "flex",
@@ -96,10 +124,22 @@ const PaginationBar = ({ page, totalPages, rows, setRows, setPage, total, startI
       <Select
         size="sm"
         value={rows}
-        onChange={(e, val) => { setRows(val); setPage(0); }}
-        sx={{ width: 70, borderRadius: "8px", fontSize: "0.8rem", fontWeight: 600 }}
+        onChange={(e, val) => {
+          setRows(val);
+          setPage(0);
+        }}
+        sx={{
+          width: 70,
+          borderRadius: "8px",
+          fontSize: "0.8rem",
+          fontWeight: 600,
+        }}
       >
-        {[3, 5, 10].map((n) => <Option key={n} value={n}>{n}</Option>)}
+        {[3, 5, 10].map((n) => (
+          <Option key={n} value={n}>
+            {n}
+          </Option>
+        ))}
       </Select>
     </Box>
 
@@ -113,8 +153,18 @@ const PaginationBar = ({ page, totalPages, rows, setRows, setPage, total, startI
       >
         ← Prev
       </Button>
-      <Box sx={{ px: 2, py: 0.5, borderRadius: "8px", backgroundColor: "#e8f0fe", border: "1px solid #c5cae9" }}>
-        <Typography sx={{ fontSize: "0.8rem", fontWeight: 700, color: "#1976d2" }}>
+      <Box
+        sx={{
+          px: 2,
+          py: 0.5,
+          borderRadius: "8px",
+          backgroundColor: "#e8f0fe",
+          border: "1px solid #c5cae9",
+        }}
+      >
+        <Typography
+          sx={{ fontSize: "0.8rem", fontWeight: 700, color: "#1976d2" }}
+        >
           {page + 1} / {totalPages || 1}
         </Typography>
       </Box>
@@ -143,7 +193,11 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
   const [remarksExpanded, setRemarksExpanded] = useState(false);
 
   const formatDate = (d) =>
-    new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(d).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
   const getShortDescription = (desc) => {
     if (!desc?.includes("Task Assigned: ")) return desc;
@@ -169,15 +223,29 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
       }}
     >
       {/* Header row */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1.5,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
             sx={{
-              width: 26, height: 26, borderRadius: "50%",
-              backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center",
+              width: 26,
+              height: 26,
+              borderRadius: "50%",
+              backgroundColor: "#e8f0fe",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#1976d2" }}>
+            <Typography
+              sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#1976d2" }}
+            >
               {startIndex + index + 1}
             </Typography>
           </Box>
@@ -192,29 +260,49 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
         <Box
           sx={{
-            width: 28, height: 28, borderRadius: "50%", backgroundColor: "#e8f0fe",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            backgroundColor: "#e8f0fe",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
           }}
         >
-          <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#1976d2" }}>
+          <Typography
+            sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#1976d2" }}
+          >
             {task.assigned_by?.charAt(0).toUpperCase()}
           </Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", lineHeight: 1 }}>Assigned by</Typography>
-          <Typography sx={{ fontSize: "0.82rem", fontWeight: 600 }}>{task.assigned_by}</Typography>
+          <Typography
+            sx={{ fontSize: "0.7rem", color: "#94a3b8", lineHeight: 1 }}
+          >
+            Assigned by
+          </Typography>
+          <Typography sx={{ fontSize: "0.82rem", fontWeight: 600 }}>
+            {task.assigned_by}
+          </Typography>
         </Box>
       </Box>
 
       {/* Project */}
       <Box sx={{ mb: 1 }}>
-        <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Project</Typography>
-        <Typography sx={{ fontSize: "0.82rem" }}>{task.project_details}</Typography>
+        <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+          Project
+        </Typography>
+        <Typography sx={{ fontSize: "0.82rem" }}>
+          {task.project_details}
+        </Typography>
       </Box>
 
       {/* Description */}
       <Box sx={{ mb: 1 }}>
-        <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Description</Typography>
+        <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+          Description
+        </Typography>
         <Typography sx={{ fontSize: "0.82rem", lineHeight: 1.5 }}>
           {expanded ? task.task_desc : getShortDescription(task.task_desc)}
         </Typography>
@@ -222,7 +310,12 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
           <Link
             component="button"
             onClick={() => setExpanded(!expanded)}
-            sx={{ fontSize: "0.72rem", fontWeight: 600, color: "#1976d2", textDecoration: "none" }}
+            sx={{
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              color: "#1976d2",
+              textDecoration: "none",
+            }}
           >
             {expanded ? "Show Less ▲" : "Read More ▼"}
           </Link>
@@ -232,11 +325,17 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
       {/* Deadline + Remarks row */}
       <Box sx={{ display: "flex", gap: 2, mb: 1.5, flexWrap: "wrap" }}>
         <Box>
-          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Deadline</Typography>
-          <Typography sx={{ fontSize: "0.82rem", color: "#475569" }}>{formatDate(task.deadline)}</Typography>
+          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+            Deadline
+          </Typography>
+          <Typography sx={{ fontSize: "0.82rem", color: "#475569" }}>
+            {formatDate(task.deadline)}
+          </Typography>
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Remarks</Typography>
+          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+            Remarks
+          </Typography>
           <Typography sx={{ fontSize: "0.82rem" }}>
             {remarksExpanded ? task.remarks : getFirstThreeWords(task.remarks)}
           </Typography>
@@ -244,7 +343,12 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
             <Link
               component="button"
               onClick={() => setRemarksExpanded(!remarksExpanded)}
-              sx={{ fontSize: "0.72rem", fontWeight: 600, color: "#1976d2", textDecoration: "none" }}
+              sx={{
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                color: "#1976d2",
+                textDecoration: "none",
+              }}
             >
               {remarksExpanded ? "Show Less ▲" : "Read More ▼"}
             </Link>
@@ -259,7 +363,12 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
         color="primary"
         startDecorator={<Edit sx={{ fontSize: "0.85rem" }} />}
         onClick={() => onEdit(task.id)}
-        sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.75rem", width: "100%" }}
+        sx={{
+          borderRadius: "8px",
+          fontWeight: 600,
+          fontSize: "0.75rem",
+          width: "100%",
+        }}
       >
         Edit Task
       </Button>
@@ -270,10 +379,34 @@ const AssignedCard = ({ task, index, startIndex, onEdit }) => {
 // ─── Mobile Card: Under Review ────────────────────────────────────────────────
 const UnderReviewCard = ({ task, index, startIndex, onClick }) => {
   const statCols = [
-    { key: "pending_count",   label: "Pending",   color: "#e65100", bg: "#fff8e1", icon: <HourglassEmpty sx={{ fontSize: "0.85rem" }} /> },
-    { key: "completed_count", label: "Done",      color: "#2e7d32", bg: "#e8f5e9", icon: <CheckCircle sx={{ fontSize: "0.85rem" }} /> },
-    { key: "overdue_count",   label: "Overdue",   color: "#c62828", bg: "#fce4ec", icon: <Warning sx={{ fontSize: "0.85rem" }} /> },
-    { key: "reloaded_count",  label: "Reloaded",  color: "#6a1b9a", bg: "#f3e5f5", icon: <Refresh sx={{ fontSize: "0.85rem" }} /> },
+    {
+      key: "pending_count",
+      label: "Pending",
+      color: "#e65100",
+      bg: "#fff8e1",
+      icon: <HourglassEmpty sx={{ fontSize: "0.85rem" }} />,
+    },
+    {
+      key: "completed_count",
+      label: "Done",
+      color: "#2e7d32",
+      bg: "#e8f5e9",
+      icon: <CheckCircle sx={{ fontSize: "0.85rem" }} />,
+    },
+    {
+      key: "overdue_count",
+      label: "Overdue",
+      color: "#c62828",
+      bg: "#fce4ec",
+      icon: <Warning sx={{ fontSize: "0.85rem" }} />,
+    },
+    {
+      key: "reloaded_count",
+      label: "Reloaded",
+      color: "#6a1b9a",
+      bg: "#f3e5f5",
+      icon: <Refresh sx={{ fontSize: "0.85rem" }} />,
+    },
   ];
 
   return (
@@ -294,49 +427,77 @@ const UnderReviewCard = ({ task, index, startIndex, onClick }) => {
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
         <Box
           sx={{
-            width: 36, height: 36, borderRadius: "50%",
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
             background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 6px rgba(25,118,210,0.3)", flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 2px 6px rgba(25,118,210,0.3)",
+            flexShrink: 0,
           }}
         >
-          <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff" }}>
+          <Typography
+            sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff" }}
+          >
             {task.name?.charAt(0).toUpperCase()}
           </Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontSize: "0.88rem", fontWeight: 600, color: "#0f1b35" }}>
+          <Typography
+            sx={{ fontSize: "0.88rem", fontWeight: 600, color: "#0f1b35" }}
+          >
             {task.name}
           </Typography>
-          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Tap to view tasks</Typography>
+          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+            Tap to view tasks
+          </Typography>
         </Box>
         <Box
           sx={{
             ml: "auto",
-            width: 26, height: 26, borderRadius: "50%",
-            backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center",
+            width: 26,
+            height: 26,
+            borderRadius: "50%",
+            backgroundColor: "#e8f0fe",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#1976d2" }}>
+          <Typography
+            sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#1976d2" }}
+          >
             {startIndex + index + 1}
           </Typography>
         </Box>
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1 }}>
+      <Box
+        sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1 }}
+      >
         {statCols.map((col) => (
           <Box
             key={col.key}
             sx={{
-              display: "flex", alignItems: "center", gap: 0.6,
-              backgroundColor: col.bg, color: col.color,
-              px: 1.2, py: 0.6, borderRadius: "8px",
-              fontWeight: 700, fontSize: "0.8rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 0.6,
+              backgroundColor: col.bg,
+              color: col.color,
+              px: 1.2,
+              py: 0.6,
+              borderRadius: "8px",
+              fontWeight: 700,
+              fontSize: "0.8rem",
               border: `1px solid ${col.color}33`,
             }}
           >
             {col.icon}
-            <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: col.color }}>
+            <Typography
+              sx={{ fontSize: "0.78rem", fontWeight: 700, color: col.color }}
+            >
               {task[col.key] ?? 0} {col.label}
             </Typography>
           </Box>
@@ -363,29 +524,29 @@ const tdStyle = {
   padding: "11px 14px",
   fontSize: "0.8rem",
   color: "#1e293b",
-  verticalAlign: "middle",
+  verticalAlign: "top",
   borderBottom: "1px solid #f0f2f8",
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-const Tables = ({ type, tableData, loading = true }) => {
+const Tables = ({ type, tableData, loading = true, onEmployeeClick }) => {
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
   }, []);
 
   const isMobile = useMediaQuery("(max-width:640px)");
 
-  const [expandedRow, setExpandedRow]               = useState(null);
-  const [taskId, setTaskId]                         = useState(0);
-  const [editModal, setEditModal]                   = useState(false);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [taskId, setTaskId] = useState(0);
+  const [editModal, setEditModal] = useState(false);
   const [expandedRemarksRow, setExpandedRemarksRow] = useState(null);
   const [employeeTasksLoading, setEmployeeTasksLoading] = useState(false);
-  const [employeeTasks, setEmployeeTasks]           = useState([]);
-  const [showEmployeeTasks, setShowEmployeeTasks]   = useState(false);
-  const [employeeName, setEmployeeName]             = useState("");
-  const [editModalType, setEditModalType]           = useState("");
-  const [page, setPage]                             = useState(0);
-  const [rows, setRows]                             = useState(5);
+  const [employeeTasks, setEmployeeTasks] = useState([]);
+  const [showEmployeeTasks, setShowEmployeeTasks] = useState(false);
+  const [employeeName, setEmployeeName] = useState("");
+  const [editModalType, setEditModalType] = useState("");
+  const [page, setPage] = useState(0);
+  const [rows, setRows] = useState(5);
 
   const fetchEmployeeTasks = (name, assignerName) => {
     if (!name) return;
@@ -394,18 +555,26 @@ const Tables = ({ type, tableData, loading = true }) => {
     setShowEmployeeTasks(true);
     setEmployeeTasksLoading(true);
     axios
-      .get(`/get_employee_tasks`, { params: { employee_name: name, assigner_name: assignerName } })
-      .then((res) => { if (res.status === 200) setEmployeeTasks(res.data); })
+      .get(`/get_employee_tasks`, {
+        params: { employee_name: name, assigner_name: assignerName },
+      })
+      .then((res) => {
+        if (res.status === 200) setEmployeeTasks(res.data);
+      })
       .catch(console.error)
       .finally(() => setEmployeeTasksLoading(false));
   };
 
-  const startIndex   = page * rows;
+  const startIndex = page * rows;
   const paginatedData = tableData.slice(startIndex, startIndex + rows);
-  const totalPages   = Math.ceil(tableData.length / rows);
+  const totalPages = Math.ceil(tableData.length / rows);
 
   const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(dateString).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
   const getShortDescription = (desc) => {
     if (!desc?.includes("Task Assigned: ")) return desc;
@@ -423,17 +592,39 @@ const Tables = ({ type, tableData, loading = true }) => {
     Array.from({ length: rows }).map((_, i) => (
       <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}>
         {Array.from({ length: cols }).map((_, j) => (
-          <td key={j} style={tdStyle}><Skeleton variant="text" animation="wave" height={20} /></td>
+          <td key={j} style={tdStyle}>
+            <Skeleton variant="text" animation="wave" height={20} />
+          </td>
         ))}
       </tr>
     ));
 
   const skeletonCards = (n) =>
     Array.from({ length: n }).map((_, i) => (
-      <Box key={i} sx={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #e8ecf4", p: 2, mb: 1.5 }}>
+      <Box
+        key={i}
+        sx={{
+          backgroundColor: "#fff",
+          borderRadius: "12px",
+          border: "1px solid #e8ecf4",
+          p: 2,
+          mb: 1.5,
+        }}
+      >
         <Skeleton variant="text" animation="wave" height={20} sx={{ mb: 1 }} />
-        <Skeleton variant="text" animation="wave" height={16} width="60%" sx={{ mb: 1 }} />
-        <Skeleton variant="rectangular" animation="wave" height={40} sx={{ borderRadius: "8px" }} />
+        <Skeleton
+          variant="text"
+          animation="wave"
+          height={16}
+          width="60%"
+          sx={{ mb: 1 }}
+        />
+        <Skeleton
+          variant="rectangular"
+          animation="wave"
+          height={40}
+          sx={{ borderRadius: "8px" }}
+        />
       </Box>
     ));
 
@@ -442,7 +633,9 @@ const Tables = ({ type, tableData, loading = true }) => {
     const emptyState = (
       <Box sx={{ textAlign: "center", py: 6 }}>
         <InboxOutlined sx={{ fontSize: "2.5rem", color: "#c5cae9", mb: 1 }} />
-        <Typography level="title-sm" sx={{ color: "#90a4ae" }}>No tasks pending</Typography>
+        <Typography level="title-sm" sx={{ color: "#90a4ae" }}>
+          No tasks pending
+        </Typography>
       </Box>
     );
 
@@ -451,97 +644,293 @@ const Tables = ({ type, tableData, loading = true }) => {
         {/* Mobile: card list */}
         {isMobile ? (
           <Box>
-            {loading ? (
-              skeletonCards(rows)
-            ) : paginatedData.length === 0 ? (
-              emptyState
-            ) : (
-              paginatedData.map((task, index) => (
-                <AssignedCard
-                  key={index}
-                  task={task}
-                  index={index}
-                  startIndex={startIndex}
-                  onEdit={(id) => { setTaskId(id); setEditModal(true); setEditModalType("assigned"); }}
-                />
-              ))
-            )}
+            {loading
+              ? skeletonCards(rows)
+              : paginatedData.length === 0
+                ? emptyState
+                : paginatedData.map((task, index) => (
+                    <AssignedCard
+                      key={index}
+                      task={task}
+                      index={index}
+                      startIndex={startIndex}
+                      onEdit={(id) => {
+                        setTaskId(id);
+                        setEditModal(true);
+                        setEditModalType("assigned");
+                      }}
+                    />
+                  ))}
             <PaginationBar
-              page={page} totalPages={totalPages} rows={rows}
-              setRows={setRows} setPage={setPage}
-              total={tableData.length} startIndex={startIndex}
+              page={page}
+              totalPages={totalPages}
+              rows={rows}
+              setRows={setRows}
+              setPage={setPage}
+              total={tableData.length}
+              startIndex={startIndex}
             />
           </Box>
         ) : (
           // Desktop: full table
-          <Box sx={{ borderRadius: "14px", border: "1px solid #e8ecf4", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
+          <Box
+            sx={{
+              borderRadius: "14px",
+              border: "1px solid #e8ecf4",
+              overflow: "hidden",
+              boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+            }}
+          >
             <Box sx={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  tableLayout: "auto",
+                }}
+              >
+                <colgroup>
+                  <col style={{ width: "44px" }} /> {/* # */}
+                  <col style={{ width: "90px" }} /> {/* Date */}
+                  <col style={{ width: "120px" }} /> {/* Assigned By */}
+                  <col style={{ width: "155px" }} /> {/* Project Details */}
+                  <col style={{ width: "200px" }} />{" "}
+                  {/* Description — takes remaining space */}
+                  <col style={{ width: "110px" }} /> {/* Status */}
+                  <col style={{ width: "90px" }} /> {/* Deadline */}
+                  <col style={{ width: "120px" }} /> {/* Remarks */}
+                  <col style={{ width: "50px" }} /> {/* Action */}
+                </colgroup>
                 <thead>
-                  <tr style={{ background: "linear-gradient(135deg, #0f1b35, #1565c0)" }}>
-                    {["#","Date","Assigned By","Project Details","Description","Status","Deadline","Remarks","Action"].map((h, i, arr) => (
-                      <th key={h} style={{ ...thStyle, borderRight: i < arr.length - 1 ? thStyle.borderRight : "none" }}>{h}</th>
+                  <tr
+                    style={{
+                      background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                    }}
+                  >
+                    {[
+                      "#",
+                      "Date",
+                      "Assigned By",
+                      "Project Details",
+                      "Description",
+                      "Status",
+                      "Deadline",
+                      "Remarks",
+                      "Action",
+                    ].map((h, i, arr) => (
+                      <th
+                        key={h}
+                        style={{
+                          ...thStyle,
+                          borderRight:
+                            i < arr.length - 1 ? thStyle.borderRight : "none",
+                        }}
+                      >
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? skeletonRows(9) : paginatedData.length === 0 ? (
-                    <tr><td colSpan={9} style={tdStyle}>{emptyState}</td></tr>
+                  {loading ? (
+                    skeletonRows(9)
+                  ) : paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} style={tdStyle}>
+                        {emptyState}
+                      </td>
+                    </tr>
                   ) : (
                     paginatedData.map((task, index) => {
-                      const isExpanded        = expandedRow === index;
+                      const isExpanded = expandedRow === index;
                       const isRemarksExpanded = expandedRemarksRow === index;
                       return (
                         <tr
                           key={index}
-                          style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f4ff")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = index % 2 === 0 ? "#fff" : "#fafbff")}
+                          style={{
+                            backgroundColor:
+                              index % 2 === 0 ? "#fff" : "#fafbff",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor = "#f0f4ff")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              index % 2 === 0 ? "#fff" : "#fafbff")
+                          }
                         >
-                          <td style={tdStyle}>
-                            <Box sx={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#1976d2" }}>{startIndex + index + 1}</Typography>
+                          <td style={{ ...tdStyle, verticalAlign: "middle" }}>
+                            <Box
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: "50%",
+                                backgroundColor: "#e8f0fe",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontSize: "0.7rem",
+                                  fontWeight: 700,
+                                  color: "#1976d2",
+                                }}
+                              >
+                                {startIndex + index + 1}
+                              </Typography>
                             </Box>
                           </td>
-                          <td style={{ ...tdStyle, color: "#475569", fontSize: "0.78rem" }}>{formatDate(task.date_of_entry)}</td>
+                          <td
+                            style={{
+                              ...tdStyle,
+                              color: "#475569",
+                              fontSize: "0.78rem",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {formatDate(task.date_of_entry)}
+                          </td>
                           <td style={tdStyle}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Box sx={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#1976d2" }}>{task.assigned_by?.charAt(0).toUpperCase()}</Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: "50%",
+                                  backgroundColor: "#e8f0fe",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <Typography
+                                  sx={{
+                                    fontSize: "0.65rem",
+                                    fontWeight: 700,
+                                    color: "#1976d2",
+                                  }}
+                                >
+                                  {task.assigned_by?.charAt(0).toUpperCase()}
+                                </Typography>
                               </Box>
-                              <Typography sx={{ fontSize: "0.8rem" }}>{task.assigned_by}</Typography>
+                              <Typography sx={{ fontSize: "0.8rem" }}>
+                                {task.assigned_by}
+                              </Typography>
                             </Box>
                           </td>
-                          <td style={tdStyle}><Typography sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}>{task.project_details}</Typography></td>
                           <td style={tdStyle}>
-                            <Typography sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
-                              {isExpanded ? task.task_desc : getShortDescription(task.task_desc)}
+                            <Typography
+                              sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}
+                            >
+                              {task.project_details}
+                            </Typography>
+                          </td>
+                          <td style={tdStyle}>
+                            <Typography
+                              sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}
+                            >
+                              {isExpanded
+                                ? task.task_desc
+                                : getShortDescription(task.task_desc)}
                             </Typography>
                             {task.task_desc?.includes("Task Assigned:") && (
-                              <Link component="button" onClick={() => setExpandedRow(isExpanded ? null : index)}
-                                sx={{ fontSize: "0.72rem", fontWeight: 600, color: "#1976d2", textDecoration: "none", mt: 0.3, display: "block" }}>
+                              <Link
+                                component="button"
+                                onClick={() =>
+                                  setExpandedRow(isExpanded ? null : index)
+                                }
+                                sx={{
+                                  fontSize: "0.72rem",
+                                  fontWeight: 600,
+                                  color: "#1976d2",
+                                  textDecoration: "none",
+                                  mt: 0.3,
+                                  display: "block",
+                                }}
+                              >
                                 {isExpanded ? "Show Less ▲" : "Read More ▼"}
                               </Link>
                             )}
                           </td>
-                          <td style={tdStyle}><StatusChip status={task.status} deadline={task.deadline} /></td>
-                          <td style={{ ...tdStyle, color: "#475569", fontSize: "0.78rem" }}>{formatDate(task.deadline)}</td>
                           <td style={tdStyle}>
-                            <Typography sx={{ fontSize: "0.8rem" }}>
-                              {isRemarksExpanded ? task.remarks : getFirstThreeWords(task.remarks)}
-                            </Typography>
-                            {task.remarks && task.remarks.split(/\s+/).length > 3 && (
-                              <Link component="button" onClick={() => setExpandedRemarksRow(isRemarksExpanded ? null : index)}
-                                sx={{ fontSize: "0.72rem", fontWeight: 600, color: "#1976d2", textDecoration: "none", mt: 0.3, display: "block" }}>
-                                {isRemarksExpanded ? "Show Less ▲" : "Read More ▼"}
-                              </Link>
-                            )}
+                            <StatusChip
+                              status={task.status}
+                              deadline={task.deadline}
+                            />
+                          </td>
+                          <td
+                            style={{
+                              ...tdStyle,
+                              color: "#475569",
+                              fontSize: "0.78rem",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {formatDate(task.deadline)}
                           </td>
                           <td style={tdStyle}>
-                            <Button size="sm" variant="soft" color="primary"
-                              startDecorator={<Edit sx={{ fontSize: "0.85rem" }} />}
-                              onClick={() => { setTaskId(task.id); setEditModal(true); setEditModalType("assigned"); }}
-                              sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.75rem", "&:hover": { backgroundColor: "#1976d2", color: "#fff" }, transition: "all 0.2s ease" }}>
+                            <Typography sx={{ fontSize: "0.8rem" }}>
+                              {isRemarksExpanded
+                                ? task.remarks
+                                : getFirstThreeWords(task.remarks)}
+                            </Typography>
+                            {task.remarks &&
+                              task.remarks.split(/\s+/).length > 3 && (
+                                <Link
+                                  component="button"
+                                  onClick={() =>
+                                    setExpandedRemarksRow(
+                                      isRemarksExpanded ? null : index,
+                                    )
+                                  }
+                                  sx={{
+                                    fontSize: "0.72rem",
+                                    fontWeight: 600,
+                                    color: "#1976d2",
+                                    textDecoration: "none",
+                                    mt: 0.3,
+                                    display: "block",
+                                  }}
+                                >
+                                  {isRemarksExpanded
+                                    ? "Show Less ▲"
+                                    : "Read More ▼"}
+                                </Link>
+                              )}
+                          </td>
+                          <td style={tdStyle}>
+                            <Button
+                              size="sm"
+                              variant="soft"
+                              color="primary"
+                              startDecorator={
+                                <Edit sx={{ fontSize: "0.85rem" }} />
+                              }
+                              onClick={() => {
+                                setTaskId(task.id);
+                                setEditModal(true);
+                                setEditModalType("assigned");
+                              }}
+                              sx={{
+                                borderRadius: "8px",
+                                fontWeight: 600,
+                                fontSize: "0.75rem",
+                                "&:hover": {
+                                  backgroundColor: "#1976d2",
+                                  color: "#fff",
+                                },
+                                transition: "all 0.2s ease",
+                              }}
+                            >
                               Edit
                             </Button>
                           </td>
@@ -553,15 +942,30 @@ const Tables = ({ type, tableData, loading = true }) => {
               </table>
             </Box>
             <PaginationBar
-              page={page} totalPages={totalPages} rows={rows}
-              setRows={setRows} setPage={setPage}
-              total={tableData.length} startIndex={startIndex}
+              page={page}
+              totalPages={totalPages}
+              rows={rows}
+              setRows={setRows}
+              setPage={setPage}
+              total={tableData.length}
+              startIndex={startIndex}
             />
           </Box>
         )}
 
-        <EditModal taskId={taskId} open={editModal} onClose={() => setEditModal(false)} type={editModalType} />
-        <TasksModal open={showEmployeeTasks} taskData={employeeTasks} loading={employeeTasksLoading} name={employeeName} onClose={() => setShowEmployeeTasks(false)} />
+        <EditModal
+          taskId={taskId}
+          open={editModal}
+          onClose={() => setEditModal(false)}
+          type={editModalType}
+        />
+        <TasksModal
+          open={showEmployeeTasks}
+          taskData={employeeTasks}
+          loading={employeeTasksLoading}
+          name={employeeName}
+          onClose={() => setShowEmployeeTasks(false)}
+        />
       </>
     );
   }
@@ -569,16 +973,42 @@ const Tables = ({ type, tableData, loading = true }) => {
   // ── UNDER REVIEW ────────────────────────────────────────────────────────────
   if (type === "underReview") {
     const statCols = [
-      { key: "pending_count",   label: "Pending",  color: "#e65100", bg: "#fff8e1", icon: <HourglassEmpty sx={{ fontSize: "0.9rem" }} /> },
-      { key: "completed_count", label: "Completed",color: "#2e7d32", bg: "#e8f5e9", icon: <CheckCircle sx={{ fontSize: "0.9rem" }} /> },
-      { key: "overdue_count",   label: "Overdue",  color: "#c62828", bg: "#fce4ec", icon: <Warning sx={{ fontSize: "0.9rem" }} /> },
-      { key: "reloaded_count",  label: "Reloaded", color: "#6a1b9a", bg: "#f3e5f5", icon: <Refresh sx={{ fontSize: "0.9rem" }} /> },
+      {
+        key: "pending_count",
+        label: "Pending",
+        color: "#e65100",
+        bg: "#fff8e1",
+        icon: <HourglassEmpty sx={{ fontSize: "0.9rem" }} />,
+      },
+      {
+        key: "completed_count",
+        label: "Completed",
+        color: "#2e7d32",
+        bg: "#e8f5e9",
+        icon: <CheckCircle sx={{ fontSize: "0.9rem" }} />,
+      },
+      {
+        key: "overdue_count",
+        label: "Overdue",
+        color: "#c62828",
+        bg: "#fce4ec",
+        icon: <Warning sx={{ fontSize: "0.9rem" }} />,
+      },
+      {
+        key: "reloaded_count",
+        label: "Reloaded",
+        color: "#6a1b9a",
+        bg: "#f3e5f5",
+        icon: <Refresh sx={{ fontSize: "0.9rem" }} />,
+      },
     ];
 
     const emptyState = (
       <Box sx={{ textAlign: "center", py: 6 }}>
         <InboxOutlined sx={{ fontSize: "2.5rem", color: "#c5cae9", mb: 1 }} />
-        <Typography level="title-sm" sx={{ color: "#90a4ae" }}>No tasks under review</Typography>
+        <Typography level="title-sm" sx={{ color: "#90a4ae" }}>
+          No tasks under review
+        </Typography>
       </Box>
     );
 
@@ -586,65 +1016,201 @@ const Tables = ({ type, tableData, loading = true }) => {
       <>
         {isMobile ? (
           <Box>
-            {loading ? skeletonCards(rows) : paginatedData.length === 0 ? emptyState : (
-              paginatedData.map((task, index) => (
-                <UnderReviewCard
-                  key={index}
-                  task={task}
-                  index={index}
-                  startIndex={startIndex}
-                  onClick={() => fetchEmployeeTasks(task.name, sessionStorage.getItem("empName"))}
-                />
-              ))
-            )}
+            {loading
+              ? skeletonCards(rows)
+              : paginatedData.length === 0
+                ? emptyState
+                : paginatedData.map((task, index) => (
+                    <UnderReviewCard
+                      key={index}
+                      task={task}
+                      index={index}
+                      startIndex={startIndex}
+                      onClick={() => {
+                        fetchEmployeeTasks(
+                          task.name,
+                          sessionStorage.getItem("empName"),
+                        );
+                        onEmployeeClick?.(task.name);
+                      }}
+                    />
+                  ))}
             <PaginationBar
-              page={page} totalPages={totalPages} rows={rows}
-              setRows={setRows} setPage={setPage}
-              total={tableData.length} startIndex={startIndex}
+              page={page}
+              totalPages={totalPages}
+              rows={rows}
+              setRows={setRows}
+              setPage={setPage}
+              total={tableData.length}
+              startIndex={startIndex}
             />
           </Box>
         ) : (
-          <Box sx={{ borderRadius: "14px", border: "1px solid #e8ecf4", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
+          <Box
+            sx={{
+              borderRadius: "14px",
+              border: "1px solid #e8ecf4",
+              overflow: "hidden",
+              boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+            }}
+          >
             <Box sx={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  tableLayout: "fixed",
+                }}
+              >
                 <thead>
-                  <tr style={{ background: "linear-gradient(135deg, #0f1b35, #1565c0)" }}>
-                    {["#","Employee","Pending","Completed","Overdue","Reloaded"].map((h, i, arr) => (
-                      <th key={h} style={{ ...thStyle, borderRight: i < arr.length - 1 ? thStyle.borderRight : "none" }}>{h}</th>
+                  <tr
+                    style={{
+                      background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                    }}
+                  >
+                    {[
+                      "#",
+                      "Employee",
+                      "Pending",
+                      "Completed",
+                      "Overdue",
+                      "Reloaded",
+                    ].map((h, i, arr) => (
+                      <th
+                        key={h}
+                        style={{
+                          ...thStyle,
+                          borderRight:
+                            i < arr.length - 1 ? thStyle.borderRight : "none",
+                        }}
+                      >
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? skeletonRows(6) : paginatedData.length === 0 ? (
-                    <tr><td colSpan={6} style={tdStyle}>{emptyState}</td></tr>
+                  {loading ? (
+                    skeletonRows(6)
+                  ) : paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={tdStyle}>
+                        {emptyState}
+                      </td>
+                    </tr>
                   ) : (
                     paginatedData.map((task, index) => (
                       <tr
                         key={index}
-                        style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff", cursor: "pointer" }}
-                        onClick={() => fetchEmployeeTasks(task.name, sessionStorage.getItem("empName"))}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f4ff")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = index % 2 === 0 ? "#fff" : "#fafbff")}
+                        style={{
+                          backgroundColor: index % 2 === 0 ? "#fff" : "#fafbff",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          fetchEmployeeTasks(
+                            task.name,
+                            sessionStorage.getItem("empName"),
+                          );
+                          onEmployeeClick?.(task.name);
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#f0f4ff")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            index % 2 === 0 ? "#fff" : "#fafbff")
+                        }
                       >
                         <td style={tdStyle}>
-                          <Box sx={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#1976d2" }}>{startIndex + index + 1}</Typography>
+                          <Box
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: "50%",
+                              backgroundColor: "#e8f0fe",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                color: "#1976d2",
+                              }}
+                            >
+                              {startIndex + index + 1}
+                            </Typography>
                           </Box>
                         </td>
                         <td style={tdStyle}>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Box sx={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, #1565c0, #42a5f5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(25,118,210,0.3)" }}>
-                              <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff" }}>{task.name?.charAt(0).toUpperCase()}</Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1.5,
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #1565c0, #42a5f5)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                                boxShadow: "0 2px 6px rgba(25,118,210,0.3)",
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                  color: "#fff",
+                                }}
+                              >
+                                {task.name?.charAt(0).toUpperCase()}
+                              </Typography>
                             </Box>
                             <Box>
-                              <Typography sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#0f1b35" }}>{task.name}</Typography>
-                              <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Click to view tasks</Typography>
+                              <Typography
+                                sx={{
+                                  fontSize: "0.85rem",
+                                  fontWeight: 600,
+                                  color: "#0f1b35",
+                                }}
+                              >
+                                {task.name}
+                              </Typography>
+                              <Typography
+                                sx={{ fontSize: "0.7rem", color: "#94a3b8" }}
+                              >
+                                Click to view tasks
+                              </Typography>
                             </Box>
                           </Box>
                         </td>
                         {statCols.map((col) => (
                           <td key={col.key} style={tdStyle}>
-                            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6, backgroundColor: col.bg, color: col.color, px: 1.2, py: 0.4, borderRadius: "8px", fontWeight: 700, fontSize: "0.8rem", border: `1px solid ${col.color}33` }}>
+                            <Box
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 0.6,
+                                backgroundColor: col.bg,
+                                color: col.color,
+                                px: 1.2,
+                                py: 0.4,
+                                borderRadius: "8px",
+                                fontWeight: 700,
+                                fontSize: "0.8rem",
+                                border: `1px solid ${col.color}33`,
+                              }}
+                            >
                               {col.icon}
                               {task[col.key] ?? 0}
                             </Box>
@@ -657,15 +1223,30 @@ const Tables = ({ type, tableData, loading = true }) => {
               </table>
             </Box>
             <PaginationBar
-              page={page} totalPages={totalPages} rows={rows}
-              setRows={setRows} setPage={setPage}
-              total={tableData.length} startIndex={startIndex}
+              page={page}
+              totalPages={totalPages}
+              rows={rows}
+              setRows={setRows}
+              setPage={setPage}
+              total={tableData.length}
+              startIndex={startIndex}
             />
           </Box>
         )}
 
-        <EditModal taskId={taskId} open={editModal} onClose={() => setEditModal(false)} type={editModalType} />
-        <TasksModal open={showEmployeeTasks} taskData={employeeTasks} loading={employeeTasksLoading} name={employeeName} onClose={() => setShowEmployeeTasks(false)} />
+        <EditModal
+          taskId={taskId}
+          open={editModal}
+          onClose={() => setEditModal(false)}
+          type={editModalType}
+        />
+        <TasksModal
+          open={showEmployeeTasks}
+          taskData={employeeTasks}
+          loading={employeeTasksLoading}
+          name={employeeName}
+          onClose={() => setShowEmployeeTasks(false)}
+        />
       </>
     );
   }

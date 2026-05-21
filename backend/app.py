@@ -25,6 +25,15 @@ def get_db_connection():
         port=os.environ.get("DB_PORT")
     )
 
+def getUserId(empName):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s """,[empName,])
+    
+    user_id = cursor.fetchone()
+    return user_id[0]
+
 @app.route("/",methods=["GET"])
 def index():
     return "Welcome to MCPL Task Management System Server."
@@ -165,7 +174,7 @@ def getEmployeeTasks():
     cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
-                       WHERE ph."ChangeStatus?" = true AND ph."UserID" IN (SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s) AND ph."AssignedBy" IN (SELECT "UserID" FROM "UserMaster" WHERE "EmpName" = %s) ORDER BY ph."ProjectHistoryID" ASC """,[empName,assignerName])
+                       WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
     
     tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
     
@@ -652,20 +661,16 @@ def dashboard_tasks_under_review(user):
     cursor.execute("""
     SELECT 
         um."EmpName",
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."ChangeStatus?" = TRUE)                                    AS pending_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared'  AND ph."ChangeStatus?" = FALSE)                                   AS cleared_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE AND ph."ChangeStatus?" = TRUE) AS overdue_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' AND ph."ChangeStatus?" = TRUE)                                    AS reloaded_count
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' )                                    AS pending_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared')                                   AS cleared_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE) AS overdue_count,
+        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')                                    AS reloaded_count
     FROM "ProjectHistory" ph
     JOIN "UserMaster" um ON ph."UserID" = um."UserID"
     WHERE ph."AssignedBy" = %s
       AND ph."IsHistory" = FALSE
+      AND ph."ChangeStatus?" = TRUE
     GROUP BY um."EmpName"
-    HAVING
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."ChangeStatus?" = TRUE)                                    > 0
-     OR COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared'  AND ph."ChangeStatus?" = FALSE)                                   > 0
-     OR COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE AND ph."ChangeStatus?" = TRUE) > 0
-     OR COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded' AND ph."ChangeStatus?" = TRUE)                                    > 0;
 """, [user_id[0]])
     
     tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]

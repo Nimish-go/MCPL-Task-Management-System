@@ -14,6 +14,8 @@ import { Assignment, TaskAlt, TaskSharp, WavingHand } from "@mui/icons-material"
 import DashboardTasksAssigned from "../components/DashboardTasksAssigned";
 import DashboardTasksUnderReview from "../components/DashboardTasksUnderReview";
 import AllTasksAssigned from "../components/AllTasksAssigned";
+import SessionExpiredModal from "../components/SessionExpiredModal";
+import useSessionGuard from "../hooks/useSessionGuard";
 import { useLocation } from "react-router-dom";
 import { useMediaQuery } from "@mui/material";
 
@@ -25,6 +27,9 @@ const Dashboard = () => {
   const isDirector = designation.toUpperCase().includes("DIRECTOR");
   const isMobile = useMediaQuery("(max-width:600px)");
 
+  // Session guard — polls every 30s and on tab visibility change
+  const { sessionExpired } = useSessionGuard(30_000);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -35,6 +40,9 @@ const Dashboard = () => {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f4f6fb" }}>
       <Navbar active={"/dashboard"} />
+
+      {/* Session expired modal — blocks all interaction until user logs in */}
+      <SessionExpiredModal open={sessionExpired} />
 
       {/* Hero Header */}
       <Box
