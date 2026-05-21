@@ -283,7 +283,7 @@ const SidebarContent = ({
       )}
 
       {/* Nav items */}
-      <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", pt: 1.5, pb: 2, "&::-webkit-scrollbar": { width: 0 } }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", pt: 1.5, pb: 2, "&::-webkit-scrollbar": { width: 0 } }}>
         <NavItem
           icon={<SpaceDashboard sx={{ fontSize: "1.2rem" }} />}
           label="Dashboard"
@@ -351,6 +351,8 @@ const SidebarContent = ({
           borderRadius: "10px",
           mx: 1,
           mb: 1,
+          // Pushes the profile above the iPad home indicator / bottom chrome
+          paddingBottom: "max(8px, env(safe-area-inset-bottom))",
           transition: "background 0.2s ease",
           "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
         }}
@@ -510,7 +512,10 @@ const Navbar = () => {
             position: "fixed",
             top: 0,
             left: 0,
+            // 100dvh accounts for mobile/tablet browser chrome (address bar, bottom bar).
+            // Falls back to -webkit-fill-available for older iOS Safari, then 100vh.
             height: "100vh",
+            "@supports (height: 100dvh)": { height: "100dvh" },
             width: expanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED,
             background: sidebarBg,
             transition: "width 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -519,6 +524,8 @@ const Navbar = () => {
             flexDirection: "column",
             overflow: "hidden",
             boxShadow: expanded ? "4px 0 24px rgba(0,0,0,0.25)" : "2px 0 8px rgba(0,0,0,0.15)",
+            // Ensure the profile section at the bottom is never hidden behind iPad chrome
+            pb: "env(safe-area-inset-bottom)",
           }}
         >
           <SidebarContent expanded={expanded} {...sharedContentProps} />
