@@ -671,7 +671,7 @@ def dashboard_tasks_under_review(user):
       AND ph."IsHistory" = FALSE
       AND ph."ChangeStatus?" = TRUE
     GROUP BY um."EmpName"
-""", [user_id[0]])
+""", [user_id[0],])
     
     tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]
     

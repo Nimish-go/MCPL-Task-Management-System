@@ -825,7 +825,9 @@ const DashboardTasksUnderReview = () => {
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
     axios
-      .get(`/dashboard_tasks_under_review/${sessionStorage.getItem("empName")}`)
+      .get(
+        `http://localhost:5002/dashboard_tasks_under_review/${sessionStorage.getItem("empName")}`,
+      )
       .then((res) => {
         if (res.status === 200) setEmployeeList(res.data);
       })
