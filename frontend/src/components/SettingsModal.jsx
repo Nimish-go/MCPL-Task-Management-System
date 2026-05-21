@@ -1,11 +1,11 @@
 import {
   Check,
   Edit,
-  KeyboardArrowRight,
   PowerSettingsNew,
   PersonOutline,
   LockOutlined,
   VerifiedUser,
+  Close,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -20,8 +20,8 @@ import {
   ModalDialog,
   Typography,
   Divider,
-  IconButton,
 } from "@mui/joy";
+import { useMediaQuery } from "@mui/material";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -29,52 +29,69 @@ import Toast from "./Toast";
 import LogoutConfirm from "./LogoutConfirm";
 
 const NAV_ITEMS = [
-  {
-    id: "profile",
-    label: "Profile Settings",
-    icon: <PersonOutline sx={{ fontSize: 18 }} />,
-  },
-  {
-    id: "password",
-    label: "Password & Security",
-    icon: <LockOutlined sx={{ fontSize: 18 }} />,
-  },
+  { id: "profile",  label: "Profile Settings",     icon: <PersonOutline sx={{ fontSize: 18 }} /> },
+  { id: "password", label: "Password & Security",  icon: <LockOutlined  sx={{ fontSize: 18 }} /> },
 ];
 
+// ─── Shared input style ───────────────────────────────────────────────────────
+const inputSx = (editable) => ({
+  bgcolor: editable ? "rgba(2,143,188,0.06)" : "rgba(255,255,255,0.02)",
+  border: "1px solid",
+  borderColor: editable ? "rgba(2,143,188,0.25)" : "rgba(255,255,255,0.06)",
+  borderRadius: "10px",
+  color: editable ? "#e0e8f0" : "#4a5260",
+  fontSize: "0.85rem",
+  "&:focus-within": {
+    borderColor: "#028FB9",
+    boxShadow: "0 0 0 3px rgba(2,143,188,0.15)",
+  },
+});
+
+const labelSx = {
+  fontSize: "0.68rem",
+  fontWeight: 600,
+  letterSpacing: "0.7px",
+  color: "#4a5260",
+  textTransform: "uppercase",
+  mb: 0.8,
+};
+
 const SettingsModal = ({ open, onClose }) => {
-  const [activeTab, setActiveTab] = useState("profile");
-  const [userId, setUserId] = useState("");
-  const [userMobile, setUserMobile] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [editState, setEditState] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab]               = useState("profile");
+  const [userId, setUserId]                     = useState("");
+  const [userMobile, setUserMobile]             = useState("");
+  const [username, setUsername]                 = useState("");
+  const [email, setEmail]                       = useState("");
+  const [editState, setEditState]               = useState(false);
+  const [updateLoading, setUpdateLoading]       = useState(false);
+  const [loading, setLoading]                   = useState(false);
   const [passwordChangeState, setPasswordChangeState] = useState(false);
-  const [toastStatus, setToastStatus] = useState("");
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [logoutConfirm, setLogoutConfirm] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
+  const [toastStatus, setToastStatus]           = useState("");
+  const [toastOpen, setToastOpen]               = useState(false);
+  const [toastMessage, setToastMessage]         = useState("");
+  const [logoutConfirm, setLogoutConfirm]       = useState(false);
+  const [newPassword, setNewPassword]           = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [enteredOtp, setEnteredOtp] = useState("");
-  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otp, setOtp]                           = useState("");
+  const [enteredOtp, setEnteredOtp]             = useState("");
+  const [otpVerifying, setOtpVerifying]         = useState(false);
+
+  const isMobile = useMediaQuery("(max-width:640px)");
+  const isTablet = useMediaQuery("(max-width:860px)");
 
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
     if (!open) return;
     setLoading(true);
-    axios
-      .get(`/getProfile/${sessionStorage.getItem("empName")}`)
+    axios.get(`/getProfile/${sessionStorage.getItem("empName")}`)
       .then((res) => {
         if (res.status === 200) {
-          const data = res.data;
-          setUsername(data.username);
-          setUserId(data.id);
-          setEmail(data.email);
-          setUserMobile(data.mobile);
-          setOtp(data.otp);
+          const d = res.data;
+          setUsername(d.username);
+          setUserId(d.id);
+          setEmail(d.email);
+          setUserMobile(d.mobile);
+          setOtp(d.otp);
         }
       })
       .catch(console.error)
@@ -83,20 +100,21 @@ const SettingsModal = ({ open, onClose }) => {
 
   const getInitials = (name) => {
     if (!name) return "?";
-    const words = name.trim().split(" ");
-    return words.length === 1
-      ? words[0][0].toUpperCase()
-      : (words[0][0] + words[words.length - 1][0]).toUpperCase();
+    const w = name.trim().split(" ");
+    return w.length === 1 ? w[0][0].toUpperCase() : (w[0][0] + w[w.length - 1][0]).toUpperCase();
   };
+
+  const empName    = sessionStorage.getItem("empName")    || "User";
+  const designation = sessionStorage.getItem("designation") || "";
+  const role        = sessionStorage.getItem("role")        || "";
 
   const updateProfile = () => {
     setUpdateLoading(true);
-    const formData = new FormData();
-    formData.append("username", username);
-    formData.append("email", email);
-    formData.append("mobile", userMobile);
-    axios
-      .put(`/updateProfile/${userId}`, formData)
+    const fd = new FormData();
+    fd.append("username", username);
+    fd.append("email", email);
+    fd.append("mobile", userMobile);
+    axios.put(`/updateProfile/${userId}`, fd)
       .then((res) => {
         if (res.status === 200) {
           setToastStatus("success");
@@ -105,42 +123,33 @@ const SettingsModal = ({ open, onClose }) => {
           setEditState(false);
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setToastStatus("error");
         setToastMessage("Something went wrong. Please try again.");
         setToastOpen(true);
-        console.error(err);
       })
       .finally(() => setUpdateLoading(false));
   };
 
-  const empName = sessionStorage.getItem("empName") || "User";
-  const designation = sessionStorage.getItem("designation") || "";
-  const role = sessionStorage.getItem("role") || "";
-
   const sendOTP = async () => {
-    const formData = new FormData();
-
-    formData.append("email", sessionStorage.getItem("email").toString());
-
+    const fd = new FormData();
+    fd.append("email", sessionStorage.getItem("email").toString());
     if (newPassword === confirmNewPassword) {
-      await axios
-        .post("/sendEmail", formData)
+      await axios.post("/sendEmail", fd)
         .then((res) => {
           if (res.status === 200) {
-            const data = res.data;
-            setToastMessage(data.message);
-            setToastStatus(data.status);
-            setToastOpen(open);
+            setToastMessage(res.data.message);
+            setToastStatus(res.data.status);
+            setToastOpen(true);
             setPasswordChangeState(true);
-            setOtp(data.otp);
+            setOtp(res.data.otp);
           }
         })
         .catch((err) => {
           setToastMessage("Something Went Wrong. Please Check the Console.");
           setToastStatus("error");
           setToastOpen(true);
-          console.error(err.response.data.errorText);
+          console.error(err);
         });
     }
   };
@@ -151,16 +160,14 @@ const SettingsModal = ({ open, onClose }) => {
       setToastMessage("OTP Entered is Correct.");
       setToastStatus("success");
       setToastOpen(true);
-      const formData = new FormData();
-      formData.append("email", sessionStorage.getItem("email").toString());
-      formData.append("newPass", newPassword);
-      await axios
-        .post("/updatePass", formData)
+      const fd = new FormData();
+      fd.append("email", sessionStorage.getItem("email").toString());
+      fd.append("newPass", newPassword);
+      await axios.post("/updatePass", fd)
         .then((res) => {
           if (res.status === 200) {
-            const data = res.data;
-            setToastMessage(data.message);
-            setToastStatus(data.status);
+            setToastMessage(res.data.message);
+            setToastStatus(res.data.status);
             setToastOpen(true);
           }
         })
@@ -172,13 +179,160 @@ const SettingsModal = ({ open, onClose }) => {
         })
         .finally(() => setOtpVerifying(false));
     } else {
-      setToastMessage(
-        "Entered OTP is incorrect. Please Check the Email Once More.",
-      );
+      setToastMessage("Entered OTP is incorrect. Please check your email.");
       setToastStatus("warning");
       setToastOpen(true);
+      setOtpVerifying(false);
     }
   };
+
+  // ─── Sidebar panel ──────────────────────────────────────────────────────────
+  const SidebarPanel = () => (
+    <Box
+      sx={{
+        // Desktop: fixed-width left column. Mobile/tablet: full-width top strip.
+        width: isTablet ? "100%" : 240,
+        flexShrink: 0,
+        bgcolor: "#13151c",
+        borderRight: isTablet ? "none" : "1px solid rgba(255,255,255,0.06)",
+        borderBottom: isTablet ? "1px solid rgba(255,255,255,0.06)" : "none",
+        display: "flex",
+        flexDirection: isTablet ? "row" : "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* Avatar + user info — hidden on mobile to save space */}
+      {!isTablet && (
+        <>
+          <Box sx={{ position: "relative", mb: 5 }}>
+            <Box
+              sx={{
+                height: 80,
+                background: "linear-gradient(135deg, #0d3b5e 0%, #023047 50%, #051923 100%)",
+                position: "relative",
+                overflow: "hidden",
+                "&::after": {
+                  content: '""', position: "absolute", inset: 0,
+                  background: "radial-gradient(ellipse at 60% 50%, rgba(2,143,188,0.25) 0%, transparent 70%)",
+                },
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute", bottom: -26, left: 18,
+                p: "3px", borderRadius: "50%",
+                background: "linear-gradient(135deg, #028FB9, #0d3b5e)",
+                boxShadow: "0 4px 16px rgba(2,143,188,0.4)",
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 48, height: 48, bgcolor: "#023047", color: "#7dd3fc",
+                  fontWeight: 700, fontSize: 16, border: "2px solid #13151c",
+                }}
+              >
+                {getInitials(empName)}
+              </Avatar>
+            </Box>
+          </Box>
+
+          <Box sx={{ px: 2.5, mb: 2.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+              <Box
+                sx={{
+                  width: 7, height: 7, borderRadius: "50%", bgcolor: "#22c55e",
+                  "@keyframes onlinePulse": {
+                    "0%,100%": { boxShadow: "0 0 4px #22c55e" },
+                    "50%":     { boxShadow: "0 0 10px #22c55e, 0 0 20px rgba(34,197,94,0.4)" },
+                  },
+                  animation: "onlinePulse 2s ease-in-out infinite",
+                }}
+              />
+              <Typography sx={{ fontSize: "0.68rem", color: "#22c55e", fontWeight: 600, letterSpacing: "0.8px" }}>ONLINE</Typography>
+            </Box>
+            <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", color: "#f0f0f5", lineHeight: 1.3 }}>{empName}</Typography>
+            {designation && <Typography sx={{ fontSize: "0.72rem", color: "#5a6070", mt: 0.3 }}>{designation}</Typography>}
+            {role && (
+              <Chip size="sm" sx={{ mt: 1, bgcolor: "rgba(2,143,188,0.12)", border: "1px solid rgba(2,143,188,0.25)", color: "#7dd3fc", fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.6px" }}>
+                {role.toUpperCase()}
+              </Chip>
+            )}
+          </Box>
+
+          <Divider sx={{ borderColor: "rgba(255,255,255,0.05)", mx: 2.5, mb: 1.5 }} />
+        </>
+      )}
+
+      {/* Tab navigation */}
+      <Box
+        sx={{
+          px: 1.5,
+          flex: 1,
+          display: "flex",
+          flexDirection: isTablet ? "row" : "column",
+          alignItems: isTablet ? "center" : "stretch",
+          gap: isTablet ? 1 : 0,
+          py: isTablet ? 1 : 0,
+          overflowX: isTablet ? "auto" : "unset",
+          "&::-webkit-scrollbar": { height: 0 },
+        }}
+      >
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <Box
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.2,
+                px: isTablet ? 2 : 1.8,
+                py: isTablet ? 0.9 : 1.2,
+                mb: isTablet ? 0 : 0.5,
+                borderRadius: "10px",
+                cursor: "pointer",
+                transition: "all 0.18s ease",
+                bgcolor: isActive ? "rgba(2,143,188,0.12)" : "transparent",
+                border: isActive ? "1px solid rgba(2,143,188,0.2)" : "1px solid transparent",
+                color: isActive ? "#7dd3fc" : "#5a6070",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                "&:hover": { bgcolor: isActive ? "rgba(2,143,188,0.15)" : "rgba(255,255,255,0.04)", color: isActive ? "#7dd3fc" : "#9aa3b0" },
+              }}
+            >
+              {item.icon}
+              <Typography sx={{ fontSize: "0.8rem", fontWeight: isActive ? 600 : 400, color: "inherit" }}>
+                {item.label}
+              </Typography>
+              {isActive && !isTablet && (
+                <Box sx={{ ml: "auto", width: 5, height: 5, borderRadius: "50%", bgcolor: "#028FB9" }} />
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+
+      {/* Sign out — inline on tablet, bottom on desktop */}
+      <Box sx={{ p: isTablet ? 1 : 2, display: "flex", alignItems: "center" }}>
+        <Button
+          fullWidth={!isTablet}
+          size="sm"
+          startDecorator={<PowerSettingsNew sx={{ fontSize: 15 }} />}
+          onClick={() => setLogoutConfirm(true)}
+          sx={{
+            bgcolor: "rgba(239,68,68,0.08)", color: "#f87171",
+            border: "1px solid rgba(239,68,68,0.15)", borderRadius: "10px",
+            fontWeight: 500, fontSize: "0.8rem",
+            whiteSpace: "nowrap",
+            "&:hover": { bgcolor: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.3)" },
+          }}
+        >
+          {isTablet ? "Sign Out" : "Sign Out"}
+        </Button>
+      </Box>
+    </Box>
+  );
 
   return (
     <>
@@ -186,242 +340,36 @@ const SettingsModal = ({ open, onClose }) => {
         <ModalDialog
           sx={{
             p: 0,
-            borderRadius: "20px",
-            width: "880px",
-            maxWidth: "95vw",
-            height: "540px",
+            borderRadius: { xs: "16px", sm: "20px" },
+            width: { xs: "96vw", sm: "92vw", md: "860px" },
+            maxWidth: "860px",
+            // Use dvh for iPad compatibility
+            maxHeight: { xs: "92dvh", sm: "88dvh", md: "560px" },
             overflow: "hidden",
             bgcolor: "#0f1117",
             border: "1px solid rgba(255,255,255,0.07)",
             boxShadow: "0 40px 100px rgba(0,0,0,0.7)",
             "@keyframes modalIn": {
               from: { opacity: 0, transform: "scale(0.96) translateY(16px)" },
-              to: { opacity: 1, transform: "scale(1) translateY(0)" },
+              to:   { opacity: 1, transform: "scale(1) translateY(0)" },
             },
             animation: "modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          <Box sx={{ display: "flex", height: "100%" }}>
-            {/* ── Sidebar ── */}
-            <Box
-              sx={{
-                width: 260,
-                flexShrink: 0,
-                bgcolor: "#13151c",
-                borderRight: "1px solid rgba(255,255,255,0.06)",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-              }}
-            >
-              {/* Cover + Avatar */}
-              <Box sx={{ position: "relative", mb: 5 }}>
-                <Box
-                  sx={{
-                    height: 90,
-                    background:
-                      "linear-gradient(135deg, #0d3b5e 0%, #023047 50%, #051923 100%)",
-                    position: "relative",
-                    overflow: "hidden",
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      inset: 0,
-                      background:
-                        "radial-gradient(ellipse at 60% 50%, rgba(2,143,188,0.25) 0%, transparent 70%)",
-                    },
-                  }}
-                />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: -28,
-                    left: 20,
-                    p: "3px",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #028FB9, #0d3b5e)",
-                    boxShadow: "0 4px 20px rgba(2,143,188,0.4)",
-                  }}
-                >
-                  <Avatar
-                    sx={{
-                      width: 52,
-                      height: 52,
-                      bgcolor: "#023047",
-                      color: "#7dd3fc",
-                      fontFamily: "'Syne', sans-serif",
-                      fontWeight: 700,
-                      fontSize: 18,
-                      border: "2px solid #13151c",
-                    }}
-                  >
-                    {getInitials(empName)}
-                  </Avatar>
-                </Box>
-              </Box>
+          {/* Layout: column on tablet/mobile, row on desktop */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: isTablet ? "column" : "row",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <SidebarPanel />
 
-              {/* User Info */}
-              <Box sx={{ px: 2.5, mb: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.5,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: "50%",
-                      bgcolor: "#22c55e",
-                      boxShadow: "0 0 6px #22c55e",
-                      flexShrink: 0,
-                      "@keyframes onlinePulse": {
-                        "0%, 100%": { boxShadow: "0 0 4px #22c55e" },
-                        "50%": {
-                          boxShadow:
-                            "0 0 10px #22c55e, 0 0 20px rgba(34,197,94,0.4)",
-                        },
-                      },
-                      animation: "onlinePulse 2s ease-in-out infinite",
-                    }}
-                  />
-                  <Typography
-                    sx={{
-                      fontSize: 11,
-                      color: "#22c55e",
-                      fontWeight: 600,
-                      letterSpacing: "0.8px",
-                    }}
-                  >
-                    ONLINE
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: "'Syne', sans-serif",
-                    fontWeight: 700,
-                    fontSize: 15,
-                    color: "#f0f0f5",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {empName}
-                </Typography>
-                {designation && (
-                  <Typography sx={{ fontSize: 12, color: "#5a6070", mt: 0.3 }}>
-                    {designation}
-                  </Typography>
-                )}
-                {role && (
-                  <Chip
-                    size="sm"
-                    sx={{
-                      mt: 1,
-                      bgcolor: "rgba(2,143,188,0.12)",
-                      border: "1px solid rgba(2,143,188,0.25)",
-                      color: "#7dd3fc",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      letterSpacing: "0.6px",
-                    }}
-                  >
-                    {role.toUpperCase()}
-                  </Chip>
-                )}
-              </Box>
-
-              <Divider
-                sx={{ borderColor: "rgba(255,255,255,0.05)", mx: 2.5, mb: 2 }}
-              />
-
-              {/* Nav */}
-              <Box sx={{ px: 1.5, flex: 1 }}>
-                {NAV_ITEMS.map((item) => {
-                  const isActive = activeTab === item.id;
-                  return (
-                    <Box
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        px: 2,
-                        py: 1.3,
-                        mb: 0.5,
-                        borderRadius: "10px",
-                        cursor: "pointer",
-                        transition: "all 0.18s ease",
-                        bgcolor: isActive
-                          ? "rgba(2,143,188,0.12)"
-                          : "transparent",
-                        border: isActive
-                          ? "1px solid rgba(2,143,188,0.2)"
-                          : "1px solid transparent",
-                        color: isActive ? "#7dd3fc" : "#5a6070",
-                        "&:hover": {
-                          bgcolor: isActive
-                            ? "rgba(2,143,188,0.15)"
-                            : "rgba(255,255,255,0.04)",
-                          color: isActive ? "#7dd3fc" : "#9aa3b0",
-                        },
-                      }}
-                    >
-                      {item.icon}
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          fontWeight: isActive ? 600 : 400,
-                          color: "inherit",
-                          flex: 1,
-                        }}
-                      >
-                        {item.label}
-                      </Typography>
-                      {isActive && (
-                        <Box
-                          sx={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: "50%",
-                            bgcolor: "#028FB9",
-                          }}
-                        />
-                      )}
-                    </Box>
-                  );
-                })}
-              </Box>
-
-              {/* Logout */}
-              <Box sx={{ p: 2 }}>
-                <Button
-                  fullWidth
-                  size="sm"
-                  startDecorator={<PowerSettingsNew sx={{ fontSize: 16 }} />}
-                  onClick={() => setLogoutConfirm(true)}
-                  sx={{
-                    bgcolor: "rgba(239,68,68,0.08)",
-                    color: "#f87171",
-                    border: "1px solid rgba(239,68,68,0.15)",
-                    borderRadius: "10px",
-                    fontWeight: 500,
-                    fontSize: 13,
-                    "&:hover": {
-                      bgcolor: "rgba(239,68,68,0.14)",
-                      borderColor: "rgba(239,68,68,0.3)",
-                    },
-                  }}
-                >
-                  Sign Out
-                </Button>
-              </Box>
-            </Box>
-
-            {/* ── Content ── */}
+            {/* ── Content panel ── */}
             <Box
               sx={{
                 flex: 1,
@@ -430,175 +378,93 @@ const SettingsModal = ({ open, onClose }) => {
                 position: "relative",
                 bgcolor: "#0f1117",
                 overflow: "hidden",
+                minHeight: 0,
                 "&::before": {
-                  content: '""',
-                  position: "absolute",
-                  top: -60,
-                  right: -60,
-                  width: 200,
-                  height: 200,
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle, rgba(2,143,188,0.06) 0%, transparent 70%)",
+                  content: '""', position: "absolute", top: -60, right: -60,
+                  width: 200, height: 200, borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(2,143,188,0.06) 0%, transparent 70%)",
                   pointerEvents: "none",
                 },
               }}
             >
               <ModalClose
                 sx={{
-                  top: 14,
-                  right: 14,
-                  borderRadius: "50%",
-                  bgcolor: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  top: 12, right: 12, borderRadius: "50%",
+                  bgcolor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
                   color: "#5a6070",
-                  "&:hover": {
-                    bgcolor: "rgba(255,255,255,0.1)",
-                    color: "#fff",
-                  },
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.1)", color: "#fff" },
                 }}
               />
 
-              {/* Header */}
+              {/* Content header */}
               <Box
                 sx={{
-                  px: 4,
-                  pt: 3.5,
-                  pb: 2.5,
+                  px: { xs: 2.5, md: 4 },
+                  pt: { xs: 2.5, md: 3 },
+                  pb: 2,
                   borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  flexShrink: 0,
                 }}
               >
-                <Typography
-                  sx={{
-                    fontFamily: "'Syne', sans-serif",
-                    fontWeight: 800,
-                    fontSize: 19,
-                    color: "#f0f0f5",
-                    letterSpacing: "-0.3px",
-                  }}
-                >
-                  {activeTab === "profile"
-                    ? "Profile Settings"
-                    : "Password & Security"}
+                <Typography sx={{ fontWeight: 800, fontSize: { xs: "1rem", md: "1.1rem" }, color: "#f0f0f5", letterSpacing: "-0.3px" }}>
+                  {activeTab === "profile" ? "Profile Settings" : "Password & Security"}
                 </Typography>
-                <Typography sx={{ fontSize: 13, color: "#4a5260", mt: 0.3 }}>
+                <Typography sx={{ fontSize: "0.78rem", color: "#4a5260", mt: 0.3 }}>
                   {activeTab === "profile"
                     ? "Manage your personal information"
                     : "Update your password and verify changes via OTP"}
                 </Typography>
               </Box>
 
-              {/* Body */}
-              <Box sx={{ flex: 1, overflowY: "auto", px: 4, py: 3 }}>
+              {/* Scrollable body */}
+              <Box
+                sx={{
+                  flex: 1, overflowY: "auto", minHeight: 0,
+                  px: { xs: 2.5, md: 4 }, py: { xs: 2, md: 3 },
+                  "&::-webkit-scrollbar": { width: 4 },
+                  "&::-webkit-scrollbar-thumb": { borderRadius: 4, backgroundColor: "#2a2f3d" },
+                }}
+              >
+                {/* Loading */}
                 {loading && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: "100%",
-                      gap: 1,
-                    }}
-                  >
+                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 1 }}>
                     <DotLottieReact
                       src="https://lottie.host/876ba248-54ac-48d0-a9dc-67747bd5b80a/0QJm3EJB8I.lottie"
-                      loop
-                      autoplay
-                      style={{ width: 100, height: 100 }}
+                      loop autoplay style={{ width: 90, height: 90 }}
                     />
-                    <Typography sx={{ fontSize: 13, color: "#4a5260" }}>
-                      Loading profile…
-                    </Typography>
+                    <Typography sx={{ fontSize: "0.78rem", color: "#4a5260" }}>Loading profile…</Typography>
                   </Box>
                 )}
 
-                {/* Profile Tab */}
+                {/* Profile tab */}
                 {activeTab === "profile" && !loading && (
                   <>
                     <Box
                       sx={{
                         display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 2.5,
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                        gap: 2,
                       }}
                     >
                       {[
-                        {
-                          label: "User ID",
-                          value: userId,
-                          setter: null,
-                          disabled: true,
-                        },
-                        {
-                          label: "Username",
-                          value: username,
-                          setter: setUsername,
-                          disabled: !editState || updateLoading,
-                        },
-                        {
-                          label: "Email Address",
-                          value: email,
-                          setter: setEmail,
-                          disabled: !editState || updateLoading,
-                        },
-                        {
-                          label: "Mobile Number",
-                          value: userMobile,
-                          setter: setUserMobile,
-                          disabled: !editState || updateLoading,
-                        },
+                        { label: "User ID",        value: userId,      setter: null,          disabled: true },
+                        { label: "Username",        value: username,    setter: setUsername,   disabled: !editState || updateLoading },
+                        { label: "Email Address",   value: email,       setter: setEmail,      disabled: !editState || updateLoading },
+                        { label: "Mobile Number",   value: userMobile,  setter: setUserMobile, disabled: !editState || updateLoading },
                       ].map((field) => (
                         <FormControl key={field.label}>
-                          <FormLabel
-                            sx={{
-                              fontSize: 11,
-                              fontWeight: 600,
-                              letterSpacing: "0.7px",
-                              color: "#4a5260",
-                              textTransform: "uppercase",
-                              mb: 0.8,
-                            }}
-                          >
-                            {field.label}
-                          </FormLabel>
+                          <FormLabel sx={labelSx}>{field.label}</FormLabel>
                           <Input
                             value={field.value}
-                            onChange={
-                              field.setter
-                                ? (e) => field.setter(e.target.value)
-                                : undefined
-                            }
+                            onChange={field.setter ? (e) => field.setter(e.target.value) : undefined}
                             disabled={field.disabled}
-                            sx={{
-                              bgcolor: field.disabled
-                                ? "rgba(255,255,255,0.02)"
-                                : "rgba(2,143,188,0.06)",
-                              border: "1px solid",
-                              borderColor: field.disabled
-                                ? "rgba(255,255,255,0.06)"
-                                : "rgba(2,143,188,0.25)",
-                              borderRadius: "10px",
-                              color: field.disabled ? "#4a5260" : "#e0e8f0",
-                              fontSize: 13.5,
-                              "&:focus-within": {
-                                borderColor: "#028FB9",
-                                boxShadow: "0 0 0 3px rgba(2,143,188,0.15)",
-                              },
-                            }}
+                            sx={inputSx(!field.disabled)}
                           />
                         </FormControl>
                       ))}
                     </Box>
 
-                    <Box
-                      sx={{
-                        mt: 3,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
+                    <Box sx={{ mt: 3, display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
                       {editState ? (
                         <>
                           <Button
@@ -607,32 +473,19 @@ const SettingsModal = ({ open, onClose }) => {
                             loading={updateLoading}
                             size="sm"
                             sx={{
-                              background:
-                                "linear-gradient(135deg, #059669, #047857)",
-                              color: "#fff",
-                              borderRadius: "9px",
-                              fontWeight: 600,
-                              fontSize: 13,
-                              px: 2.5,
-                              border: "none",
+                              background: "linear-gradient(135deg, #059669, #047857)",
+                              color: "#fff", borderRadius: "9px", fontWeight: 600,
+                              fontSize: "0.82rem", px: 2.5, border: "none",
                               boxShadow: "0 4px 12px rgba(5,150,105,0.3)",
-                              "&:hover": {
-                                background:
-                                  "linear-gradient(135deg, #10b981, #059669)",
-                              },
+                              "&:hover": { background: "linear-gradient(135deg, #10b981, #059669)" },
                             }}
                           >
                             Save Changes
                           </Button>
                           <Button
-                            variant="plain"
-                            size="sm"
+                            variant="plain" size="sm"
                             onClick={() => setEditState(false)}
-                            sx={{
-                              color: "#4a5260",
-                              fontSize: 13,
-                              "&:hover": { color: "#9aa3b0" },
-                            }}
+                            sx={{ color: "#4a5260", fontSize: "0.82rem", "&:hover": { color: "#9aa3b0" } }}
                           >
                             Cancel
                           </Button>
@@ -644,22 +497,15 @@ const SettingsModal = ({ open, onClose }) => {
                             onClick={() => setEditState(true)}
                             size="sm"
                             sx={{
-                              bgcolor: "rgba(2,143,188,0.1)",
-                              color: "#7dd3fc",
-                              border: "1px solid rgba(2,143,188,0.2)",
-                              borderRadius: "9px",
-                              fontWeight: 600,
-                              fontSize: 13,
-                              px: 2.5,
-                              "&:hover": {
-                                bgcolor: "rgba(2,143,188,0.18)",
-                                borderColor: "rgba(2,143,188,0.35)",
-                              },
+                              bgcolor: "rgba(2,143,188,0.1)", color: "#7dd3fc",
+                              border: "1px solid rgba(2,143,188,0.2)", borderRadius: "9px",
+                              fontWeight: 600, fontSize: "0.82rem", px: 2.5,
+                              "&:hover": { bgcolor: "rgba(2,143,188,0.18)", borderColor: "rgba(2,143,188,0.35)" },
                             }}
                           >
                             Edit Profile
                           </Button>
-                          <Typography sx={{ fontSize: 12, color: "#3a4050" }}>
+                          <Typography sx={{ fontSize: "0.72rem", color: "#3a4050" }}>
                             Click edit to modify your details
                           </Typography>
                         </>
@@ -668,109 +514,44 @@ const SettingsModal = ({ open, onClose }) => {
                   </>
                 )}
 
-                {/* Password Tab */}
+                {/* Password tab */}
                 {activeTab === "password" && !loading && (
                   <Box sx={{ maxWidth: 380 }}>
                     {[
-                      {
-                        label: "New Password",
-                        disabled: false,
-                        value: newPassword,
-                        onChange: (e) => setNewPassword(e.target.value),
-                      },
-                      {
-                        label: "Confirm New Password",
-                        disabled: false,
-                        value: confirmNewPassword,
-                        onChange: (e) => setConfirmNewPassword(e.target.value),
-                      },
+                      { label: "New Password",          value: newPassword,          onChange: (e) => setNewPassword(e.target.value) },
+                      { label: "Confirm New Password",  value: confirmNewPassword,   onChange: (e) => setConfirmNewPassword(e.target.value) },
                     ].map((field) => (
                       <FormControl key={field.label} sx={{ mb: 2 }}>
-                        <FormLabel
-                          sx={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            letterSpacing: "0.7px",
-                            color: "#4a5260",
-                            textTransform: "uppercase",
-                            mb: 0.8,
-                          }}
-                        >
-                          {field.label}
-                        </FormLabel>
-                        <Input
-                          type="password"
-                          sx={{
-                            bgcolor: "rgba(2,143,188,0.05)",
-                            border: "1px solid rgba(2,143,188,0.2)",
-                            borderRadius: "10px",
-                            color: "#e0e8f0",
-                            fontSize: 13.5,
-                            "&:focus-within": {
-                              borderColor: "#028FB9",
-                              boxShadow: "0 0 0 3px rgba(2,143,188,0.15)",
-                            },
-                          }}
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+                        <FormLabel sx={labelSx}>{field.label}</FormLabel>
+                        <Input type="password" sx={inputSx(true)} value={field.value} onChange={field.onChange} />
                       </FormControl>
                     ))}
 
                     <Button
                       size="sm"
+                      onClick={sendOTP}
                       sx={{
                         mb: 3,
                         background: "linear-gradient(135deg, #028FB9, #0369a1)",
-                        color: "#fff",
-                        borderRadius: "9px",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        px: 2.5,
-                        border: "none",
+                        color: "#fff", borderRadius: "9px", fontWeight: 600,
+                        fontSize: "0.82rem", px: 2.5, border: "none",
                         boxShadow: "0 4px 12px rgba(2,143,188,0.3)",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(135deg, #0ea5e9, #028FB9)",
-                        },
+                        "&:hover": { background: "linear-gradient(135deg, #0ea5e9, #028FB9)" },
                       }}
-                      onClick={sendOTP}
                     >
                       Send OTP to Email
                     </Button>
 
-                    <Divider
-                      sx={{ borderColor: "rgba(255,255,255,0.05)", mb: 3 }}
-                    />
+                    <Divider sx={{ borderColor: "rgba(255,255,255,0.05)", mb: 3 }} />
 
                     <FormControl disabled={!passwordChangeState} sx={{ mb: 2 }}>
-                      <FormLabel
-                        sx={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          letterSpacing: "0.7px",
-                          color: passwordChangeState ? "#4a5260" : "#2e3440",
-                          textTransform: "uppercase",
-                          mb: 0.8,
-                        }}
-                      >
+                      <FormLabel sx={{ ...labelSx, color: passwordChangeState ? "#4a5260" : "#2e3440" }}>
                         OTP Verification
                       </FormLabel>
                       <Input
                         type="text"
                         placeholder="Enter OTP sent to your email"
-                        sx={{
-                          bgcolor: passwordChangeState
-                            ? "rgba(2,143,188,0.05)"
-                            : "rgba(255,255,255,0.02)",
-                          border: "1px solid",
-                          borderColor: passwordChangeState
-                            ? "rgba(2,143,188,0.2)"
-                            : "rgba(255,255,255,0.05)",
-                          borderRadius: "10px",
-                          color: "#e0e8f0",
-                          fontSize: 13.5,
-                        }}
+                        sx={inputSx(passwordChangeState)}
                         value={enteredOtp}
                         onChange={(e) => setEnteredOtp(e.target.value)}
                       />
@@ -780,22 +561,17 @@ const SettingsModal = ({ open, onClose }) => {
                       disabled={!passwordChangeState}
                       size="sm"
                       startDecorator={<VerifiedUser sx={{ fontSize: 15 }} />}
+                      loading={otpVerifying}
+                      onClick={verifyOTP}
                       sx={{
                         background: passwordChangeState
                           ? "linear-gradient(135deg, #059669, #047857)"
                           : "rgba(255,255,255,0.04)",
                         color: passwordChangeState ? "#fff" : "#3a4050",
-                        border: "none",
-                        borderRadius: "9px",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        px: 2.5,
-                        boxShadow: passwordChangeState
-                          ? "0 4px 12px rgba(5,150,105,0.3)"
-                          : "none",
+                        border: "none", borderRadius: "9px", fontWeight: 600,
+                        fontSize: "0.82rem", px: 2.5,
+                        boxShadow: passwordChangeState ? "0 4px 12px rgba(5,150,105,0.3)" : "none",
                       }}
-                      loading={otpVerifying}
-                      onClick={verifyOTP}
                     >
                       Verify & Update Password
                     </Button>
@@ -807,16 +583,8 @@ const SettingsModal = ({ open, onClose }) => {
         </ModalDialog>
       </Modal>
 
-      <Toast
-        open={toastOpen}
-        message={toastMessage}
-        status={toastStatus}
-        onClose={() => setToastOpen(false)}
-      />
-      <LogoutConfirm
-        open={logoutConfirm}
-        onClose={() => setLogoutConfirm(false)}
-      />
+      <Toast open={toastOpen} message={toastMessage} status={toastStatus} onClose={() => setToastOpen(false)} />
+      <LogoutConfirm open={logoutConfirm} onClose={() => setLogoutConfirm(false)} />
     </>
   );
 };
