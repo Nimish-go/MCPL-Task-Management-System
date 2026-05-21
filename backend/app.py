@@ -661,17 +661,52 @@ def dashboard_tasks_under_review(user):
     cursor.execute("""
     SELECT 
         um."EmpName",
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending' )                                    AS pending_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Cleared')                                   AS cleared_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Pending'  AND ph."TargetDate" < CURRENT_DATE) AS overdue_count,
-        COUNT(*) FILTER (WHERE ph."TaskStatus" = 'Reloaded')                                    AS reloaded_count
+
+        -- Active Pending
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Pending'
+              AND ph."ChangeStatus?" = TRUE
+        ) AS pending_count,
+
+        -- Completed / Cleared
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Cleared'
+              AND ph."ChangeStatus?" = FALSE
+        ) AS cleared_count,
+
+        -- Overdue
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Pending'
+              AND ph."TargetDate" < CURRENT_DATE
+              AND ph."ChangeStatus?" = TRUE
+        ) AS overdue_count,
+
+        -- Reloaded
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Reloaded'
+              AND ph."ChangeStatus?" = TRUE
+        ) AS reloaded_count
+
     FROM "ProjectHistory" ph
-    JOIN "UserMaster" um ON ph."UserID" = um."UserID"
+    JOIN "UserMaster" um
+        ON ph."UserID" = um."UserID"
+
     WHERE ph."AssignedBy" = %s
       AND ph."IsHistory" = FALSE
-      AND ph."ChangeStatus?" = TRUE
+
     GROUP BY um."EmpName"
-""", [user_id[0],])
+
+    HAVING
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Pending'
+              AND ph."ChangeStatus?" = TRUE
+        ) > 0
+        OR
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Reloaded'
+              AND ph."ChangeStatus?" = TRUE
+        ) > 0
+""", [user_id[0]])
     
     tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]
     
