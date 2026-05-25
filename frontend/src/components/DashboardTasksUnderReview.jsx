@@ -283,7 +283,7 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5 }) => {
                   }}
                 >
                   <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>
-                    {formatDate(task.date_of_entry)}
+                    {formatDate(task.dateOfEntry)}
                   </Typography>
                   <StatusBadge
                     colorKey={sk}
@@ -293,14 +293,14 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5 }) => {
                 <Typography
                   sx={{ fontSize: "0.82rem", fontWeight: 600, mb: 0.3 }}
                 >
-                  {task.project_details}
+                  {task.projectDetails}
                 </Typography>
                 <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
-                  {task.task_desc
+                  {task.taskDesc
                     ?.split("Task Assigned: ")[1]
                     ?.split(" ")
                     .slice(0, 5)
-                    .join(" ") ?? task.task_desc}
+                    .join(" ") ?? task.taskDesc}
                 </Typography>
                 <Typography
                   sx={{ fontSize: "0.7rem", color: "#94a3b8", mt: 0.5 }}
@@ -456,7 +456,11 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5 }) => {
                         borderRight: "none",
                       }}
                     >
-                      {task.deadline === "" || task.deadline === null || task.deadline === undefined ? "No Deadline was set." : formatDate(task.deadline)}
+                      {task.deadline === "" ||
+                      task.deadline === null ||
+                      task.deadline === undefined
+                        ? "No Deadline was set."
+                        : formatDate(task.deadline)}
                     </td>
                     <td
                       style={{
@@ -584,21 +588,21 @@ const CompletedTasksTable = ({ data, loading }) => {
                 }}
               >
                 <Typography sx={{ fontSize: "0.72rem", color: "#64748b" }}>
-                  {formatDate(task.date_of_entry)}
+                  {formatDate(task.dateOfEntry)}
                 </Typography>
                 <StatusBadge colorKey="completed" label="Completed" />
               </Box>
               <Typography
                 sx={{ fontSize: "0.82rem", fontWeight: 600, mb: 0.3 }}
               >
-                {task.project_details}
+                {task.projectDetails}
               </Typography>
               <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
-                {task.task_desc
+                {task.taskDesc
                   ?.split("Task Desc: ")[1]
                   ?.split(" ")
                   .slice(0, 5)
-                  .join(" ") ?? task.task_desc}
+                  .join(" ") ?? task.taskDesc}
               </Typography>
             </Box>
           ))
@@ -825,9 +829,7 @@ const DashboardTasksUnderReview = () => {
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
     axios
-      .get(
-        `/dashboard_tasks_under_review/${sessionStorage.getItem("empName")}`,
-      )
+      .get(`/dashboard_tasks_under_review/${sessionStorage.getItem("empName")}`)
       .then((res) => {
         if (res.status === 200) setEmployeeList(res.data);
       })
