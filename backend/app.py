@@ -168,15 +168,24 @@ def getEmployeeTasksAll(name):
 def getEmployeeTasks():
     empName = request.args.get("employee_name")
     assignerName = request.args.get("assigner_name")
+    projectCode = request.args.get("project_code")
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
+    if projectCode:
+        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
+                       FROM "ProjectHistory" ph
+                       JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       WHERE pm."ProjectCode" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[projectCode,getUserId(assignerName)])
+    
+        tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
+    else:
+        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
                        WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
     
-    tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
+        tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
     
     return jsonify(tasks), 200
 
@@ -325,8 +334,6 @@ def assignTask():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    if "From Director Meeting" not in taskDesc:
-        updatedTaskDesc = f"Task Desc: {taskDesc}. Deadline: {targetDate}."
     if remarks:
         updatedRemarks = "Remarks: "+remarks
     else:
@@ -341,11 +348,11 @@ def assignTask():
     if meeting_id:
         cursor.execute(""" INSERT INTO "ProjectHistory"(
 	                "ProjectID", "AssignedBy", "UserID", "DateOfEntry","Event", "Remarks","ChangeStatus?", "EventDate", "WorkTypeID","TaskStatus","TargetDate","TaskType","MeetingId")
-	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s,%s,%s); """,[projectId[0], assignBy_id[0], assignTo, today, updatedTaskDesc, updatedRemarks, today, workType, targetDate, taskType,meeting_id])
+	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s,%s,%s); """,[projectId[0], assignBy_id[0], assignTo, today, taskDesc, updatedRemarks, today, workType, targetDate, taskType,meeting_id])
     else:
         cursor.execute(""" INSERT INTO "ProjectHistory"(
 	                "ProjectID", "AssignedBy", "UserID", "DateOfEntry","Event", "Remarks","ChangeStatus?", "EventDate", "WorkTypeID","TaskStatus","TargetDate","TaskType")
-	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s,%s); """,[projectId[0], assignBy_id[0], assignTo, today, updatedTaskDesc, updatedRemarks, today, workType, targetDate, taskType])
+	                VALUES (%s, %s, %s, %s, %s, %s,True,%s,%s,'Pending',%s,%s); """,[projectId[0], assignBy_id[0], assignTo, today, taskDesc, updatedRemarks, today, workType, targetDate, taskType])
     
     conn.commit()
     
@@ -711,8 +718,61 @@ def dashboard_tasks_under_review(user):
     tasks_under_review = [{ "name" : row[0], "pending_count" : row[1], "completed_count" : row[2], "overdue_count" : row[3], "reloaded_count" : row[4] }for row in cursor.fetchall()]
     
     # tasks_under_review = [{ "id" : row[0], "taskDesc" : row[1], "emp_name" : row[2], "project_details" : row[3]+" : "+row[4], "remarks" : row[5], "status" : row[6], "deadline" : row[7], "date_of_entry" : row[8] } for row in cursor.fetchall() ]
+    cursor.execute(""" SELECT 
+        pm."ProjectCode",
+        -- Active Pending
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Pending'
+              AND ph."ChangeStatus?" = TRUE
+        ) AS pending_count,
+
+        -- Completed / Cleared
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Cleared'
+              AND ph."ChangeStatus?" = FALSE
+        ) AS cleared_count,
+
+        -- Overdue
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Pending'
+              AND ph."TargetDate" < CURRENT_DATE
+              AND ph."ChangeStatus?" = TRUE
+        ) AS overdue_count,
+
+        -- Reloaded
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Reloaded'
+              AND ph."ChangeStatus?" = TRUE
+        ) AS reloaded_count
+
+    FROM "ProjectHistory" ph
+    JOIN "UserMaster" um
+        ON ph."UserID" = um."UserID"
+    JOIN "ProjectMaster" pm 
+        ON pm."ProjectID" = ph."ProjectID"
+
+    WHERE ph."AssignedBy" = %s
+      AND ph."IsHistory" = FALSE
+
+    GROUP BY pm."ProjectCode"
+
+    HAVING
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Pending'
+              AND ph."ChangeStatus?" = TRUE
+        ) > 0
+        OR
+        COUNT(*) FILTER (
+            WHERE ph."TaskStatus" = 'Reloaded'
+              AND ph."ChangeStatus?" = TRUE
+        ) > 0 """,[user_id[0],])
     
-    return jsonify(tasks_under_review), 200
+    tasks_under_review_projects = [{"projectCode": row[0], "pendingCount" : row[1], "clearedCount" : row[2], "overdueCount" : row[3], "reloadedCount" : row[4]}for row in cursor.fetchall()]
+    
+    return jsonify({
+        "employees" : tasks_under_review,
+        "projects" : tasks_under_review_projects
+        }), 200
 
 @app.route("/getDirectors",methods=["GET"])
 def getDirectors():

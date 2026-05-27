@@ -21,6 +21,8 @@ import { useMediaQuery } from "@mui/material";
 
 const Dashboard = () => {
   const [tasksIndex, setTasksIndex] = useState(0);
+  const [toRefreshKey, setToRefreshKey] = useState(0);
+  const [byRefreshKey, setByRefreshKey] = useState(0);
   const location = useLocation();
   const designation = sessionStorage.getItem("designation") || "";
   const empName = sessionStorage.getItem("empName") || "User";
@@ -192,10 +194,10 @@ const Dashboard = () => {
             </TabList>
 
             <TabPanel value={0} sx={{ p: 0 }}>
-              <DashboardTasksAssigned />
+              <DashboardTasksAssigned refreshKey={0} onRefresh={() => setToRefreshKey((k) => k+1)} />
             </TabPanel>
             <TabPanel value={1} sx={{ p: 0 }}>
-              <DashboardTasksUnderReview />
+              <DashboardTasksUnderReview refreshKey={0} onRefresh={() => setByRefreshKey((k) => k+1)} />
             </TabPanel>
             <TabPanel value={2} sx={{ p: 0 }}>
               <AllTasksAssigned />

@@ -5,8 +5,8 @@ import {
   CheckCircle,
   HourglassEmpty,
   Warning,
-  Refresh,
   InboxOutlined,
+  RestartAlt,
 } from "@mui/icons-material";
 import React, { useEffect, useState } from "react";
 import EditModal from "./EditModal";
@@ -62,7 +62,7 @@ const StatusChip = ({ status, deadline }) => {
       bg: "#fce4ec",
       color: "#c62828",
       border: "#ef9a9a",
-      icon: <Refresh sx={{ fontSize: "0.8rem" }} />,
+      icon: <RestartAlt sx={{ fontSize: "0.8rem" }} />,
     },
   };
 

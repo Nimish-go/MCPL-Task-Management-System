@@ -173,7 +173,6 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
       .finally(() => {
         setAssigning(false);
         resetForm();
-        window.location.reload();
       });
   };
 

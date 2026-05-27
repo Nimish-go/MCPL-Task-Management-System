@@ -371,34 +371,36 @@ const Login = () => {
               </Typography>
             </Box>
 
-            <FormControl error={error}>
-              <Input
-                type="text"
-                placeholder="Enter organisation code (e.g. MCPL01)"
-                value={orgCode}
-                onChange={(e) => setOrgCode(e.target.value)}
-                disabled={validOrgCode}
-                startDecorator={
-                  <Security
-                    sx={{
-                      fontSize: "1rem",
-                      color: validOrgCode ? "#22c55e" : "#94a3b8",
-                    }}
-                  />
-                }
-                sx={{
-                  borderRadius: "10px",
-                  fontSize: "0.875rem",
-                  "--Input-focusedHighlight": "#1976d2",
-                  backgroundColor: validOrgCode ? "#dcfce7" : "#fff",
-                }}
-              />
-              {error && (
-                <FormHelperText sx={{ mt: 0.5, fontSize: "0.75rem" }}>
-                  ✕ Invalid organisation code. Please try again.
-                </FormHelperText>
-              )}
-            </FormControl>
+            <form onSubmit={validateOrgCode}>
+              <FormControl error={error}>
+                <Input
+                  type="text"
+                  placeholder="Enter organisation code (e.g. XXXX)"
+                  value={orgCode}
+                  onChange={(e) => setOrgCode(e.target.value)}
+                  disabled={validOrgCode}
+                  startDecorator={
+                    <Security
+                      sx={{
+                        fontSize: "1rem",
+                        color: validOrgCode ? "#22c55e" : "#94a3b8",
+                      }}
+                    />
+                  }
+                  sx={{
+                    borderRadius: "10px",
+                    fontSize: "0.875rem",
+                    "--Input-focusedHighlight": "#1976d2",
+                    backgroundColor: validOrgCode ? "#dcfce7" : "#fff",
+                  }}
+                />
+                {error && (
+                  <FormHelperText sx={{ mt: 0.5, fontSize: "0.75rem" }}>
+                    ✕ Invalid organisation code. Please try again.
+                  </FormHelperText>
+                )}
+              </FormControl>
+            </form>
 
             {!validOrgCode && (
               <Button
