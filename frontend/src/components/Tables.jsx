@@ -529,7 +529,7 @@ const tdStyle = {
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-const Tables = ({ type, tableData, loading = true, onEmployeeClick }) => {
+const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited }) => {
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
   }, []);
@@ -918,7 +918,15 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick }) => {
                               onClick={() => {
                                 setTaskId(task.id);
                                 setEditModal(true);
-                                setEditModalType("assigned");
+                                if (
+                                  sessionStorage
+                                    .getItem("designation")
+                                    .includes("DIRECTOR")
+                                ) {
+                                  setEditModalType("underReview");
+                                } else {
+                                  setEditModalType("assigned");
+                                }
                               }}
                               sx={{
                                 borderRadius: "8px",
@@ -958,6 +966,7 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick }) => {
           open={editModal}
           onClose={() => setEditModal(false)}
           type={editModalType}
+          onSaved = {(id) => onTaskEdited?.id}
         />
         <TasksModal
           open={showEmployeeTasks}

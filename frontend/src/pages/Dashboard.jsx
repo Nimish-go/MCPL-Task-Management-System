@@ -10,7 +10,13 @@ import {
   Box,
   Chip,
 } from "@mui/joy";
-import { Assignment, TaskAlt, TaskSharp, WavingHand } from "@mui/icons-material";
+import {
+  Assignment,
+  History,
+  TaskAlt,
+  TaskSharp,
+  WavingHand,
+} from "@mui/icons-material";
 import DashboardTasksAssigned from "../components/DashboardTasksAssigned";
 import DashboardTasksUnderReview from "../components/DashboardTasksUnderReview";
 import AllTasksAssigned from "../components/AllTasksAssigned";
@@ -18,6 +24,7 @@ import SessionExpiredModal from "../components/SessionExpiredModal";
 import useSessionGuard from "../hooks/useSessionGuard";
 import { useLocation } from "react-router-dom";
 import { useMediaQuery } from "@mui/material";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const Dashboard = () => {
   const [tasksIndex, setTasksIndex] = useState(0);
@@ -28,6 +35,7 @@ const Dashboard = () => {
   const empName = sessionStorage.getItem("empName") || "User";
   const isDirector = designation.toUpperCase().includes("DIRECTOR");
   const isMobile = useMediaQuery("(max-width:600px)");
+  const [editedTaskId, setEditedTaskId] = useState(0);
 
   // Session guard — polls every 30s and on tab visibility change
   const { sessionExpired } = useSessionGuard(30_000);
@@ -37,6 +45,10 @@ const Dashboard = () => {
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
+  };
+
+  const handleEditedTasks = (taskId) => {
+    setEditedTaskId((prev) => new Set([...prev, taskId]));
   };
 
   return (
@@ -49,14 +61,22 @@ const Dashboard = () => {
       {/* Hero Header */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
+          background:
+            "linear-gradient(135deg, #0f1b35 0%, #1565c0 60%, #1976d2 100%)",
           px: { xs: 2.5, sm: 4, md: 6 },
           py: { xs: 3, md: 4 },
         }}
       >
         <Box sx={{ maxWidth: 1200, mx: "auto" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
-            <WavingHand sx={{ color: "#ffd54f", fontSize: { xs: "1.3rem", md: "1.6rem" } }} />
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}
+          >
+            <WavingHand
+              sx={{
+                color: "#ffd54f",
+                fontSize: { xs: "1.3rem", md: "1.6rem" },
+              }}
+            />
             <Typography
               sx={{
                 color: "rgba(255,255,255,0.75)",
@@ -97,7 +117,14 @@ const Dashboard = () => {
       </Box>
 
       {/* Main Content */}
-      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 1.5, sm: 2, md: 4 }, py: { xs: 2, md: 4 } }}>
+      <Box
+        sx={{
+          maxWidth: 1200,
+          mx: "auto",
+          px: { xs: 1.5, sm: 2, md: 4 },
+          py: { xs: 2, md: 4 },
+        }}
+      >
         <Box
           sx={{
             backgroundColor: "#fff",
@@ -129,7 +156,11 @@ const Dashboard = () => {
             />
             <Typography
               level="title-lg"
-              sx={{ fontWeight: 700, color: "#0f1b35", letterSpacing: "-0.01em" }}
+              sx={{
+                fontWeight: 700,
+                color: "#0f1b35",
+                letterSpacing: "-0.01em",
+              }}
             >
               Task Section
             </Typography>
@@ -179,7 +210,9 @@ const Dashboard = () => {
               </Tab>
               <Tab value={1} disableIndicator>
                 <ListItemDecorator sx={{ mr: 0.5 }}>
-                  <Assignment sx={{ fontSize: { xs: "0.85rem", md: "1rem" } }} />
+                  <Assignment
+                    sx={{ fontSize: { xs: "0.85rem", md: "1rem" } }}
+                  />
                 </ListItemDecorator>
                 {isMobile ? "By You" : "Tasks Assigned By You"}
               </Tab>
@@ -191,16 +224,50 @@ const Dashboard = () => {
                   {isMobile ? "All Tasks" : "All Tasks Assigned"}
                 </Tab>
               )}
+              <Tab value={3} disableIndicator>
+                <ListItemDecorator sx={{ mr: 0.5 }}>
+                  <History sx={{ fontSize: { xs: "0.85rem", md: "1rem" } }} />
+                </ListItemDecorator>
+                {isMobile ? "Proj. Hist." : "Project History Sheet"}
+              </Tab>
             </TabList>
 
             <TabPanel value={0} sx={{ p: 0 }}>
-              <DashboardTasksAssigned refreshKey={0} onRefresh={() => setToRefreshKey((k) => k+1)} />
+              <DashboardTasksAssigned
+                refreshKey={0}
+                onRefresh={() => setToRefreshKey((k) => k + 1)}
+                onTaskEdited={handleEditedTasks}
+              />
             </TabPanel>
             <TabPanel value={1} sx={{ p: 0 }}>
-              <DashboardTasksUnderReview refreshKey={0} onRefresh={() => setByRefreshKey((k) => k+1)} />
+              <DashboardTasksUnderReview
+                refreshKey={0}
+                onRefresh={() => setByRefreshKey((k) => k + 1)}
+                editedTaskIds={editedTaskId}
+              />
             </TabPanel>
             <TabPanel value={2} sx={{ p: 0 }}>
               <AllTasksAssigned />
+            </TabPanel>
+            <TabPanel value={3}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  textAlign: "center",
+                  alignItems: "center",
+                }}
+              >
+                <DotLottieReact
+                  src="https://lottie.host/9407d68b-42d6-4463-a95a-c44fd254f3f3/fSWzDbxuS0.lottie"
+                  autoplay
+                  loop
+                  className="h-80 w-80"
+                />
+                <Typography level="body-md" my={1}>
+                  This module is still being constructed. Will be updated soon.
+                </Typography>
+              </Box>
             </TabPanel>
           </Tabs>
         </Box>

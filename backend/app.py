@@ -196,12 +196,14 @@ def getAdminPanelLists():
     cursor = conn.cursor()
     
     cursor.execute(""" 
-                   SELECT um."UserID", um."EmpName", dm."DesignationName", bm."BranchName" 
+                   SELECT um."UserID", um."EmpName", dm."DesignationName", bm."BranchName", manager."EmpName" as "ReportsToName", manager."UserID" as "ReportsToID"
                    FROM "UserMaster" um 
                    JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID" 
-                   JOIN "BranchMaster" bm ON um."BranchID" = bm."BranchID" WHERE um."IsActive" = TRUE ORDER BY um."UserID" ASC; """)
+                   JOIN "BranchMaster" bm ON um."BranchID" = bm."BranchID" 
+                   JOIN "UserMaster" manager ON um."UserID" = manager."UserID"
+                   WHERE um."IsActive" = TRUE ORDER BY um."UserID" ASC; """)
     
-    employees = [{"id" : row[0], "name" : row[1], "designation" : row[2], "branch" : row[3]}for row in cursor.fetchall()]
+    employees = [{"id" : row[0], "name" : row[1], "designation" : row[2], "branch" : row[3], "reportsToName" : row[4], "reportsToID" : row[5]}for row in cursor.fetchall()]
     
     cursor.execute(""" SELECT "ProjectID", "ProjectCode", "ProjectName" FROM "ProjectMaster" ORDER BY "ProjectCode" ASC; """)
     projects = [{"id" : row[0], "code" : row[1], "name" : row[2]}for row in cursor.fetchall()]

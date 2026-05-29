@@ -21,7 +21,7 @@ import Toast from "./Toast";
 import { useLocation } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-const EditModal = ({ open, onClose, taskId, type }) => {
+const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
   const [taskData, setTaskData] = useState({});
   const [loading, setLoading] = useState(false);
   const [buttonLoading, setButtonLoading] = useState(false);
@@ -107,6 +107,7 @@ const EditModal = ({ open, onClose, taskId, type }) => {
           setToastStatus(data.status);
           setToastMessage(data.message);
           setToastShow(true);
+          onSaved?.(taskId);
         }
       })
       .catch((err) => {
