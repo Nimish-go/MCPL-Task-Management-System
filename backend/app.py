@@ -173,19 +173,20 @@ def getEmployeeTasks():
     cursor = conn.cursor()
     
     if projectCode:
-        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
+        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue", um."EmpName"
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       JOIN "UserMaster" um ON ph."UserID" = um."UserID"
                        WHERE pm."ProjectCode" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[projectCode,getUserId(assignerName)])
     
-        tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
+        tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8], "assignedTo" : row[9] } for row in cursor.fetchall()]
     else:
-        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue"
+        cursor.execute(""" SELECT ph."ProjectHistoryID" , ph."Event", pm."ProjectCode", pm."ProjectName", ph."Remarks", ph."TargetDate", ph."DateOfEntry", ph."TaskStatus", CASE WHEN ph."TaskStatus" = 'Pending' AND ph."TargetDate" < CURRENT_DATE THEN TRUE ELSE FALSE END AS "isOverdue", um."EmpName"
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
+                       JOIN "UserMaster" um ON ph."UserID" = um."UserID"
                        WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
-    
-        tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8] } for row in cursor.fetchall()]
+        tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8], "assignedTo" : row[9] } for row in cursor.fetchall()]
     
     return jsonify(tasks), 200
 
