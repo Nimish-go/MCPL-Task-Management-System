@@ -1160,7 +1160,7 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
     setEmpActiveTasks([]);
     setEmpCompletedTasks([]);
     axios
-      .get("http://localhost:5002/get_employee_tasks", {
+      .get("/get_employee_tasks", {
         params: {
           employee_name: empName,
           assigner_name: sessionStorage.getItem("empName"),
