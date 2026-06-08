@@ -35,7 +35,7 @@ import EditModal from "./EditModal";
 // ─── Shared colour map ────────────────────────────────────────────────────────
 const C = {
   pending: { solid: "#ffbd00", bg: "#fff8e1", border: "#ffcc80" },
-  completed: { solid: "#2e7d32", bg: "#e8f5e9", border: "#a5d6a7" },
+  completed: { solid: "#059669", bg: "#ecfdf5", border: "#6ee7b7" },
   overdue: { solid: "#c62828", bg: "#fce4ec", border: "#ef9a9a" },
   reloaded: { solid: "#6a1b9a", bg: "#f3e5f5", border: "#ce93d8" },
 };
@@ -307,7 +307,7 @@ const ActiveTasksTable = ({
   loading,
   rowsPerPage = 5,
   editedTaskIds = new Set(),
-  onEditModalClose
+  onEditModalClose,
 }) => {
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(rowsPerPage);
@@ -496,7 +496,7 @@ const ActiveTasksTable = ({
           open={editTask}
           onClose={() => {
             setEditTask(false);
-            onEditModalClose
+            onEditModalClose;
           }}
           type="underReview"
           taskId={taskId}
@@ -1250,11 +1250,26 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
         { name: "Pending", value: totals.pending },
         { name: "Overdue", value: totals.overdue },
         { name: "Reloaded", value: totals.reloaded },
+        { name: "Completed", value: totals.completed },
       ].filter((d) => d.value > 0),
     [totals],
   );
 
-  const PIE_COLORS = [C.pending.solid, C.overdue.solid, C.reloaded.solid];
+  const getPieColor = (name) => {
+    switch (name) {
+      case "Pending":
+        return C.pending.solid;
+      case "Completed":
+        return C.completed.solid;
+      case "Overdue":
+        return C.overdue.solid;
+      case "Reloaded":
+        return C.reloaded.solid;
+      default:
+        return "#ccc";
+    }
+  };
+
   const employeeNames = useMemo(
     () => employeeList.map((e) => e.name),
     [employeeList],
@@ -1500,10 +1515,10 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {pieData.map((_, i) => (
+                    {pieData.map((i) => (
                       <Cell
                         key={i}
-                        fill={PIE_COLORS[i % PIE_COLORS.length]}
+                        fill={getPieColor(i.name)}
                         stroke="none"
                       />
                     ))}
