@@ -19,10 +19,12 @@ import {
   MeetingRoom,
   TodayOutlined,
   Groups2Outlined,
+  EventAvailable,
 } from "@mui/icons-material";
 import axios from "axios";
 import AddDirectorMeetingRecords from "../components/AddDirectorMeetingRecords";
 import ViewPastMeetings from "../components/ViewPastMeetings";
+import MeetingScheduler from "../components/MeetingScheduler";
 
 const todayDisplay = new Date().toLocaleDateString("en-US", {
   weekday: "long",
@@ -36,12 +38,20 @@ const DirectorMeetings = () => {
   const [meetingData, setMeetingData] = useState([]);
   const [loadingMeeting, setLoadingMeeting] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [scheduleNextMeeting, setScheduleNextMeeting] = useState(false);
+  const [toast, setToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
+  const [toastStatus, setToastStatus] = useState("");
+
+  // ── NEW: Scheduled next meeting state ────────────────────────────────────
+  const [scheduledMeeting, setScheduledMeeting] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const designation = sessionStorage.getItem("designation") || "";
     if (!designation.toUpperCase().includes("DIRECTOR")) setAccessDenied(true);
-    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
   }, []);
 
   useEffect(() => {
@@ -54,6 +64,49 @@ const DirectorMeetings = () => {
       .catch(console.error)
       .finally(() => setLoadingMeeting(false));
   }, []);
+
+  // ── NEW: Fetch the scheduled next meeting ─────────────────────────────────
+  useEffect(() => {
+    axios
+      .get("/getScheduledNextMeetingData")
+      .then((res) => {
+        if (res.status === 200 && res.data) setScheduledMeeting(res.data);
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleSchedule = (payload) => {
+    setToast(true);
+    if (payload.success) {
+      setToastMsg("Meeting Has Been Scheduled.");
+      setToastStatus("success");
+    } else {
+      setToastMsg("Something Went Wrong. Please Check the Console.");
+      setToastStatus("danger");
+    }
+  };
+
+  // ── Helper: format scheduled date nicely ─────────────────────────────────
+  const formattedScheduledDate = scheduledMeeting?.scheduledDate
+    ? new Date(scheduledMeeting.scheduledDate + "T00:00:00").toLocaleDateString(
+        "en-IN",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        },
+      )
+    : null;
+
+  // ── Helper: how many days away is the next meeting? ──────────────────────
+  const daysUntilMeeting = (() => {
+    if (!scheduledMeeting?.scheduledDate) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(scheduledMeeting.scheduledDate + "T00:00:00");
+    const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
+    return diff;
+  })();
 
   return (
     <div className="min-h-screen bg-[#f5f6ff] w-screen min-w-full">
@@ -107,7 +160,10 @@ const DirectorMeetings = () => {
             <Button
               size="md"
               startDecorator={<Schedule sx={{ fontSize: 18 }} />}
-              onClick={() => setActiveTab(1)}
+              onClick={() => {
+                setActiveTab(1);
+                setScheduleNextMeeting(true);
+              }}
               sx={{
                 bgcolor: "rgba(255,255,255,0.18)",
                 color: "#fff",
@@ -152,6 +208,82 @@ const DirectorMeetings = () => {
               </span>
             </div>
           </div>
+
+          {/* ── NEW: Scheduled Next Meeting Banner ──────────────────────── */}
+          {scheduledMeeting?.scheduledDate && (
+            <div
+              className="inline-flex items-center gap-3 mt-4 px-4 py-2.5 rounded-xl border"
+              style={{
+                background: "rgba(99,179,237,0.12)",
+                borderColor: "rgba(99,179,237,0.35)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              {/* Icon */}
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: "rgba(99,179,237,0.25)" }}
+              >
+                <EventAvailable sx={{ color: "#93c5fd", fontSize: 17 }} />
+              </div>
+
+              {/* Label + Date */}
+              <div className="flex flex-col leading-tight">
+                <span className="text-white/50 text-[10px] font-semibold uppercase tracking-wider">
+                  Next Scheduled Meeting
+                </span>
+                <span className="text-white font-bold text-sm">
+                  {formattedScheduledDate}
+                </span>
+              </div>
+
+              {/* Days pill */}
+              {daysUntilMeeting !== null && (
+                <div
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold shrink-0"
+                  style={{
+                    background:
+                      daysUntilMeeting === 0
+                        ? "rgba(16,185,129,0.25)"
+                        : daysUntilMeeting < 0
+                          ? "rgba(239,68,68,0.2)"
+                          : "rgba(251,191,36,0.2)",
+                    color:
+                      daysUntilMeeting === 0
+                        ? "#6ee7b7"
+                        : daysUntilMeeting < 0
+                          ? "#fca5a5"
+                          : "#fde68a",
+                    border:
+                      daysUntilMeeting === 0
+                        ? "1px solid rgba(16,185,129,0.35)"
+                        : daysUntilMeeting < 0
+                          ? "1px solid rgba(239,68,68,0.3)"
+                          : "1px solid rgba(251,191,36,0.3)",
+                  }}
+                >
+                  {daysUntilMeeting === 0
+                    ? "Today!"
+                    : daysUntilMeeting < 0
+                      ? `${Math.abs(daysUntilMeeting)}d ago`
+                      : `in ${daysUntilMeeting}d`}
+                </div>
+              )}
+
+              {/* Agenda preview */}
+              {scheduledMeeting.agenda && (
+                <>
+                  <div className="w-px h-6 bg-white/20 shrink-0" />
+                  <span
+                    className="text-white/50 text-xs italic truncate max-w-[180px]"
+                    title={scheduledMeeting.agenda}
+                  >
+                    {scheduledMeeting.agenda}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -245,7 +377,28 @@ const DirectorMeetings = () => {
 
             <TabPanel value={1} sx={{ p: 0 }}>
               <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <AddDirectorMeetingRecords meetingData={meetingData} />
+                <AddDirectorMeetingRecords
+                  meetingData={meetingData}
+                  nextMeetingDate={scheduledMeeting?.scheduledDate}
+                  scheduledAgendaPoints={
+                    scheduledMeeting?.agendaPoints
+                      ? (() => {
+                          try {
+                            const raw = scheduledMeeting.agendaPoints;
+                            const parsed =
+                              typeof raw === "string" ? JSON.parse(raw) : raw;
+                            return parsed.map((p) =>
+                              typeof p === "string"
+                                ? p
+                                : (p.title ?? p.label ?? ""),
+                            );
+                          } catch {
+                            return [];
+                          }
+                        })()
+                      : []
+                  }
+                />
               </Box>
             </TabPanel>
           </Tabs>
@@ -259,6 +412,11 @@ const DirectorMeetings = () => {
           navigate("/dashboard");
         }}
         location="Director Meetings"
+      />
+      <MeetingScheduler
+        open={scheduleNextMeeting}
+        onClose={() => setScheduleNextMeeting(false)}
+        onSave={(payload) => handleSchedule(payload)}
       />
     </div>
   );

@@ -96,11 +96,22 @@ const SummaryPill = ({ label, value, colorKey, icon }) => {
     >
       <Box sx={{ color: c.solid, display: "flex", flexShrink: 0 }}>{icon}</Box>
       <Typography
-        sx={{ fontSize: { xs: "1.1rem", md: "1.4rem" }, fontWeight: 800, color: c.solid, lineHeight: 1 }}
+        sx={{
+          fontSize: { xs: "1.1rem", md: "1.4rem" },
+          fontWeight: 800,
+          color: c.solid,
+          lineHeight: 1,
+        }}
       >
         {value}
       </Typography>
-      <Typography sx={{ fontSize: { xs: "0.7rem", md: "0.78rem" }, color: c.solid, fontWeight: 600 }}>
+      <Typography
+        sx={{
+          fontSize: { xs: "0.7rem", md: "0.78rem" },
+          color: c.solid,
+          fontWeight: 600,
+        }}
+      >
         {label}
       </Typography>
     </Box>
@@ -183,7 +194,11 @@ const EditButton = ({ onClick, size = "desktop" }) => {
           bgcolor: "#e8f0fe",
           color: "#1565c0",
           border: "1px solid #c5d8f8",
-          "&:hover": { bgcolor: "#1565c0", color: "#fff", boxShadow: "0 3px 10px rgba(21,101,192,0.3)" },
+          "&:hover": {
+            bgcolor: "#1565c0",
+            color: "#fff",
+            boxShadow: "0 3px 10px rgba(21,101,192,0.3)",
+          },
           transition: "all 0.2s ease",
         }}
       >
@@ -205,7 +220,12 @@ const EditButton = ({ onClick, size = "desktop" }) => {
         color: "#1565c0",
         border: "1px solid #c5d8f8",
         px: 1.5,
-        "&:hover": { bgcolor: "#1565c0", color: "#fff", boxShadow: "0 3px 10px rgba(21,101,192,0.3)", transform: "translateY(-1px)" },
+        "&:hover": {
+          bgcolor: "#1565c0",
+          color: "#fff",
+          boxShadow: "0 3px 10px rgba(21,101,192,0.3)",
+          transform: "translateY(-1px)",
+        },
         transition: "all 0.2s ease",
       }}
     >
@@ -215,7 +235,15 @@ const EditButton = ({ onClick, size = "desktop" }) => {
 };
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
-const Pagination = ({ page, totalPages, rows, setRows, setPage, total, startIndex }) => (
+const Pagination = ({
+  page,
+  totalPages,
+  rows,
+  setRows,
+  setPage,
+  total,
+  startIndex,
+}) => (
   <Box
     sx={{
       display: "flex",
@@ -230,21 +258,57 @@ const Pagination = ({ page, totalPages, rows, setRows, setPage, total, startInde
     }}
   >
     <Typography level="body-xs" sx={{ color: "#94a3b8" }}>
-      {total > 0 ? `${startIndex + 1}–${Math.min(startIndex + rows, total)} of ${total}` : "0 results"}
+      {total > 0
+        ? `${startIndex + 1}–${Math.min(startIndex + rows, total)} of ${total}`
+        : "0 results"}
     </Typography>
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      <Button size="sm" variant="outlined" disabled={page === 0} onClick={() => setPage((p) => p - 1)} sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.78rem" }}>← Prev</Button>
-      <Box sx={{ px: 1.5, py: 0.4, borderRadius: "8px", backgroundColor: "#e8f0fe", border: "1px solid #c5cae9" }}>
-        <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#1976d2" }}>{page + 1} / {totalPages || 1}</Typography>
+      <Button
+        size="sm"
+        variant="outlined"
+        disabled={page === 0}
+        onClick={() => setPage((p) => p - 1)}
+        sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.78rem" }}
+      >
+        ← Prev
+      </Button>
+      <Box
+        sx={{
+          px: 1.5,
+          py: 0.4,
+          borderRadius: "8px",
+          backgroundColor: "#e8f0fe",
+          border: "1px solid #c5cae9",
+        }}
+      >
+        <Typography
+          sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#1976d2" }}
+        >
+          {page + 1} / {totalPages || 1}
+        </Typography>
       </Box>
-      <Button size="sm" variant="outlined" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)} sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.78rem" }}>Next →</Button>
+      <Button
+        size="sm"
+        variant="outlined"
+        disabled={page + 1 >= totalPages}
+        onClick={() => setPage((p) => p + 1)}
+        sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.78rem" }}
+      >
+        Next →
+      </Button>
     </Box>
   </Box>
 );
 
 // ─── Active tasks table ───────────────────────────────────────────────────────
 // NEW: accepts editedTaskIds so it can show a dot on each recently-edited row.
-const ActiveTasksTable = ({ data, loading, rowsPerPage = 5, editedTaskIds = new Set() }) => {
+const ActiveTasksTable = ({
+  data,
+  loading,
+  rowsPerPage = 5,
+  editedTaskIds = new Set(),
+  onEditModalClose
+}) => {
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState(rowsPerPage);
   const [editTask, setEditTask] = useState(false);
@@ -268,13 +332,24 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5, editedTaskIds = new 
   };
 
   const formatDate = (d) =>
-    new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(d).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-  const openEdit = (id) => { setTaskId(id); setEditTask(true); };
+  const openEdit = (id) => {
+    setTaskId(id);
+    setEditTask(true);
+  };
 
   const skeletonRows = Array.from({ length: rows }).map((_, i) => (
     <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}>
-      {[...Array(7)].map((_, j) => (<td key={j} style={tdStyle}><Skeleton variant="text" animation="wave" height={18} /></td>))}
+      {[...Array(7)].map((_, j) => (
+        <td key={j} style={tdStyle}>
+          <Skeleton variant="text" animation="wave" height={18} />
+        </td>
+      ))}
     </tr>
   ));
 
@@ -283,76 +358,206 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5, editedTaskIds = new 
       <Box>
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <Box key={i} sx={{ bgcolor: "#fff", borderRadius: "10px", border: "1px solid #e8ecf4", p: 1.8, mb: 1 }}>
+            <Box
+              key={i}
+              sx={{
+                bgcolor: "#fff",
+                borderRadius: "10px",
+                border: "1px solid #e8ecf4",
+                p: 1.8,
+                mb: 1,
+              }}
+            >
               <Skeleton variant="text" height={18} sx={{ mb: 0.8 }} />
               <Skeleton variant="text" height={14} width="55%" />
             </Box>
           ))
         ) : data.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 5 }}>
-            <InboxOutlined sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }} />
-            <Typography level="body-sm" sx={{ color: "#90a4ae" }}>No active tasks</Typography>
+            <InboxOutlined
+              sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }}
+            />
+            <Typography level="body-sm" sx={{ color: "#90a4ae" }}>
+              No active tasks
+            </Typography>
           </Box>
         ) : (
           paginated.map((task, i) => {
             const sk = getStatusKey(task);
             // NEW: check if this task was recently edited
-            const hasEdit = editedTaskIds.has(String(task.id));
+            const hasEdit = editedTaskIds.has(task.id);
             return (
-              <Box key={i} sx={{ bgcolor: "#fff", borderRadius: "12px", border: "1px solid #e8ecf4", p: 2, mb: 1.5, boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+              <Box
+                key={i}
+                sx={{
+                  bgcolor: "#fff",
+                  borderRadius: "12px",
+                  border: "1px solid #e8ecf4",
+                  p: 2,
+                  mb: 1.5,
+                  boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                  }}
+                >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
                     {/* NEW: dot next to date on mobile */}
                     <NotifDot visible={hasEdit} />
-                    <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", fontFamily: "monospace" }}>{formatDate(task.dateOfEntry)}</Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "0.7rem",
+                        color: "#94a3b8",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {formatDate(task.dateOfEntry)}
+                    </Typography>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <StatusBadge colorKey={sk} label={sk.charAt(0).toUpperCase() + sk.slice(1)} />
-                    <EditButton size="mobile" onClick={() => openEdit(task.id)} />
+                    <StatusBadge
+                      colorKey={sk}
+                      label={sk.charAt(0).toUpperCase() + sk.slice(1)}
+                    />
+                    <EditButton
+                      size="mobile"
+                      onClick={() => openEdit(task.id)}
+                    />
                   </Box>
                 </Box>
-                <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#1565c0", mb: 0.3 }}>{task.projectDetails}</Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.5, mb: 0.5 }}>
-                  {task.taskDesc?.split("Task Assigned: ")[1]?.split(" ").slice(0, 8).join(" ") ?? task.taskDesc}
+                <Typography
+                  sx={{
+                    fontSize: "0.82rem",
+                    fontWeight: 700,
+                    color: "#1565c0",
+                    mb: 0.3,
+                  }}
+                >
+                  {task.projectDetails}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: "#475569",
+                    lineHeight: 1.5,
+                    mb: 0.5,
+                  }}
+                >
+                  {task.taskDesc
+                    ?.split("Task Assigned: ")[1]
+                    ?.split(" ")
+                    .slice(0, 8)
+                    .join(" ") ?? task.taskDesc}
                   {task.taskDesc?.includes("Task Assigned:") ? "…" : ""}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8" }}>Due:</Typography>
-                  <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: sk === "overdue" ? "#c62828" : "#475569" }}>
-                    {!task.deadline ? "No deadline set" : formatDate(task.deadline)}
+                  <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8" }}>
+                    Due:
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "0.68rem",
+                      fontWeight: 600,
+                      color: sk === "overdue" ? "#c62828" : "#475569",
+                    }}
+                  >
+                    {!task.deadline
+                      ? "No deadline set"
+                      : formatDate(task.deadline)}
                   </Typography>
                 </Box>
               </Box>
             );
           })
         )}
-        <Box sx={{ borderRadius: "10px", border: "1px solid #e8ecf4", overflow: "hidden" }}>
-          <Pagination page={page} totalPages={totalPages} rows={rows} setRows={setRows} setPage={setPage} total={data.length} startIndex={startIndex} />
+        <Box
+          sx={{
+            borderRadius: "10px",
+            border: "1px solid #e8ecf4",
+            overflow: "hidden",
+          }}
+        >
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            rows={rows}
+            setRows={setRows}
+            setPage={setPage}
+            total={data.length}
+            startIndex={startIndex}
+          />
         </Box>
-        <EditModal open={editTask} onClose={() => setEditTask(false)} type="underReview" taskId={taskId} />
+        <EditModal
+          open={editTask}
+          onClose={() => {
+            setEditTask(false);
+            onEditModalClose
+          }}
+          type="underReview"
+          taskId={taskId}
+        />
       </Box>
     );
   }
 
-  const headers = ["#", "Date", "Project", "Description", "Status", "Deadline", "Action"];
+  const headers = [
+    "#",
+    "Date",
+    "Assigned To",
+    "Project",
+    "Description",
+    "Status",
+    "Deadline",
+    "Action",
+  ];
   return (
-    <Box sx={{ borderRadius: "12px", border: "1px solid #e8ecf4", overflow: "hidden" }}>
+    <Box
+      sx={{
+        borderRadius: "12px",
+        border: "1px solid #e8ecf4",
+        overflow: "hidden",
+      }}
+    >
       <Box sx={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "linear-gradient(135deg, #0f1b35, #1565c0)" }}>
+            <tr
+              style={{
+                background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+              }}
+            >
               {headers.map((h, i) => (
-                <th key={h} style={{ ...thStyle, borderRight: i < headers.length - 1 ? thStyle.borderRight : "none" }}>{h}</th>
+                <th
+                  key={h}
+                  style={{
+                    ...thStyle,
+                    borderRight:
+                      i < headers.length - 1 ? thStyle.borderRight : "none",
+                  }}
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading ? skeletonRows : data.length === 0 ? (
+            {loading ? (
+              skeletonRows
+            ) : data.length === 0 ? (
               <tr>
                 <td colSpan={7} style={tdStyle}>
                   <Box sx={{ textAlign: "center", py: 5 }}>
-                    <InboxOutlined sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }} />
-                    <Typography level="body-sm" sx={{ color: "#90a4ae" }}>No active tasks</Typography>
+                    <InboxOutlined
+                      sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }}
+                    />
+                    <Typography level="body-sm" sx={{ color: "#90a4ae" }}>
+                      No active tasks
+                    </Typography>
                   </Box>
                 </td>
               </tr>
@@ -364,34 +569,102 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5, editedTaskIds = new 
                 return (
                   <tr
                     key={i}
-                    style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f4ff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#fff" : "#fafbff")}
+                    style={{
+                      backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#f0f4ff")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        i % 2 === 0 ? "#fff" : "#fafbff")
+                    }
                   >
                     <td style={tdStyle}>
-                      <Box sx={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#1976d2" }}>{startIndex + i + 1}</Typography>
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          backgroundColor: "#e8f0fe",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: "0.65rem",
+                            fontWeight: 700,
+                            color: "#1976d2",
+                          }}
+                        >
+                          {startIndex + i + 1}
+                        </Typography>
                       </Box>
                     </td>
-                    <td style={{ ...tdStyle, color: "#475569", fontSize: "0.75rem" }}>{formatDate(task.dateOfEntry)}</td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        color: "#475569",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {formatDate(task.dateOfEntry)}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        color: "#475569",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {task.assignedTo}
+                    </td>
                     <td style={tdStyle}>
                       {/* NEW: dot next to project name in task row */}
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 0.8 }}
+                      >
                         <NotifDot visible={hasEdit} />
-                        <Typography sx={{ fontSize: "0.78rem", fontWeight: 500 }}>{task.projectDetails}</Typography>
+                        <Typography
+                          sx={{ fontSize: "0.78rem", fontWeight: 500 }}
+                        >
+                          {task.projectDetails}
+                        </Typography>
                       </Box>
                     </td>
                     <td style={tdStyle}>
                       <Typography sx={{ fontSize: "0.78rem", lineHeight: 1.4 }}>
-                        {task.taskDesc?.split("Task Assigned: ")[1]?.split(" ").slice(0, 5).join(" ") ?? task.taskDesc}
+                        {task.taskDesc
+                          ?.split("Task Assigned: ")[1]
+                          ?.split(" ")
+                          .slice(0, 5)
+                          .join(" ") ?? task.taskDesc}
                         {task.taskDesc?.includes("Task Assigned:") && "…"}
                       </Typography>
                     </td>
-                    <td style={tdStyle}><StatusBadge colorKey={sk} label={sk.charAt(0).toUpperCase() + sk.slice(1)} /></td>
-                    <td style={{ ...tdStyle, color: sk === "overdue" ? "#c62828" : "#475569", fontSize: "0.75rem", fontWeight: sk === "overdue" ? 700 : 400 }}>
-                      {!task.deadline ? "No deadline set" : formatDate(task.deadline)}
+                    <td style={tdStyle}>
+                      <StatusBadge
+                        colorKey={sk}
+                        label={sk.charAt(0).toUpperCase() + sk.slice(1)}
+                      />
                     </td>
-                    <td style={tdStyle}><EditButton onClick={() => openEdit(task.id)} /></td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        color: sk === "overdue" ? "#c62828" : "#475569",
+                        fontSize: "0.75rem",
+                        fontWeight: sk === "overdue" ? 700 : 400,
+                      }}
+                    >
+                      {!task.deadline
+                        ? "No deadline set"
+                        : formatDate(task.deadline)}
+                    </td>
+                    <td style={tdStyle}>
+                      <EditButton onClick={() => openEdit(task.id)} />
+                    </td>
                   </tr>
                 );
               })
@@ -399,8 +672,21 @@ const ActiveTasksTable = ({ data, loading, rowsPerPage = 5, editedTaskIds = new 
           </tbody>
         </table>
       </Box>
-      <Pagination page={page} totalPages={totalPages} rows={rows} setRows={setRows} setPage={setPage} total={data.length} startIndex={startIndex} />
-      <EditModal open={editTask} onClose={() => setEditTask(false)} type="underReview" taskId={taskId} />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rows={rows}
+        setRows={setRows}
+        setPage={setPage}
+        total={data.length}
+        startIndex={startIndex}
+      />
+      <EditModal
+        open={editTask}
+        onClose={() => setEditTask(false)}
+        type="underReview"
+        taskId={taskId}
+      />
     </Box>
   );
 };
@@ -416,11 +702,19 @@ const CompletedTasksTable = ({ data, loading }) => {
   const totalPages = Math.ceil(data.length / rows);
 
   const formatDate = (d) =>
-    new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(d).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
   const skeletonRows = Array.from({ length: rows }).map((_, i) => (
     <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}>
-      {[...Array(4)].map((_, j) => (<td key={j} style={tdStyle}><Skeleton variant="text" animation="wave" height={18} /></td>))}
+      {[...Array(4)].map((_, j) => (
+        <td key={j} style={tdStyle}>
+          <Skeleton variant="text" animation="wave" height={18} />
+        </td>
+      ))}
     </tr>
   ));
 
@@ -429,75 +723,218 @@ const CompletedTasksTable = ({ data, loading }) => {
       <Box>
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <Box key={i} sx={{ bgcolor: "#fff", borderRadius: "10px", border: "1px solid #e8ecf4", p: 1.8, mb: 1 }}>
+            <Box
+              key={i}
+              sx={{
+                bgcolor: "#fff",
+                borderRadius: "10px",
+                border: "1px solid #e8ecf4",
+                p: 1.8,
+                mb: 1,
+              }}
+            >
               <Skeleton variant="text" height={18} sx={{ mb: 0.8 }} />
               <Skeleton variant="text" height={14} width="55%" />
             </Box>
           ))
         ) : data.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 5 }}>
-            <InboxOutlined sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }} />
-            <Typography level="body-sm" sx={{ color: "#90a4ae" }}>No completed tasks</Typography>
+            <InboxOutlined
+              sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }}
+            />
+            <Typography level="body-sm" sx={{ color: "#90a4ae" }}>
+              No completed tasks
+            </Typography>
           </Box>
         ) : (
           paginated.map((task, i) => (
-            <Box key={i} sx={{ bgcolor: "#fff", borderRadius: "12px", border: "1px solid #e8ecf4", p: 2, mb: 1.5, boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", fontFamily: "monospace" }}>{formatDate(task.dateOfEntry)}</Typography>
+            <Box
+              key={i}
+              sx={{
+                bgcolor: "#fff",
+                borderRadius: "12px",
+                border: "1px solid #e8ecf4",
+                p: 2,
+                mb: 1.5,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.7rem",
+                    color: "#94a3b8",
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {formatDate(task.dateOfEntry)}
+                </Typography>
                 <StatusBadge colorKey="completed" label="Completed" />
               </Box>
-              <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#2e7d32", mb: 0.3 }}>{task.projectDetails}</Typography>
-              <Typography sx={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.5 }}>
-                {task.taskDesc?.split("Task Assigned: ")[1]?.split(" ").slice(0, 8).join(" ") ?? task.taskDesc}
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  color: "#2e7d32",
+                  mb: 0.3,
+                }}
+              >
+                {task.projectDetails}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  color: "#2e7d32",
+                  mb: 0.3,
+                }}
+              >
+                {task.assignedBy}
+              </Typography>
+              <Typography
+                sx={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.5 }}
+              >
+                {task.taskDesc
+                  ?.split("Task Assigned: ")[1]
+                  ?.split(" ")
+                  .slice(0, 8)
+                  .join(" ") ?? task.taskDesc}
                 {task.taskDesc?.includes("Task Assigned:") ? "…" : ""}
               </Typography>
             </Box>
           ))
         )}
-        <Box sx={{ borderRadius: "10px", border: "1px solid #e8ecf4", overflow: "hidden" }}>
-          <Pagination page={page} totalPages={totalPages} rows={rows} setRows={setRows} setPage={setPage} total={data.length} startIndex={startIndex} />
+        <Box
+          sx={{
+            borderRadius: "10px",
+            border: "1px solid #e8ecf4",
+            overflow: "hidden",
+          }}
+        >
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            rows={rows}
+            setRows={setRows}
+            setPage={setPage}
+            total={data.length}
+            startIndex={startIndex}
+          />
         </Box>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ borderRadius: "12px", border: "1px solid #e8ecf4", overflow: "hidden" }}>
+    <Box
+      sx={{
+        borderRadius: "12px",
+        border: "1px solid #e8ecf4",
+        overflow: "hidden",
+      }}
+    >
       <Box sx={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "linear-gradient(135deg, #1b5e20, #2e7d32)" }}>
+            <tr
+              style={{
+                background: "linear-gradient(135deg, #1b5e20, #2e7d32)",
+              }}
+            >
               {["#", "Date", "Project", "Description"].map((h, i, arr) => (
-                <th key={h} style={{ ...thStyle, borderRight: i < arr.length - 1 ? thStyle.borderRight : "none" }}>{h}</th>
+                <th
+                  key={h}
+                  style={{
+                    ...thStyle,
+                    borderRight:
+                      i < arr.length - 1 ? thStyle.borderRight : "none",
+                  }}
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading ? skeletonRows : data.length === 0 ? (
+            {loading ? (
+              skeletonRows
+            ) : data.length === 0 ? (
               <tr>
                 <td colSpan={4} style={tdStyle}>
                   <Box sx={{ textAlign: "center", py: 5 }}>
-                    <InboxOutlined sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }} />
-                    <Typography level="body-sm" sx={{ color: "#90a4ae" }}>No completed tasks</Typography>
+                    <InboxOutlined
+                      sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }}
+                    />
+                    <Typography level="body-sm" sx={{ color: "#90a4ae" }}>
+                      No completed tasks
+                    </Typography>
                   </Box>
                 </td>
               </tr>
             ) : (
               paginated.map((task, i) => (
-                <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0fff4")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#fff" : "#fafbff")}
+                <tr
+                  key={i}
+                  style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f0fff4")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      i % 2 === 0 ? "#fff" : "#fafbff")
+                  }
                 >
                   <td style={tdStyle}>
-                    <Box sx={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#2e7d32" }}>{startIndex + i + 1}</Typography>
+                    <Box
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        backgroundColor: "#e8f5e9",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          color: "#2e7d32",
+                        }}
+                      >
+                        {startIndex + i + 1}
+                      </Typography>
                     </Box>
                   </td>
-                  <td style={{ ...tdStyle, color: "#475569", fontSize: "0.75rem" }}>{formatDate(task.dateOfEntry)}</td>
-                  <td style={tdStyle}><Typography sx={{ fontSize: "0.78rem", fontWeight: 500 }}>{task.projectDetails}</Typography></td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      color: "#475569",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {formatDate(task.dateOfEntry)}
+                  </td>
+                  <td style={tdStyle}>
+                    <Typography sx={{ fontSize: "0.78rem", fontWeight: 500 }}>
+                      {task.projectDetails}
+                    </Typography>
+                  </td>
                   <td style={tdStyle}>
                     <Typography sx={{ fontSize: "0.78rem", lineHeight: 1.4 }}>
-                      {task.taskDesc?.split("Task Assigned: ")[1]?.split(" ").slice(0, 5).join(" ") ?? task.taskDesc}
+                      {task.taskDesc
+                        ?.split("Task Assigned: ")[1]
+                        ?.split(" ")
+                        .slice(0, 5)
+                        .join(" ") ?? task.taskDesc}
                       {task.taskDesc?.includes("Task Assigned:") && "…"}
                     </Typography>
                   </td>
@@ -507,7 +944,15 @@ const CompletedTasksTable = ({ data, loading }) => {
           </tbody>
         </table>
       </Box>
-      <Pagination page={page} totalPages={totalPages} rows={rows} setRows={setRows} setPage={setPage} total={data.length} startIndex={startIndex} />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        rows={rows}
+        setRows={setRows}
+        setPage={setPage}
+        total={data.length}
+        startIndex={startIndex}
+      />
     </Box>
   );
 };
@@ -518,9 +963,22 @@ const CustomTooltip = ({ active, payload }) => {
   const { name, value } = payload[0];
   const c = C[name.toLowerCase()] || C.pending;
   return (
-    <Box sx={{ backgroundColor: "#fff", border: `1px solid ${c.border}`, borderRadius: "10px", px: 2, py: 1.2, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
-      <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: c.solid }}>{name}</Typography>
-      <Typography sx={{ fontSize: "1.1rem", fontWeight: 800, color: c.solid }}>{value}</Typography>
+    <Box
+      sx={{
+        backgroundColor: "#fff",
+        border: `1px solid ${c.border}`,
+        borderRadius: "10px",
+        px: 2,
+        py: 1.2,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      }}
+    >
+      <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: c.solid }}>
+        {name}
+      </Typography>
+      <Typography sx={{ fontSize: "1.1rem", fontWeight: 800, color: c.solid }}>
+        {value}
+      </Typography>
     </Box>
   );
 };
@@ -528,10 +986,31 @@ const CustomTooltip = ({ active, payload }) => {
 // ─── Section header ───────────────────────────────────────────────────────────
 const SectionHeader = ({ title, subtitle, accentColor = "#1976d2" }) => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-    <Box sx={{ width: 4, height: 28, borderRadius: "4px", background: `linear-gradient(180deg, ${accentColor}, ${accentColor}88)`, flexShrink: 0 }} />
+    <Box
+      sx={{
+        width: 4,
+        height: 28,
+        borderRadius: "4px",
+        background: `linear-gradient(180deg, ${accentColor}, ${accentColor}88)`,
+        flexShrink: 0,
+      }}
+    />
     <Box>
-      <Typography sx={{ fontWeight: 700, fontSize: "0.92rem", color: "#0f1b35", lineHeight: 1.2 }}>{title}</Typography>
-      {subtitle && <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", mt: 0.2 }}>{subtitle}</Typography>}
+      <Typography
+        sx={{
+          fontWeight: 700,
+          fontSize: "0.92rem",
+          color: "#0f1b35",
+          lineHeight: 1.2,
+        }}
+      >
+        {title}
+      </Typography>
+      {subtitle && (
+        <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", mt: 0.2 }}>
+          {subtitle}
+        </Typography>
+      )}
     </Box>
   </Box>
 );
@@ -541,16 +1020,29 @@ const Zone2Tab = ({ label, icon, active, onClick }) => (
   <Box
     onClick={onClick}
     sx={{
-      display: "flex", alignItems: "center", gap: 0.8, px: 2, py: 0.9, borderRadius: "8px",
-      cursor: "pointer", fontWeight: 700, fontSize: "0.8rem", transition: "all 0.18s ease",
+      display: "flex",
+      alignItems: "center",
+      gap: 0.8,
+      px: 2,
+      py: 0.9,
+      borderRadius: "8px",
+      cursor: "pointer",
+      fontWeight: 700,
+      fontSize: "0.8rem",
+      transition: "all 0.18s ease",
       backgroundColor: active ? "#1976d2" : "transparent",
       color: active ? "#fff" : "#64748b",
       border: active ? "1px solid #1976d2" : "1px solid #e2e8f0",
       userSelect: "none",
-      "&:hover": { backgroundColor: active ? "#1565c0" : "#f0f4ff", color: active ? "#fff" : "#1976d2", borderColor: "#1976d2" },
+      "&:hover": {
+        backgroundColor: active ? "#1565c0" : "#f0f4ff",
+        color: active ? "#fff" : "#1976d2",
+        borderColor: "#1976d2",
+      },
     }}
   >
-    {icon}{label}
+    {icon}
+    {label}
   </Box>
 );
 
@@ -597,13 +1089,26 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
   }, [syncEditedMeta]);
 
   // Derived sets for quick O(1) lookup
-  const editedTaskIds = useMemo(() => new Set(Object.keys(editedMeta)), [editedMeta]);
+  const editedTaskIds = useMemo(
+    () => new Set(Object.keys(editedMeta)),
+    [editedMeta],
+  );
   const editedEmployees = useMemo(
-    () => new Set(Object.values(editedMeta).map((m) => m.employeeName).filter(Boolean)),
+    () =>
+      new Set(
+        Object.values(editedMeta)
+          .map((m) => m.employeeName)
+          .filter(Boolean),
+      ),
     [editedMeta],
   );
   const editedProjects = useMemo(
-    () => new Set(Object.values(editedMeta).map((m) => m.projectCode).filter(Boolean)),
+    () =>
+      new Set(
+        Object.values(editedMeta)
+          .map((m) => m.projectCode)
+          .filter(Boolean),
+      ),
     [editedMeta],
   );
   // ─────────────────────────────────────────────────────────────────────────
@@ -637,6 +1142,16 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
     if (onRefresh) onRefresh();
   };
 
+  const handleeditModalClose = () => {
+    if (selectedProject) {
+      handleRefreshofProjects();
+    } else if (selectedEmployee) {
+      handleRefreshofEmployees();
+    } else {
+      handleRefresh();
+    }
+  };
+
   // ── Employee drill-down ───────────────────────────────────────────────────
   const loadEmployeeDetails = (empName) => {
     if (!empName) return;
@@ -645,8 +1160,11 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
     setEmpActiveTasks([]);
     setEmpCompletedTasks([]);
     axios
-      .get("/get_employee_tasks", {
-        params: { employee_name: empName, assigner_name: sessionStorage.getItem("empName") },
+      .get("http://localhost:5002/get_employee_tasks", {
+        params: {
+          employee_name: empName,
+          assigner_name: sessionStorage.getItem("empName"),
+        },
       })
       .then((res) => {
         if (res.status === 200) {
@@ -674,7 +1192,10 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
     setProjCompletedTasks([]);
     axios
       .get("/get_employee_tasks", {
-        params: { project_code: projectCode, assigner_name: sessionStorage.getItem("empName") },
+        params: {
+          project_code: projectCode,
+          assigner_name: sessionStorage.getItem("empName"),
+        },
       })
       .then((res) => {
         if (res.status === 200) {
@@ -699,7 +1220,9 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
   // ── Derived data ──────────────────────────────────────────────────────────
   const filteredEmployeeList = useMemo(() => {
     if (!selectedEmployee) return employeeList;
-    return employeeList.filter((e) => e.name === selectedEmployee && e.pending_count > 0);
+    return employeeList.filter(
+      (e) => e.name === selectedEmployee && e.pending_count > 0,
+    );
   }, [employeeList, selectedEmployee]);
 
   const filteredProjectList = useMemo(() => {
@@ -732,8 +1255,14 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
   );
 
   const PIE_COLORS = [C.pending.solid, C.overdue.solid, C.reloaded.solid];
-  const employeeNames = useMemo(() => employeeList.map((e) => e.name), [employeeList]);
-  const projectCodes = useMemo(() => projectList.map((p) => p.projectCode), [projectList]);
+  const employeeNames = useMemo(
+    () => employeeList.map((e) => e.name),
+    [employeeList],
+  );
+  const projectCodes = useMemo(
+    () => projectList.map((p) => p.projectCode),
+    [projectList],
+  );
 
   const isEmployeeDrilldown = zone2Tab === "employees" && !!detailEmployee;
   const isProjectDrilldown = zone2Tab === "projects" && !!detailProject;
@@ -744,7 +1273,10 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
     color: loading ? "#c5cae9" : "#64748b",
     ...(spinning && {
       animation: "spin 0.5s linear",
-      "@keyframes spin": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } },
+      "@keyframes spin": {
+        from: { transform: "rotate(0deg)" },
+        to: { transform: "rotate(360deg)" },
+      },
     }),
   };
 
@@ -761,40 +1293,116 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
           mb: 3,
         }}
       >
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(4,auto)" }, gap: 1 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(4,auto)" },
+            gap: 1,
+          }}
+        >
           {loading ? (
-            [...Array(4)].map((_, i) => <Skeleton key={i} variant="rectangular" height={48} sx={{ borderRadius: "12px", minWidth: 90 }} />)
+            [...Array(4)].map((_, i) => (
+              <Skeleton
+                key={i}
+                variant="rectangular"
+                height={48}
+                sx={{ borderRadius: "12px", minWidth: 90 }}
+              />
+            ))
           ) : (
             <>
-              <SummaryPill label="Pending" value={totals.pending} colorKey="pending" icon={<HourglassEmpty sx={{ fontSize: "1rem" }} />} />
-              <SummaryPill label="Completed" value={totals.completed} colorKey="completed" icon={<CheckCircle sx={{ fontSize: "1rem" }} />} />
-              <SummaryPill label="Overdue" value={totals.overdue} colorKey="overdue" icon={<Warning sx={{ fontSize: "1rem" }} />} />
-              <SummaryPill label="Reloaded" value={totals.reloaded} colorKey="reloaded" icon={<Refresh sx={{ fontSize: "1rem" }} />} />
+              <SummaryPill
+                label="Pending"
+                value={totals.pending}
+                colorKey="pending"
+                icon={<HourglassEmpty sx={{ fontSize: "1rem" }} />}
+              />
+              <SummaryPill
+                label="Completed"
+                value={totals.completed}
+                colorKey="completed"
+                icon={<CheckCircle sx={{ fontSize: "1rem" }} />}
+              />
+              <SummaryPill
+                label="Overdue"
+                value={totals.overdue}
+                colorKey="overdue"
+                icon={<Warning sx={{ fontSize: "1rem" }} />}
+              />
+              <SummaryPill
+                label="Reloaded"
+                value={totals.reloaded}
+                colorKey="reloaded"
+                icon={<Refresh sx={{ fontSize: "1rem" }} />}
+              />
             </>
           )}
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: { xs: "100%", sm: "auto" } }}>
-          <FilterList sx={{ fontSize: "1.1rem", color: "#1976d2", flexShrink: 0 }} />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            minWidth: { xs: "100%", sm: "auto" },
+          }}
+        >
+          <FilterList
+            sx={{ fontSize: "1.1rem", color: "#1976d2", flexShrink: 0 }}
+          />
           <Autocomplete
-            placeholder={zone2Tab === "projects" ? "Filter by project…" : "Filter by employee…"}
+            placeholder={
+              zone2Tab === "projects"
+                ? "Filter by project…"
+                : "Filter by employee…"
+            }
             options={zone2Tab === "projects" ? projectCodes : employeeNames}
             value={zone2Tab === "projects" ? selectedProject : selectedEmployee}
             onChange={(_, val) => {
               if (zone2Tab === "projects") {
                 setSelectedProject(val);
-                if (val) loadProjectDetails(val); else clearProjectDrilldown();
+                if (val) loadProjectDetails(val);
+                else clearProjectDrilldown();
               } else {
                 setSelectedEmployee(val);
-                if (val) loadEmployeeDetails(val); else clearEmployeeDrilldown();
+                if (val) loadEmployeeDetails(val);
+                else clearEmployeeDrilldown();
               }
             }}
-            startDecorator={zone2Tab === "projects" ? <FolderOpen sx={{ fontSize: "1rem", color: "#1976d2" }} /> : <Person sx={{ fontSize: "1rem", color: "#1976d2" }} />}
-            sx={{ flex: 1, minWidth: { sm: 220 }, borderRadius: "10px", backgroundColor: "#fff", border: "1px solid #d0d9f0", fontSize: "0.85rem", "&:hover": { borderColor: "#1976d2" } }}
+            startDecorator={
+              zone2Tab === "projects" ? (
+                <FolderOpen sx={{ fontSize: "1rem", color: "#1976d2" }} />
+              ) : (
+                <Person sx={{ fontSize: "1rem", color: "#1976d2" }} />
+              )
+            }
+            sx={{
+              flex: 1,
+              minWidth: { sm: 220 },
+              borderRadius: "10px",
+              backgroundColor: "#fff",
+              border: "1px solid #d0d9f0",
+              fontSize: "0.85rem",
+              "&:hover": { borderColor: "#1976d2" },
+            }}
           />
           <Tooltip title="Refresh" placement="top">
-            <IconButton size="sm" variant="outlined" color="neutral" onClick={handleRefresh} disabled={loading}
-              sx={{ flexShrink: 0, borderRadius: "8px", borderColor: "#e2e8f0", "&:hover": { backgroundColor: "#f0f4ff", borderColor: "#1976d2" }, transition: "all 0.2s ease" }}
+            <IconButton
+              size="sm"
+              variant="outlined"
+              color="neutral"
+              onClick={handleRefresh}
+              disabled={loading}
+              sx={{
+                flexShrink: 0,
+                borderRadius: "8px",
+                borderColor: "#e2e8f0",
+                "&:hover": {
+                  backgroundColor: "#f0f4ff",
+                  borderColor: "#1976d2",
+                },
+                transition: "all 0.2s ease",
+              }}
             >
               <Refresh sx={spinStyle} />
             </IconButton>
@@ -803,37 +1411,117 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
       </Box>
 
       {/* ── Zone 2: Pie + tabbed right panel ── */}
-      <Box sx={{ backgroundColor: "#fff", borderRadius: "16px", border: "1px solid #e8ecf4", boxShadow: "0 2px 16px rgba(0,0,0,0.05)", p: { xs: 2, md: 3 }, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 2 }}>
-          <SectionHeader title="Active Tasks Overview" subtitle="Pending, overdue and reloaded tasks across your team" accentColor="#1976d2" />
+      <Box
+        sx={{
+          backgroundColor: "#fff",
+          borderRadius: "16px",
+          border: "1px solid #e8ecf4",
+          boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+          p: { xs: 2, md: 3 },
+          mb: 3,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 2,
+            mb: 2,
+          }}
+        >
+          <SectionHeader
+            title="Active Tasks Overview"
+            subtitle="Pending, overdue and reloaded tasks across your team"
+            accentColor="#1976d2"
+          />
           {!isDrilldown && (
             <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
-              <Zone2Tab label="Employees" icon={<PeopleAlt sx={{ fontSize: "0.95rem" }} />} active={zone2Tab === "employees"}
-                onClick={() => { setZone2Tab("employees"); setSelectedProject(null); clearProjectDrilldown(); }} />
-              <Zone2Tab label="Projects" icon={<FolderOpen sx={{ fontSize: "0.95rem" }} />} active={zone2Tab === "projects"}
-                onClick={() => { setZone2Tab("projects"); setSelectedEmployee(null); clearEmployeeDrilldown(); }} />
+              <Zone2Tab
+                label="Employees"
+                icon={<PeopleAlt sx={{ fontSize: "0.95rem" }} />}
+                active={zone2Tab === "employees"}
+                onClick={() => {
+                  setZone2Tab("employees");
+                  setSelectedProject(null);
+                  clearProjectDrilldown();
+                }}
+              />
+              <Zone2Tab
+                label="Projects"
+                icon={<FolderOpen sx={{ fontSize: "0.95rem" }} />}
+                active={zone2Tab === "projects"}
+                onClick={() => {
+                  setZone2Tab("projects");
+                  setSelectedEmployee(null);
+                  clearEmployeeDrilldown();
+                }}
+              />
             </Box>
           )}
         </Box>
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "280px 1fr" }, gap: 3, alignItems: "start" }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "280px 1fr" },
+            gap: 3,
+            alignItems: "start",
+          }}
+        >
           {/* Pie chart */}
           <Box>
             {loading ? (
-              <Skeleton variant="circular" width={200} height={200} sx={{ mx: "auto" }} />
+              <Skeleton
+                variant="circular"
+                width={200}
+                height={200}
+                sx={{ mx: "auto" }}
+              />
             ) : pieData.length === 0 ? (
               <Box sx={{ textAlign: "center", py: 4 }}>
-                <CheckCircle sx={{ fontSize: "2.5rem", color: "#a5d6a7", mb: 1 }} />
-                <Typography level="body-sm" sx={{ color: "#90a4ae" }}>All tasks cleared!</Typography>
+                <CheckCircle
+                  sx={{ fontSize: "2.5rem", color: "#a5d6a7", mb: 1 }}
+                />
+                <Typography level="body-sm" sx={{ color: "#90a4ae" }}>
+                  All tasks cleared!
+                </Typography>
               </Box>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
-                    {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="none" />)}
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {pieData.map((_, i) => (
+                      <Cell
+                        key={i}
+                        fill={PIE_COLORS[i % PIE_COLORS.length]}
+                        stroke="none"
+                      />
+                    ))}
                   </Pie>
                   <RechartsTooltip content={<CustomTooltip />} />
-                  <Legend formatter={(v) => <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: 600 }}>{v}</span>} />
+                  <Legend
+                    formatter={(v) => (
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#475569",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {v}
+                      </span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -843,13 +1531,58 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
           <Box>
             {isEmployeeDrilldown ? (
               <Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                  <Button size="sm" variant="outlined" color="neutral" startDecorator={<ArrowBack sx={{ fontSize: "0.9rem" }} />} onClick={clearEmployeeDrilldown} sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.78rem" }}>Back</Button>
-                  <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", color: "#0f1b35" }}>
-                    Active tasks — <span style={{ color: "#1976d2" }}>{detailEmployee}</span>
-                    <Tooltip title={"Refresh " + detailEmployee + " Tasks:"} placement="top" sx={{ mx: 5 }}>
-                      <IconButton size="sm" variant="outlined" color="neutral" onClick={handleRefreshofEmployees} disabled={loading}
-                        sx={{ flexShrink: 0, borderRadius: "8px", borderColor: "#e2e8f0", "&:hover": { backgroundColor: "#f0f4ff", borderColor: "#1976d2" }, transition: "all 0.2s ease" }}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1.5,
+                  }}
+                >
+                  <Button
+                    size="sm"
+                    variant="outlined"
+                    color="neutral"
+                    startDecorator={<ArrowBack sx={{ fontSize: "0.9rem" }} />}
+                    onClick={clearEmployeeDrilldown}
+                    sx={{
+                      borderRadius: "8px",
+                      fontWeight: 600,
+                      fontSize: "0.78rem",
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "0.88rem",
+                      color: "#0f1b35",
+                    }}
+                  >
+                    Active tasks —{" "}
+                    <span style={{ color: "#1976d2" }}>{detailEmployee}</span>
+                    <Tooltip
+                      title={"Refresh " + detailEmployee + " Tasks:"}
+                      placement="top"
+                      sx={{ mx: 5 }}
+                    >
+                      <IconButton
+                        size="sm"
+                        variant="outlined"
+                        color="neutral"
+                        onClick={handleRefreshofEmployees}
+                        disabled={loading}
+                        sx={{
+                          flexShrink: 0,
+                          borderRadius: "8px",
+                          borderColor: "#e2e8f0",
+                          "&:hover": {
+                            backgroundColor: "#f0f4ff",
+                            borderColor: "#1976d2",
+                          },
+                          transition: "all 0.2s ease",
+                        }}
                       >
                         <Refresh sx={spinStyle} />
                       </IconButton>
@@ -857,21 +1590,88 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                   </Typography>
                 </Box>
                 {/* NEW: pass editedTaskIds so task rows show dots */}
-                <ActiveTasksTable data={empActiveTasks} loading={empDetailLoading} editedTaskIds={editedTaskIds} />
+                <ActiveTasksTable
+                  data={empActiveTasks}
+                  loading={empDetailLoading}
+                  editedTaskIds={editedTaskIds}
+                  onEditModalClose={handleeditModalClose}
+                />
               </Box>
             ) : isProjectDrilldown ? (
               <Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                  <Button size="sm" variant="outlined" color="neutral" startDecorator={<ArrowBack sx={{ fontSize: "0.9rem" }} />} onClick={clearProjectDrilldown} sx={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.78rem" }}>Back</Button>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, textAlign: "center" }}>
-                    <Box sx={{ width: 26, height: 26, borderRadius: "6px", background: "linear-gradient(135deg, #0f1b35, #1565c0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1.5,
+                  }}
+                >
+                  <Button
+                    size="sm"
+                    variant="outlined"
+                    color="neutral"
+                    startDecorator={<ArrowBack sx={{ fontSize: "0.9rem" }} />}
+                    onClick={clearProjectDrilldown}
+                    sx={{
+                      borderRadius: "8px",
+                      fontWeight: 600,
+                      fontSize: "0.78rem",
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: "6px",
+                        background: "linear-gradient(135deg, #0f1b35, #1565c0)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
                       <FolderOpen sx={{ fontSize: "0.85rem", color: "#fff" }} />
                     </Box>
-                    <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", color: "#0f1b35" }}>
-                      Active tasks — <span style={{ color: "#1976d2" }}>{detailProject}</span>
-                      <Tooltip title={"Refresh " + detailProject + " Tasks:"} placement="top">
-                        <IconButton size="sm" variant="outlined" color="neutral" onClick={handleRefreshofProjects} disabled={loading}
-                          sx={{ flexShrink: 0, borderRadius: "8px", borderColor: "#e2e8f0", "&:hover": { backgroundColor: "#f0f4ff", borderColor: "#1976d2" }, transition: "all 0.2s ease" }}
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "0.88rem",
+                        color: "#0f1b35",
+                      }}
+                    >
+                      Active tasks —{" "}
+                      <span style={{ color: "#1976d2" }}>{detailProject}</span>
+                      <Tooltip
+                        title={"Refresh " + detailProject + " Tasks:"}
+                        placement="top"
+                      >
+                        <IconButton
+                          size="sm"
+                          variant="outlined"
+                          color="neutral"
+                          onClick={handleRefreshofProjects}
+                          disabled={loading}
+                          sx={{
+                            flexShrink: 0,
+                            borderRadius: "8px",
+                            borderColor: "#e2e8f0",
+                            "&:hover": {
+                              backgroundColor: "#f0f4ff",
+                              borderColor: "#1976d2",
+                            },
+                            transition: "all 0.2s ease",
+                          }}
                         >
                           <Refresh sx={spinStyle} />
                         </IconButton>
@@ -880,33 +1680,82 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                   </Box>
                 </Box>
                 {/* NEW: pass editedTaskIds so task rows show dots */}
-                <ActiveTasksTable data={projActiveTasks} loading={projDetailLoading} editedTaskIds={editedTaskIds} />
+                <ActiveTasksTable
+                  data={projActiveTasks}
+                  loading={projDetailLoading}
+                  editedTaskIds={editedTaskIds}
+                />
               </Box>
             ) : zone2Tab === "employees" ? (
               /* ── Employee list ── */
-              <Box sx={{ borderRadius: "12px", border: "1px solid #e8ecf4", overflow: "hidden" }}>
+              <Box
+                sx={{
+                  borderRadius: "12px",
+                  border: "1px solid #e8ecf4",
+                  overflow: "hidden",
+                }}
+              >
                 <Box sx={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "linear-gradient(135deg, #0f1b35, #1565c0)" }}>
-                        {(isMobile ? ["Employee", "Pending", "Overdue", "Reloaded"] : ["#", "Employee", "Pending", "Overdue", "Reloaded"]).map((h, i, arr) => (
-                          <th key={h} style={{ ...thStyle, borderRight: i < arr.length - 1 ? thStyle.borderRight : "none" }}>{h}</th>
+                      <tr
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #0f1b35, #1565c0)",
+                        }}
+                      >
+                        {(isMobile
+                          ? ["Employee", "Pending", "Overdue", "Reloaded"]
+                          : ["#", "Employee", "Pending", "Overdue", "Reloaded"]
+                        ).map((h, i, arr) => (
+                          <th
+                            key={h}
+                            style={{
+                              ...thStyle,
+                              borderRight:
+                                i < arr.length - 1
+                                  ? thStyle.borderRight
+                                  : "none",
+                            }}
+                          >
+                            {h}
+                          </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
                         [...Array(4)].map((_, i) => (
-                          <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}>
-                            {[...Array(isMobile ? 4 : 5)].map((_, j) => (<td key={j} style={tdStyle}><Skeleton variant="text" height={18} /></td>))}
+                          <tr
+                            key={i}
+                            style={{
+                              backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff",
+                            }}
+                          >
+                            {[...Array(isMobile ? 4 : 5)].map((_, j) => (
+                              <td key={j} style={tdStyle}>
+                                <Skeleton variant="text" height={18} />
+                              </td>
+                            ))}
                           </tr>
                         ))
                       ) : filteredEmployeeList.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={tdStyle}>
                             <Box sx={{ textAlign: "center", py: 4 }}>
-                              <InboxOutlined sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }} />
-                              <Typography level="body-sm" sx={{ color: "#90a4ae" }}>No data</Typography>
+                              <InboxOutlined
+                                sx={{
+                                  fontSize: "2rem",
+                                  color: "#c5cae9",
+                                  mb: 0.5,
+                                }}
+                              />
+                              <Typography
+                                level="body-sm"
+                                sx={{ color: "#90a4ae" }}
+                              >
+                                No data
+                              </Typography>
                             </Box>
                           </td>
                         </tr>
@@ -917,30 +1766,108 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                           return (
                             <tr
                               key={i}
-                              style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff", cursor: "pointer" }}
-                              onClick={() => { setSelectedEmployee(emp.name); loadEmployeeDetails(emp.name); }}
-                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f4ff")}
-                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#fff" : "#fafbff")}
+                              style={{
+                                backgroundColor:
+                                  i % 2 === 0 ? "#fff" : "#fafbff",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setSelectedEmployee(emp.name);
+                                loadEmployeeDetails(emp.name);
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.backgroundColor =
+                                  "#f0f4ff")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.backgroundColor =
+                                  i % 2 === 0 ? "#fff" : "#fafbff")
+                              }
                             >
                               {!isMobile && (
                                 <td style={tdStyle}>
-                                  <Box sx={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#1976d2" }}>{i + 1}</Typography>
+                                  <Box
+                                    sx={{
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: "50%",
+                                      backgroundColor: "#e8f0fe",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.65rem",
+                                        fontWeight: 700,
+                                        color: "#1976d2",
+                                      }}
+                                    >
+                                      {i + 1}
+                                    </Typography>
                                   </Box>
                                 </td>
                               )}
                               <td style={tdStyle}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Box sx={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #1565c0, #42a5f5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#fff" }}>{emp.name?.charAt(0).toUpperCase()}</Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 30,
+                                      height: 30,
+                                      borderRadius: "50%",
+                                      background:
+                                        "linear-gradient(135deg, #1565c0, #42a5f5)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.7rem",
+                                        fontWeight: 700,
+                                        color: "#fff",
+                                      }}
+                                    >
+                                      {emp.name?.charAt(0).toUpperCase()}
+                                    </Typography>
                                   </Box>
                                   <Box>
                                     {/* NEW: dot next to employee name */}
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                                      <Typography sx={{ fontSize: "0.82rem", fontWeight: 600, color: "#0f1b35" }}>{emp.name}</Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.8,
+                                      }}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          fontSize: "0.82rem",
+                                          fontWeight: 600,
+                                          color: "#0f1b35",
+                                        }}
+                                      >
+                                        {emp.name}
+                                      </Typography>
                                       <NotifDot visible={hasEdit} />
                                     </Box>
-                                    <Typography sx={{ fontSize: "0.65rem", color: "#94a3b8" }}>Click to view tasks</Typography>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.65rem",
+                                        color: "#94a3b8",
+                                      }}
+                                    >
+                                      Click to view tasks
+                                    </Typography>
                                   </Box>
                                 </Box>
                               </td>
@@ -950,7 +1877,10 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                                 { key: "reloaded_count", colorKey: "reloaded" },
                               ].map((col) => (
                                 <td key={col.key} style={tdStyle}>
-                                  <CountBadge value={emp[col.key]} colorKey={col.colorKey} />
+                                  <CountBadge
+                                    value={emp[col.key]}
+                                    colorKey={col.colorKey}
+                                  />
                                 </td>
                               ))}
                             </tr>
@@ -963,29 +1893,80 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
               </Box>
             ) : (
               /* ── Project list ── */
-              <Box sx={{ borderRadius: "12px", border: "1px solid #e8ecf4", overflow: "hidden" }}>
+              <Box
+                sx={{
+                  borderRadius: "12px",
+                  border: "1px solid #e8ecf4",
+                  overflow: "hidden",
+                }}
+              >
                 <Box sx={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "linear-gradient(135deg, #0f1b35, #1565c0)" }}>
-                        {(isMobile ? ["Project", "Pending", "Overdue", "Reloaded"] : ["#", "Project Code", "Pending", "Overdue", "Reloaded"]).map((h, i, arr) => (
-                          <th key={h} style={{ ...thStyle, borderRight: i < arr.length - 1 ? thStyle.borderRight : "none" }}>{h}</th>
+                      <tr
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #0f1b35, #1565c0)",
+                        }}
+                      >
+                        {(isMobile
+                          ? ["Project", "Pending", "Overdue", "Reloaded"]
+                          : [
+                              "#",
+                              "Project Code",
+                              "Pending",
+                              "Overdue",
+                              "Reloaded",
+                            ]
+                        ).map((h, i, arr) => (
+                          <th
+                            key={h}
+                            style={{
+                              ...thStyle,
+                              borderRight:
+                                i < arr.length - 1
+                                  ? thStyle.borderRight
+                                  : "none",
+                            }}
+                          >
+                            {h}
+                          </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
                         [...Array(4)].map((_, i) => (
-                          <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff" }}>
-                            {[...Array(isMobile ? 4 : 5)].map((_, j) => (<td key={j} style={tdStyle}><Skeleton variant="text" height={18} /></td>))}
+                          <tr
+                            key={i}
+                            style={{
+                              backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff",
+                            }}
+                          >
+                            {[...Array(isMobile ? 4 : 5)].map((_, j) => (
+                              <td key={j} style={tdStyle}>
+                                <Skeleton variant="text" height={18} />
+                              </td>
+                            ))}
                           </tr>
                         ))
                       ) : filteredProjectList.length === 0 ? (
                         <tr>
                           <td colSpan={5} style={tdStyle}>
                             <Box sx={{ textAlign: "center", py: 4 }}>
-                              <InboxOutlined sx={{ fontSize: "2rem", color: "#c5cae9", mb: 0.5 }} />
-                              <Typography level="body-sm" sx={{ color: "#90a4ae" }}>No project data</Typography>
+                              <InboxOutlined
+                                sx={{
+                                  fontSize: "2rem",
+                                  color: "#c5cae9",
+                                  mb: 0.5,
+                                }}
+                              />
+                              <Typography
+                                level="body-sm"
+                                sx={{ color: "#90a4ae" }}
+                              >
+                                No project data
+                              </Typography>
                             </Box>
                           </td>
                         </tr>
@@ -996,30 +1977,105 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                           return (
                             <tr
                               key={i}
-                              style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff", cursor: "pointer" }}
-                              onClick={() => { setSelectedProject(proj.projectCode); loadProjectDetails(proj.projectCode); }}
-                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f4ff")}
-                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#fff" : "#fafbff")}
+                              style={{
+                                backgroundColor:
+                                  i % 2 === 0 ? "#fff" : "#fafbff",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setSelectedProject(proj.projectCode);
+                                loadProjectDetails(proj.projectCode);
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.backgroundColor =
+                                  "#f0f4ff")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.backgroundColor =
+                                  i % 2 === 0 ? "#fff" : "#fafbff")
+                              }
                             >
                               {!isMobile && (
                                 <td style={tdStyle}>
-                                  <Box sx={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "#e8f0fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#1976d2" }}>{i + 1}</Typography>
+                                  <Box
+                                    sx={{
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: "50%",
+                                      backgroundColor: "#e8f0fe",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.65rem",
+                                        fontWeight: 700,
+                                        color: "#1976d2",
+                                      }}
+                                    >
+                                      {i + 1}
+                                    </Typography>
                                   </Box>
                                 </td>
                               )}
                               <td style={tdStyle}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Box sx={{ width: 30, height: 30, borderRadius: "8px", background: "linear-gradient(135deg, #0f1b35, #1565c0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    <FolderOpen sx={{ fontSize: "0.85rem", color: "#fff" }} />
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 30,
+                                      height: 30,
+                                      borderRadius: "8px",
+                                      background:
+                                        "linear-gradient(135deg, #0f1b35, #1565c0)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <FolderOpen
+                                      sx={{
+                                        fontSize: "0.85rem",
+                                        color: "#fff",
+                                      }}
+                                    />
                                   </Box>
                                   <Box>
                                     {/* NEW: dot next to project code */}
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                                      <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#0f1b35" }}>{proj.projectCode}</Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.8,
+                                      }}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          fontSize: "0.82rem",
+                                          fontWeight: 700,
+                                          color: "#0f1b35",
+                                        }}
+                                      >
+                                        {proj.projectCode}
+                                      </Typography>
                                       <NotifDot visible={hasEdit} />
                                     </Box>
-                                    <Typography sx={{ fontSize: "0.65rem", color: "#94a3b8" }}>Click to view tasks</Typography>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.65rem",
+                                        color: "#94a3b8",
+                                      }}
+                                    >
+                                      Click to view tasks
+                                    </Typography>
                                   </Box>
                                 </Box>
                               </td>
@@ -1029,7 +2085,10 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                                 { key: "reloadedCount", colorKey: "reloaded" },
                               ].map((col) => (
                                 <td key={col.key} style={tdStyle}>
-                                  <CountBadge value={proj[col.key]} colorKey={col.colorKey} />
+                                  <CountBadge
+                                    value={proj[col.key]}
+                                    colorKey={col.colorKey}
+                                  />
                                 </td>
                               ))}
                             </tr>
@@ -1047,17 +2106,47 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
 
       {/* ── Zone 3: Completed tasks — employee drill-down ── */}
       {isEmployeeDrilldown && (
-        <Box sx={{ backgroundColor: "#fff", borderRadius: "16px", border: "1px solid #e8ecf4", boxShadow: "0 2px 16px rgba(0,0,0,0.05)", p: { xs: 2, md: 3 } }}>
-          <SectionHeader title={`Completed Tasks — ${detailEmployee}`} subtitle="Tasks that have been marked as completed or cleared" accentColor="#2e7d32" />
-          <CompletedTasksTable data={empCompletedTasks} loading={empDetailLoading} />
+        <Box
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "16px",
+            border: "1px solid #e8ecf4",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+            p: { xs: 2, md: 3 },
+          }}
+        >
+          <SectionHeader
+            title={`Completed Tasks — ${detailEmployee}`}
+            subtitle="Tasks that have been marked as completed or cleared"
+            accentColor="#2e7d32"
+          />
+          <CompletedTasksTable
+            data={empCompletedTasks}
+            loading={empDetailLoading}
+          />
         </Box>
       )}
 
       {/* ── Zone 3: Completed tasks — project drill-down ── */}
       {isProjectDrilldown && (
-        <Box sx={{ backgroundColor: "#fff", borderRadius: "16px", border: "1px solid #e8ecf4", boxShadow: "0 2px 16px rgba(0,0,0,0.05)", p: { xs: 2, md: 3 } }}>
-          <SectionHeader title={`Completed Tasks — ${detailProject}`} subtitle="Tasks that have been cleared under this project" accentColor="#2e7d32" />
-          <CompletedTasksTable data={projCompletedTasks} loading={projDetailLoading} />
+        <Box
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "16px",
+            border: "1px solid #e8ecf4",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+            p: { xs: 2, md: 3 },
+          }}
+        >
+          <SectionHeader
+            title={`Completed Tasks — ${detailProject}`}
+            subtitle="Tasks that have been cleared under this project"
+            accentColor="#2e7d32"
+          />
+          <CompletedTasksTable
+            data={projCompletedTasks}
+            loading={projDetailLoading}
+          />
         </Box>
       )}
     </Box>

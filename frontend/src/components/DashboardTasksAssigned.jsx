@@ -13,7 +13,11 @@ import React, { useEffect, useState } from "react";
 import Tables from "./Tables";
 import axios from "axios";
 
-const DashboardTasksAssigned = ({ refreshKey = 0, onRefresh, onTaskEdited }) => {
+const DashboardTasksAssigned = ({
+  refreshKey = 0,
+  onRefresh,
+  onTaskEdited,
+}) => {
   const [tasksData, setTasksData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [spinning, setSpinning] = useState(false);
@@ -201,7 +205,13 @@ const DashboardTasksAssigned = ({ refreshKey = 0, onRefresh, onTaskEdited }) => 
         </Tooltip>
       </Box>
 
-      <Tables type="assigned" tableData={tasksData} loading={loading} onTaskEdited={onTaskEdited} />
+      <Tables
+        type="assigned"
+        tableData={tasksData}
+        loading={loading}
+        onTaskEdited={onTaskEdited}
+        onRefresh={onRefresh}
+      />
     </Box>
   );
 };

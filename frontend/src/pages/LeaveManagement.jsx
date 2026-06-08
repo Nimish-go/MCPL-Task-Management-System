@@ -24,6 +24,7 @@ import {
   ModalClose,
   Table,
   Skeleton,
+  Autocomplete,
 } from "@mui/joy";
 import {
   BeachAccess,
@@ -45,6 +46,10 @@ import {
   HistoryToggleOff,
   AccountBalance,
   TaskAlt,
+  CrisisAlert,
+  MoreTime,
+  WorkHistory,
+  Brightness6,
 } from "@mui/icons-material";
 import axios from "axios";
 import {
@@ -55,8 +60,10 @@ import {
   passesAdvanceNotice,
   getApprovalFlow,
   fmtDate,
+  OT_RULES,
   daysUntilNextCredit,
 } from "../hooks/leaveUtils";
+import Toast from "../components/Toast";
 
 // ─── Shared label sx ──────────────────────────────────────────────────────
 const labelSx = {
@@ -180,12 +187,38 @@ const ApplyLeaveForm = ({ balance, onSuccess }) => {
   const [compHours, setCompHours] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [warning, setWarning] = useState("");
+  const [halfDayDate, setHalfDayDate] = useState("");
+  const [halfDaySession, setHalfDaySession] = useState(""); // "first" | "second"
+  const isHalfDay = leaveType === "halfDay";
 
   const today = new Date().toISOString().split("T")[0];
   const days = countWorkingDays(fromDate, toDate);
   const flow = leaveType ? getApprovalFlow(days, leaveType) : [];
   const advOk = fromDate ? passesAdvanceNotice(fromDate, days) : true;
   const isCompOff = leaveType === "comp_off";
+
+  const [otLogs, setOtLogs] = useState([]);
+  const [selectedOtLog, setSelectedOtLog] = useState(null);
+
+  // Load OT logs for the comp off picker
+  useEffect(() => {
+    const empName = sessionStorage.getItem("empName");
+    axios
+      .get("/get_overtime_logs", { params: { empName, status: "approved" } })
+      .then((res) => {
+        if (res.status === 200) setOtLogs(res.data);
+      })
+      .catch(console.error);
+  }, []);
+
+  // Reset OT log selection when leave type changes away from comp_off
+  useEffect(() => {
+    if (leaveType !== "comp_off") {
+      setSelectedOtLog(null);
+      setCompDate("");
+      setCompHours("");
+    }
+  }, [leaveType]);
 
   useEffect(() => {
     if (!fromDate || !leaveType) {
@@ -225,13 +258,13 @@ const ApplyLeaveForm = ({ balance, onSuccess }) => {
       fd.append("toDate", isCompOff ? compDate : toDate);
       fd.append("days", isCompOff ? 1 : days);
       fd.append("reason", reason);
-      fd.append("compDate", compDate);
-      fd.append("compHours", compHours);
+      fd.append("compDate", isCompOff ? compDate : "");
+      fd.append("compHours", isCompOff ? compHours : "");
       fd.append(
         "autoReject",
-        !advOk && days > LEAVE_RULES.LONG_LEAVE_THRESHOLD ? "1" : "0",
+        !advOk && days > LEAVE_RULES.LONG_LEAVE_THRESHOLD ? true : false,
       );
-      await axios.post("/apply_leave", fd);
+      await axios.post("/applyForLeave", fd);
       onSuccess("Leave application submitted successfully.");
       setLeaveType("");
       setFromDate("");
@@ -251,7 +284,7 @@ const ApplyLeaveForm = ({ balance, onSuccess }) => {
       <SectionDivider label="Leave Type" />
 
       {/* Type picker */}
-      <div className="grid grid-cols-2 items-center text-center justify-center sm:grid-cols-4 gap-3 mb-4">
+      <div className="flex flex-row items-center text-center justify-center sm:grid-cols-4 gap-3 mb-4">
         {LEAVE_TYPES.map((t) => (
           <button
             key={t.value}
@@ -265,12 +298,15 @@ const ApplyLeaveForm = ({ balance, onSuccess }) => {
                 leaveType === t.value ? `0 4px 14px ${t.text}22` : "none",
               fontWeight: leaveType === t.value ? 700 : 500,
               fontSize: "0.78rem",
+              cursor: "pointer",
             }}
           >
             {t.value === "normal" && <BeachAccess sx={{ fontSize: 22 }} />}
             {t.value === "sick" && <LocalHospital sx={{ fontSize: 22 }} />}
             {t.value === "comp_off" && <AccessTime sx={{ fontSize: 22 }} />}
             {t.value === "casual" && <EventAvailable sx={{ fontSize: 22 }} />}
+            {t.value === "emergency" && <CrisisAlert sx={{ fontSize: 22 }} />}
+            {t.value === "halfDay" && <Brightness6 sx={{ fontSize: 22 }} />}
             {t.label}
           </button>
         ))}
@@ -307,7 +343,13 @@ const ApplyLeaveForm = ({ balance, onSuccess }) => {
           )}
 
           <SectionDivider
-            label={isCompOff ? "Comp Off Details" : "Date Range"}
+            label={
+              isCompOff
+                ? "Comp Off Details"
+                : isHalfDay
+                  ? "Half Day Details"
+                  : "Date Range"
+            }
           />
 
           {isCompOff ? (
@@ -316,26 +358,164 @@ const ApplyLeaveForm = ({ balance, onSuccess }) => {
                 <FormLabel sx={labelSx}>
                   Date Worked (Holiday/Weekend)
                 </FormLabel>
-                <Input
-                  type="date"
-                  value={compDate}
-                  onChange={(e) => setCompDate(e.target.value)}
-                  slotProps={{ input: { max: today } }}
+                {/* ↓ Changed: Autocomplete from OT logs instead of free date input */}
+                <Autocomplete
+                  placeholder="Pick from your OT logs…"
+                  options={otLogs}
+                  getOptionLabel={(opt) =>
+                    `${fmtDate(opt.date)} — ${opt.hours}h — ${opt.project_code}`
+                  }
+                  isOptionEqualToValue={(a, b) => a.id === b.id}
+                  value={selectedOtLog}
+                  onChange={(_, v) => {
+                    setSelectedOtLog(v);
+                    setCompDate(v?.date ?? "");
+                    setCompHours(v?.hours ?? "");
+                  }}
                   sx={{ borderRadius: "8px" }}
+                  noOptionsText="No overtime logs found. Log overtime first."
+                />
+                {selectedOtLog && (
+                  <Typography
+                    level="body-xs"
+                    sx={{ mt: 0.5, color: "text.tertiary" }}
+                  >
+                    {new Date(
+                      selectedOtLog.date + "T00:00:00",
+                    ).toLocaleDateString("en-IN", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </Typography>
+                )}
+              </FormControl>
+              <FormControl>
+                <FormLabel sx={labelSx}>Hours (auto-filled)</FormLabel>
+                <Input
+                  value={compHours ? `${compHours} hours` : "—"}
+                  disabled
+                  sx={{ borderRadius: "8px", bgcolor: "#f8f9ff" }}
                 />
               </FormControl>
-              <FormControl required>
-                <FormLabel sx={labelSx}>Hours Worked</FormLabel>
-                <Select
-                  placeholder="Select hours"
-                  value={compHours}
-                  onChange={(_, v) => setCompHours(v)}
-                  sx={{ borderRadius: "8px" }}
-                >
-                  <Option value="8">8 hours (full day)</Option>
-                </Select>
-              </FormControl>
             </div>
+          ) : isHalfDay ? (
+            <>
+              {/* Date + Session picker */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <FormControl required>
+                  <FormLabel sx={labelSx}>Date</FormLabel>
+                  <Input
+                    type="date"
+                    value={halfDayDate}
+                    onChange={(e) => setHalfDayDate(e.target.value)}
+                    slotProps={{ input: { min: today } }}
+                    sx={{ borderRadius: "8px" }}
+                  />
+                  {halfDayDate && (
+                    <Typography
+                      level="body-xs"
+                      sx={{ mt: 0.5, color: "text.tertiary" }}
+                    >
+                      {new Date(halfDayDate + "T00:00:00").toLocaleDateString(
+                        "en-IN",
+                        {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                        },
+                      )}
+                    </Typography>
+                  )}
+                </FormControl>
+
+                <FormControl required>
+                  <FormLabel sx={labelSx}>Session</FormLabel>
+                  <Select
+                    placeholder="Select session…"
+                    value={halfDaySession}
+                    onChange={(_, v) => setHalfDaySession(v)}
+                    sx={{ borderRadius: "8px" }}
+                  >
+                    <Option value="first">
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            bgcolor: "#f59e0b",
+                          }}
+                        />
+                        First Half (Morning)
+                      </Box>
+                    </Option>
+                    <Option value="second">
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            bgcolor: "#6366f1",
+                          }}
+                        />
+                        Second Half (Afternoon)
+                      </Box>
+                    </Option>
+                  </Select>
+                </FormControl>
+              </div>
+
+              {/* Session info banner */}
+              {halfDaySession && (
+                <div
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 mb-4 border"
+                  style={{
+                    background:
+                      halfDaySession === "first" ? "#fffbeb" : "#eef2ff",
+                    borderColor:
+                      halfDaySession === "first" ? "#fcd34d" : "#c7d2fe",
+                  }}
+                >
+                  <Brightness6
+                    sx={{
+                      fontSize: 18,
+                      color: halfDaySession === "first" ? "#d97706" : "#4f46e5",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div>
+                    <p
+                      className="text-xs font-bold mb-0.5"
+                      style={{
+                        color:
+                          halfDaySession === "first" ? "#92400e" : "#3730a3",
+                      }}
+                    >
+                      {halfDaySession === "first"
+                        ? "Morning Session — 9:00 AM to 1:00 PM"
+                        : "Afternoon Session — 2:00 PM to 6:00 PM"}
+                    </p>
+                    <p
+                      className="text-[0.7rem]"
+                      style={{
+                        color:
+                          halfDaySession === "first" ? "#b45309" : "#4338ca",
+                      }}
+                    >
+                      0.5 days will be deducted from your leave balance on
+                      approval
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="grid grid-cols-2 gap-4 mb-4">
               <FormControl required>
@@ -1225,6 +1405,438 @@ const RulesCard = () => (
   </Card>
 );
 
+// ─── Log Overtime ─────────────────────────────────────────────────────────
+const LogOvertime = ({ onSuccess }) => {
+  const [date, setDate] = useState("");
+  const [hours, setHours] = useState("");
+  const [projectCode, setProjectCode] = useState(null);
+  const [notes, setNotes] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // Derived: what will this OT earn?
+  const parsedHours = parseFloat(hours) || 0;
+  const compEarned =
+    parsedHours >= OT_RULES.FULL_DAY_HOURS
+      ? "1 full comp off day"
+      : parsedHours >= OT_RULES.MIN_HOURS_FOR_COMP
+        ? "½ comp off day"
+        : parsedHours > 0
+          ? `Not enough hours (min ${OT_RULES.MIN_HOURS_FOR_COMP}h for comp off)`
+          : "";
+
+  const compEarnedColor =
+    parsedHours >= OT_RULES.MIN_HOURS_FOR_COMP ? "#2e7d32" : "#b91c1c";
+
+  useEffect(() => {
+    axios
+      .get("/get_project_data/All")
+      .then((res) => {
+        if (res.status === 200) setProjects(res.data);
+      })
+      .catch(console.error);
+
+    const empId = sessionStorage.getItem("empId");
+    axios
+      .get("/get_overtime_logs", { params: { empId } })
+      .then((res) => {
+        if (res.status === 200) setLogs(res.data);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingLogs(false));
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!date || !hours || !projectCode) return;
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      fd.append("empName", sessionStorage.getItem("empName") || "");
+      fd.append("date", date);
+      fd.append("hours", hours);
+      fd.append("projectCode", projectCode.code);
+      fd.append("projectName", projectCode.name);
+      fd.append("notes", notes);
+      await axios.post("/log_overtime", fd).then((res) => {
+        if (res.status === 200) {
+          onSuccess("Overtime logged successfully.");
+        }
+      });
+      // Refresh logs
+      const empId = sessionStorage.getItem("empId");
+      const res = await axios.get("/get_overtime_logs", { params: { empId } });
+      if (res.status === 200) setLogs(res.data);
+      setDate("");
+      setHours("");
+      setProjectCode(null);
+      setNotes("");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const thStyle = {
+    padding: "9px 12px",
+    textAlign: "left",
+    color: "rgba(255,255,255,0.85)",
+    fontWeight: 700,
+    fontSize: "0.67rem",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+  };
+  const tdStyle = {
+    padding: "10px 12px",
+    fontSize: "0.8rem",
+    color: "#1e293b",
+    borderBottom: "1px solid #f0f2f8",
+    verticalAlign: "middle",
+  };
+
+  return (
+    <Box sx={{ maxWidth: 860, mx: "auto" }}>
+      {/* ── Form Card ── */}
+      <Box
+        sx={{
+          border: "1px solid #e8eaff",
+          borderRadius: "16px",
+          overflow: "hidden",
+          mb: 4,
+          boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            background: "linear-gradient(135deg, #1a1a2e 0%, #7c3aed 100%)",
+            px: 3,
+            py: 2.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: "10px",
+              background: "rgba(255,255,255,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MoreTime sx={{ color: "#fff", fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{ color: "#fff", fontWeight: 700, fontSize: "1rem" }}
+            >
+              Log Overtime
+            </Typography>
+            <Typography
+              sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.75rem" }}
+            >
+              Overtime on holidays or weekends earns comp off
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Form body */}
+        <Box sx={{ p: 3 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            {/* Date */}
+            <FormControl required>
+              <FormLabel sx={labelSx}>Date Worked</FormLabel>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                slotProps={{ input: { max: today } }}
+                sx={{ borderRadius: "8px" }}
+              />
+              {date && (
+                <Typography
+                  level="body-xs"
+                  sx={{ mt: 0.5, color: "text.tertiary" }}
+                >
+                  {new Date(date + "T00:00:00").toLocaleDateString("en-IN", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </Typography>
+              )}
+            </FormControl>
+
+            {/* Hours */}
+            <FormControl required>
+              <FormLabel sx={labelSx}>Hours Worked</FormLabel>
+              <Select
+                placeholder="Select hours…"
+                value={hours}
+                onChange={(_, v) => setHours(v)}
+                sx={{ borderRadius: "8px" }}
+              >
+                {[4, 5, 6, 7, 8, 9, 10].map((h) => (
+                  <Option key={h} value={String(h)}>
+                    {h} hour{h !== 1 ? "s" : ""}
+                    {h >= OT_RULES.FULL_DAY_HOURS
+                      ? " — Full comp off"
+                      : h >= OT_RULES.MIN_HOURS_FOR_COMP
+                        ? " — Half comp off"
+                        : ""}
+                  </Option>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Project */}
+            <FormControl required>
+              <FormLabel sx={labelSx}>Project</FormLabel>
+              <Autocomplete
+                placeholder="Select project…"
+                options={projects}
+                value={projectCode}
+                getOptionLabel={(opt) => `${opt.code} — ${opt.name}`}
+                onChange={(_, v) => setProjectCode(v)}
+                sx={{ borderRadius: "8px" }}
+              />
+            </FormControl>
+          </div>
+
+          {/* Comp off preview banner */}
+          {parsedHours > 0 && (
+            <div
+              className="flex items-center gap-2.5 rounded-xl px-4 py-2.5 mb-4 border"
+              style={{
+                background:
+                  parsedHours >= OT_RULES.MIN_HOURS_FOR_COMP
+                    ? "#f0fdf4"
+                    : "#fff0f0",
+                borderColor:
+                  parsedHours >= OT_RULES.MIN_HOURS_FOR_COMP
+                    ? "#86efac"
+                    : "#fca5a5",
+              }}
+            >
+              <AccessTime
+                sx={{ fontSize: 16, color: compEarnedColor, flexShrink: 0 }}
+              />
+              <span
+                className="text-xs font-bold"
+                style={{ color: compEarnedColor }}
+              >
+                {compEarned}
+              </span>
+            </div>
+          )}
+
+          {/* Notes */}
+          <FormControl sx={{ mb: 4 }}>
+            <FormLabel sx={labelSx}>Notes (optional)</FormLabel>
+            <Textarea
+              placeholder="What were you working on? Any specific tasks?"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              minRows={2}
+              sx={{
+                borderRadius: "8px",
+                "--Textarea-focusedThickness": "1.5px",
+              }}
+            />
+          </FormControl>
+
+          <Button
+            fullWidth
+            size="md"
+            loading={submitting}
+            disabled={!date || !hours || !projectCode}
+            startDecorator={
+              !submitting && <WorkHistory sx={{ fontSize: 18 }} />
+            }
+            onClick={handleSubmit}
+            sx={{
+              background: "linear-gradient(135deg, #1a1a2e 0%, #7c3aed 100%)",
+              color: "#fff",
+              fontWeight: 700,
+              height: 44,
+              borderRadius: "10px",
+              boxShadow: "0 4px 14px rgba(124,58,237,0.3)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #12122a 0%, #6d28d9 100%)",
+              },
+              "&:disabled": { opacity: 0.45 },
+            }}
+          >
+            {submitting ? "Logging…" : "Log Overtime"}
+          </Button>
+        </Box>
+      </Box>
+
+      {/* ── Past OT Logs table ── */}
+      <SectionDivider label="My Overtime History" />
+      <Box
+        sx={{
+          borderRadius: "14px",
+          border: "1px solid #e8ecf4",
+          overflow: "hidden",
+          boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div className="overflow-x-auto">
+          <table
+            style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}
+          >
+            <thead>
+              <tr
+                style={{
+                  background:
+                    "linear-gradient(135deg, #1a1a2e 0%, #7c3aed 100%)",
+                }}
+              >
+                {["#", "Date", "Hours", "Project", "Comp Earned", "Status"].map(
+                  (h, i, arr) => (
+                    <th
+                      key={h}
+                      style={{
+                        ...thStyle,
+                        borderRight:
+                          i < arr.length - 1
+                            ? "1px solid rgba(255,255,255,0.1)"
+                            : "none",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {loadingLogs ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr
+                    key={i}
+                    style={{
+                      backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff",
+                    }}
+                  >
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} style={tdStyle}>
+                        <Skeleton
+                          variant="text"
+                          animation="wave"
+                          height={16}
+                          sx={{ borderRadius: "4px" }}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    style={{
+                      ...tdStyle,
+                      textAlign: "center",
+                      padding: "40px 16px",
+                    }}
+                  >
+                    <MoreTime
+                      sx={{
+                        fontSize: 32,
+                        color: "#c7caed",
+                        display: "block",
+                        margin: "0 auto 8px",
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        color: "#94a3b8",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      No overtime logged yet
+                    </Typography>
+                  </td>
+                </tr>
+              ) : (
+                logs.map((log, i) => {
+                  const h = parseFloat(log.hours) || 0;
+                  const earned =
+                    h >= OT_RULES.FULL_DAY_HOURS
+                      ? "1 full day"
+                      : h >= OT_RULES.MIN_HOURS_FOR_COMP
+                        ? "½ day"
+                        : "—";
+                  const earnedColor =
+                    h >= OT_RULES.MIN_HOURS_FOR_COMP ? "#2e7d32" : "#94a3b8";
+                  return (
+                    <tr
+                      key={log.id ?? i}
+                      style={{
+                        backgroundColor: i % 2 === 0 ? "#fff" : "#fafbff",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f5f3ff")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          i % 2 === 0 ? "#fff" : "#fafbff")
+                      }
+                    >
+                      <td style={tdStyle}>
+                        <div className="w-6 h-6 rounded-full bg-violet-50 flex items-center justify-center">
+                          <span className="text-[0.68rem] font-bold text-violet-500">
+                            {i + 1}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={tdStyle}>{fmtDate(log.date)}</td>
+                      <td style={tdStyle}>
+                        <span className="text-xs font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-lg">
+                          {log.hours}h
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, color: "#475569" }}>
+                        {log.project_code}
+                      </td>
+                      <td style={tdStyle}>
+                        <span
+                          className="text-xs font-bold px-2 py-0.5 rounded-lg"
+                          style={{
+                            color: earnedColor,
+                            background: earnedColor + "18",
+                          }}
+                        >
+                          {earned}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <StatusBadge status={log.status ?? "pending_manager"} />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Box>
+    </Box>
+  );
+};
+
 // ─── Main Page ─────────────────────────────────────────────────────────────
 const LeaveManagement = () => {
   const [tab, setTab] = useState(0);
@@ -1234,7 +1846,9 @@ const LeaveManagement = () => {
     comp_off: 0,
     carry_forward: 0,
   });
-  const [toast, setToast] = useState("");
+  const [toastMsg, setToastMsg] = useState("");
+  const [toast, setToast] = useState(false);
+  const [toastStatus, setToastStatus] = useState("");
   const designation = sessionStorage.getItem("designation") || "";
   const role = sessionStorage.getItem("role") || "";
   const isManager =
@@ -1326,22 +1940,6 @@ const LeaveManagement = () => {
           py: { xs: 2, md: 4 },
         }}
       >
-        {/* Toast */}
-        {toast && (
-          <div className="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <CheckCircle sx={{ fontSize: 18, color: "#16a34a" }} />
-            <span className="text-sm font-semibold text-green-700">
-              {toast}
-            </span>
-            <button
-              className="ml-auto text-green-500 hover:text-green-700"
-              onClick={() => setToast("")}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
         {/* Balance summary */}
         <BalanceSummary balance={balance} />
 
@@ -1432,6 +2030,11 @@ const LeaveManagement = () => {
                   Approvals
                 </Tab>
               )}
+
+              <Tab value={3} disableIndicator>
+                <MoreTime sx={{ fontSize: "1rem", mr: 0.5 }} />
+                Log Overtime
+              </Tab>
             </TabList>
 
             <TabPanel value={0} sx={{ p: { xs: 2, md: 3 } }}>
@@ -1439,7 +2042,7 @@ const LeaveManagement = () => {
               <ApplyLeaveForm
                 balance={balance}
                 onSuccess={(msg) => {
-                  setToast(msg);
+                  setToastMsg(msg);
                   setTab(1);
                 }}
               />
@@ -1454,9 +2057,20 @@ const LeaveManagement = () => {
                 <AdminPanel />
               </TabPanel>
             )}
+
+            <TabPanel value={3} sx={{ p: { xs: 2, md: 3 } }}>
+              <LogOvertime
+                onSuccess={(msg) => {
+                  setToast(true);
+                  setToastMsg(msg);
+                  setToastStatus("success");
+                }}
+              />
+            </TabPanel>
           </Tabs>
         </Box>
       </Box>
+      <Toast open={toast} onClose={() => setToast(false)} status={toastStatus} />
     </div>
   );
 };

@@ -34,7 +34,6 @@ import {
   Add,
   Delete,
   AssignmentTurnedIn,
-  BoltOutlined,
 } from "@mui/icons-material";
 import { Editor } from "primereact/editor";
 import Toast from "./Toast";
@@ -90,6 +89,7 @@ const SectionHeader = ({
   color = "#1976d2",
   bg = "#f0f4ff",
   border = "#d0d9f0",
+  action,               // optional JSX rendered flush-right
 }) => (
   <Box
     sx={{
@@ -117,7 +117,7 @@ const SectionHeader = ({
     >
       {icon}
     </Box>
-    <Box>
+    <Box sx={{ flex: 1 }}>
       <Typography level="title-sm" fontWeight={700}>
         {title}
       </Typography>
@@ -125,6 +125,11 @@ const SectionHeader = ({
         {subtitle}
       </Typography>
     </Box>
+    {action && (
+      <Box sx={{ flexShrink: 0, ml: "auto" }}>
+        {action}
+      </Box>
+    )}
   </Box>
 );
 
@@ -192,6 +197,7 @@ const PersonRow = ({
 const AddDirectorMeetingRecords = ({
   nextMeetingDate,
   employees: staffList = [],
+  scheduledAgendaPoints: scheduledAgendaPointsProp = null,
 }) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -204,21 +210,160 @@ const AddDirectorMeetingRecords = ({
   const [mom, setMom] = useState("");
   const [crucialDecisions, setCrucialDecisions] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [agenda, setAgenda] = useState("");
-  const [agendaPoints, setAgendaPoints] = useState([]);
-  const [staffSearch, setStaffSearch] = useState("");
+
+  // ── Scheduled agenda points fetched from DB ───────────────────────────────
+  const [scheduledAgendaPoints, setScheduledAgendaPoints] = useState(
+    scheduledAgendaPointsProp
+  );
+  // ── Agenda categories — fixed list, each is an accordion ─────────────────
+  const AGENDA_CATEGORIES = ["Invoicing", "Critical Tasks", "Resource", "Pipeline", "Other"];
+
+  // One agenda point inside a category
+  const makeAgendaPoint = () => ({
+    id: Date.now() + Math.random(),
+    label: "",          // the text input (Image 1 style)
+    expanded: false,    // + / − toggle (Image 2 style)
+    selectedPoint: null,
+    description: "",
+    discussions: "",
+    decisions: "",
+    actionPoints: [],   // action points inside this agenda point
+  });
+
+  // One category accordion
+  const makeCategory = (name) => ({
+    id: name,
+    expanded: false,
+    agendaPoints: [makeAgendaPoint()], // one default point
+  });
+
+  const [agendaCategories, setAgendaCategories] = useState(
+    AGENDA_CATEGORIES.map(makeCategory)
+  );
+
+  // ── Category-level handlers ───────────────────────────────────────────────
+  const toggleCategory = (catId) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) => (c.id === catId ? { ...c, expanded: !c.expanded } : c))
+    );
+
+  // ── Agenda-point-level handlers ───────────────────────────────────────────
+  const addAgendaPointToCategory = (catId) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? { ...c, agendaPoints: [...c.agendaPoints, makeAgendaPoint()] }
+          : c
+      )
+    );
+
+  const toggleAgendaPoint = (catId, apId) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              agendaPoints: c.agendaPoints.map((ap) =>
+                ap.id === apId ? { ...ap, expanded: !ap.expanded } : ap
+              ),
+            }
+          : c
+      )
+    );
+
+  const updateAgendaPoint = (catId, apId, field, value) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              agendaPoints: c.agendaPoints.map((ap) =>
+                ap.id === apId ? { ...ap, [field]: value } : ap
+              ),
+            }
+          : c
+      )
+    );
+
+  const removeAgendaPoint = (catId, apId) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? { ...c, agendaPoints: c.agendaPoints.filter((ap) => ap.id !== apId) }
+          : c
+      )
+    );
+
+  // ── Action-point handlers (inside an agenda point) ────────────────────────
+  const addActionPoint = (catId, apId) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              agendaPoints: c.agendaPoints.map((ap) =>
+                ap.id === apId
+                  ? {
+                      ...ap,
+                      actionPoints: [
+                        ...ap.actionPoints,
+                        { id: Date.now() + Math.random(), description: "", assignedTo: null, deadline: "", project: null },
+                      ],
+                    }
+                  : ap
+              ),
+            }
+          : c
+      )
+    );
+
+  const updateActionPoint = (catId, apId, taskId, field, value) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              agendaPoints: c.agendaPoints.map((ap) =>
+                ap.id === apId
+                  ? {
+                      ...ap,
+                      actionPoints: ap.actionPoints.map((t) =>
+                        t.id === taskId ? { ...t, [field]: value } : t
+                      ),
+                    }
+                  : ap
+              ),
+            }
+          : c
+      )
+    );
+
+  const removeActionPoint = (catId, apId, taskId) =>
+    setAgendaCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              agendaPoints: c.agendaPoints.map((ap) =>
+                ap.id === apId
+                  ? { ...ap, actionPoints: ap.actionPoints.filter((t) => t.id !== taskId) }
+                  : ap
+              ),
+            }
+          : c
+      )
+    );
   const [toast, setToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastStatus, setToastStatus] = useState("");
-  const [deadline, setDeadline] = useState("");
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState([]);
   const [meetingId, setMeetingId] = useState("");
 
-  // ── Action Points state ────────────────────────────────────────────────
-  // Each action point: { id, description, assignedTo: employee object | null }
-  const [actionPoints, setActionPoints] = useState([]);
+  const [staffSearch, setStaffSearch] = useState("");
   const { sendEmail } = useEmail();
+
+  // ── NEW: track whether agenda points have already been injected ─────────
+  const [agendaInjected, setAgendaInjected] = useState(false);
 
   // Parse combined editor HTML into dedicated state on every change
   const handleEditorChange = (htmlValue) => {
@@ -227,6 +372,53 @@ const AddDirectorMeetingRecords = ({
     const parsed = parseCombinedContent(html);
     setMom(parsed.mom);
     setCrucialDecisions(parsed.crucial);
+  };
+
+  // ── Inject scheduled agenda points into the MOM section of the editor ────
+  const handleInjectAgendaPoints = () => {
+    // Parse agendaPoints from the scheduled meeting passed via nextMeetingDate prop
+    // The parent fetches /getScheduledNextMeeting and passes scheduledMeeting down
+    let pointsToInject = [];
+
+    // Try to use scheduledAgendaPoints prop if parent passed it
+    if (scheduledAgendaPoints && scheduledAgendaPoints.length > 0) {
+      pointsToInject = scheduledAgendaPoints;
+    } else {
+      // Fallback: collect from the current form's filled agenda points
+      pointsToInject = agendaCategories.flatMap((cat) =>
+        cat.agendaPoints
+          .filter((ap) => ap.selectedPoint)
+          .map((ap) => ({ category: cat.id, point: ap.selectedPoint }))
+      );
+    }
+
+    if (!pointsToInject.length) return;
+
+    const listItems = pointsToInject
+      .map((item) => {
+        if (typeof item === "string") {
+          return `<li style="margin-bottom:6px;padding:4px 0;">${item}</li>`;
+        }
+        return `<li style="margin-bottom:6px;padding:4px 0;"><strong>${item.category || ""}</strong>${item.point ? ` — ${item.point}` : item}</li>`;
+      })
+      .join("");
+
+    const injectedBlock = `<p><strong style="color:#1976d2;">📋 Agenda Points for Discussion:</strong></p><ol style="padding-left:20px;margin:8px 0 16px;">${listItems}</ol>`;
+
+    setCombinedNotes((prev) => {
+      const placeholder = `<p><i>${MOM_PLACEHOLDER}</i><br><br></p>`;
+      if (prev.includes(placeholder)) {
+        return prev.replace(placeholder, `${injectedBlock}<p><br></p>`);
+      }
+      const crucialMarker = `<h2 style="color:#e65100`;
+      const idx = prev.indexOf(crucialMarker);
+      if (idx !== -1) {
+        return prev.slice(0, idx) + injectedBlock + `<p><br></p>` + prev.slice(idx);
+      }
+      return prev + injectedBlock;
+    });
+
+    setAgendaInjected(true);
   };
 
   useEffect(() => {
@@ -248,13 +440,35 @@ const AddDirectorMeetingRecords = ({
     axios
       .get("/get_project_data/All")
       .then((res) => {
-        if (res.status === 200) {
-          const data = res.data;
-          setProjects(data);
-        }
+        if (res.status === 200) setProjects(res.data);
       })
-      .catch((err) => console.error(err));
-  }, []);
+      .catch(console.error);
+
+    // Fetch scheduled meeting agenda points if not passed via props
+    if (!scheduledAgendaPointsProp) {
+      axios
+        .get("/getScheduledNextMeeting")
+        .then((res) => {
+          if (res.status === 200 && res.data) {
+            const raw = res.data.agendaPoints;
+            if (raw) {
+              try {
+                // agendaPoints is stored as a JSON string e.g. '[{"title":"Point A"},...]'
+                const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+                const normalized = parsed.map((p) =>
+                  typeof p === "string" ? p : (p.title ?? p.label ?? JSON.stringify(p))
+                );
+                setScheduledAgendaPoints(normalized);
+              } catch {
+                // plain string fallback
+                setScheduledAgendaPoints([raw]);
+              }
+            }
+          }
+        })
+        .catch(console.error);
+    }
+  }, [scheduledAgendaPointsProp]);
 
   // All staff available for action point assignment (directors + staff)
   const assignableEmployees = [
@@ -265,7 +479,7 @@ const AddDirectorMeetingRecords = ({
   const filteredEmployees = employees.filter(
     (e) =>
       e.name?.toLowerCase().includes(staffSearch.toLowerCase()) ||
-      e.designation?.toLowerCase().includes(staffSearch.toLowerCase()),
+      e.designation?.toLowerCase().includes(staffSearch.toLowerCase())
   );
 
   const toggleDirector = (i, v) =>
@@ -277,38 +491,17 @@ const AddDirectorMeetingRecords = ({
   const toggleAllEmployees = (v) =>
     setEmployees((p) => p.map((e) => ({ ...e, present: v })));
 
-  const addAgendaPoint = () => setAgendaPoints((p) => [...p, ""]);
-  const updateAgendaPoint = (i, v) =>
-    setAgendaPoints((p) => p.map((pt, j) => (j === i ? v : pt)));
-  const removeAgendaPoint = (i) =>
-    setAgendaPoints((p) => p.filter((_, j) => j !== i));
-
-  // ── Action Point handlers ──────────────────────────────────────────────
-  const addActionPoint = () =>
-    setActionPoints((p) => [
-      ...p,
-      { id: Date.now(), description: "", assignedTo: null },
-    ]);
-  const updateActionPoint = (id, field, value) =>
-    setActionPoints((p) =>
-      p.map((ap) => (ap.id === id ? { ...ap, [field]: value } : ap)),
-    );
-  const removeActionPoint = (id) =>
-    setActionPoints((p) => p.filter((ap) => ap.id !== id));
-
   const clearForm = () => {
     setMeetingTitle("");
-    setAgenda("");
-    setAgendaPoints([]);
+    setAgendaCategories(AGENDA_CATEGORIES.map(makeCategory));
     setCombinedNotes(EDITOR_TEMPLATE);
     setMom("");
     setCrucialDecisions("");
     setRemarks("");
     setMeetingDate(today);
-    setActionPoints([]);
+    setAgendaInjected(false);
     setDirectors((p) => p.map((d) => ({ ...d, present: true })));
     setEmployees((p) => p.map((e) => ({ ...e, present: false })));
-    setSelectedProject("");
   };
 
   const handleSubmit = async () => {
@@ -316,26 +509,18 @@ const AddDirectorMeetingRecords = ({
     const presentStaff = employees.filter((e) => e.present);
 
     const payload = new FormData();
-    const meetingDateFormatted = new Date(meetingDate)
-      .toISOString()
-      .split("T")[0];
-    console.log(meetingDateFormatted);
+    const meetingDateFormatted = new Date(meetingDate).toISOString().split("T")[0];
     payload.append("meetingDate", meetingDateFormatted);
     payload.append("meetingTitle", meetingTitle);
-    payload.append("agenda", agenda);
-    payload.append("agendaPoints", JSON.stringify(agendaPoints));
+    payload.append("agendaCategories", JSON.stringify(agendaCategories));
     payload.append("mom", mom);
     payload.append("crucialDecisions", crucialDecisions);
     payload.append("remarks", remarks);
     payload.append("directorsPresent", JSON.stringify(presentDirectors));
     payload.append("staffPresent", JSON.stringify(presentStaff));
-    payload.append("actionPoints", JSON.stringify(actionPoints));
 
     try {
-      const res = await axios.post(
-        "http://localhost:5002/addDirectorMeetingRecord",
-        payload,
-      );
+      const res = await axios.post("/addDirectorMeetingRecord", payload);
       if (res.status === 200) {
         setToast(true);
         setToastMessage("Meeting Record Saved Successfully.");
@@ -350,31 +535,31 @@ const AddDirectorMeetingRecords = ({
       setToastStatus("error");
     }
 
-    // Submit action points as tasks via /assign_task
-    const validActionPoints = actionPoints.filter(
-      (ap) => ap.description.trim() && ap.assignedTo,
+    // Flatten all action points from every agenda point in every category
+    const allActionPoints = agendaCategories.flatMap((cat) =>
+      cat.agendaPoints.flatMap((ap) =>
+        ap.actionPoints.map((t) => ({ ...t, categoryName: cat.id, agendaLabel: ap.label }))
+      )
     );
+    const validActionPoints = allActionPoints.filter((t) => t.description.trim() && t.assignedTo);
+
     for (const ap of validActionPoints) {
       const fd = new FormData();
       fd.append("dateOfEntry", today.toISOString().split("T")[0]);
-      fd.append(
-        "taskDesc",
-        `Action Point (Director Meeting): ${ap.description}`,
-      );
+      fd.append("taskDesc", `Action Point (${ap.categoryName}): ${ap.description}`);
       fd.append("assignTo", ap.assignedTo.id);
       fd.append("assignBy", sessionStorage.getItem("empName") || "");
-      fd.append("deadline", deadline);
+      fd.append("deadline", ap.deadline ?? "");
       fd.append("remarks", `From Director Meeting: ${meetingTitle}`);
-      fd.append("projectCode", selectedProject.code);
+      fd.append("projectCode", ap.project?.code ?? "");
       fd.append("workType", "10");
       fd.append("taskType", "Meeting Task");
       fd.append("meetingId", meetingId);
-      await axios
-        .post("http://localhost:5002/assign_task", fd)
+      await axios.post("/assign_task", fd)
         .then((res) => {
           if (res.status === 200) {
             const data = res.data;
-            setToast(open);
+            setToast(true);
             setToastStatus(data.status);
             setToastMessage(data.message);
             try {
@@ -384,13 +569,11 @@ const AddDirectorMeetingRecords = ({
                 assigner_name: sessionStorage.getItem("empName"),
                 from_email: sessionStorage.getItem("email"),
                 task_details: ap.description,
-                project_code: selectedProject.code,
-                project_name: selectedProject.name,
-                deadline: deadline.toString(),
+                project_code: ap.project?.code ?? "",
+                project_name: ap.project?.name ?? "",
+                deadline: ap.deadline ?? "",
               });
-            } catch (err) {
-              console.error(err);
-            }
+            } catch (err) { console.error(err); }
           }
         })
         .catch((err) => {
@@ -406,9 +589,94 @@ const AddDirectorMeetingRecords = ({
   const employeePresentCount = employees.filter((e) => e.present).length;
   const momChars = mom.replace(/<[^>]*>/g, "").trim().length;
   const crucialChars = crucialDecisions.replace(/<[^>]*>/g, "").trim().length;
-  const validActionPointCount = actionPoints.filter(
-    (ap) => ap.description.trim() && ap.assignedTo,
+
+  // Inject button is enabled when there are scheduled points OR filled form points
+  const scheduledPointCount = scheduledAgendaPoints?.length ?? 0;
+  const formFilledCount = agendaCategories.flatMap((c) =>
+    c.agendaPoints.filter((ap) => ap.selectedPoint)
   ).length;
+  const filledAgendaCount = scheduledPointCount || formFilledCount;
+
+  // Total valid action points across all agenda points in all categories
+  const validActionPointCount = agendaCategories
+    .flatMap((c) => c.agendaPoints.flatMap((ap) => ap.actionPoints))
+    .filter((t) => t.description.trim() && t.assignedTo).length;
+
+  // ── Inject button rendered inside the Meeting Notes SectionHeader ──────────
+  // const injectButton = (
+  //   <Tooltip
+  //     title={
+  //       filledAgendaCount === 0
+  //         ? "No scheduled agenda points found. Schedule a meeting first."
+  //         : agendaInjected
+  //           ? "Click to re-inject agenda points from the scheduled meeting"
+  //           : scheduledPointCount > 0
+  //             ? `Inject ${scheduledPointCount} scheduled agenda point${scheduledPointCount !== 1 ? "s" : ""} into Minutes of Meeting`
+  //             : `Inject ${formFilledCount} selected agenda point${formFilledCount !== 1 ? "s" : ""} into Minutes of Meeting`
+  //     }
+  //     placement="top"
+  //     arrow
+  //   >
+  //     <Button
+  //       size="sm"
+  //       onClick={handleInjectAgendaPoints}
+  //       disabled={filledAgendaCount === 0}
+  //       sx={{
+  //         borderRadius: "8px",
+  //         fontSize: "0.72rem",
+  //         fontWeight: 700,
+  //         letterSpacing: "0.2px",
+  //         whiteSpace: "nowrap",
+  //         gap: "5px",
+  //         px: 1.5,
+  //         height: "32px",
+  //         transition: "all 0.18s ease",
+  //         ...(filledAgendaCount === 0
+  //           ? {
+  //               bgcolor: "rgba(0,0,0,0.06)",
+  //               color: "text.tertiary",
+  //               "&:hover": { bgcolor: "rgba(0,0,0,0.06)" },
+  //             }
+  //           : agendaInjected
+  //             ? {
+  //                 background: "linear-gradient(135deg, #166534, #15803d)",
+  //                 color: "#fff",
+  //                 boxShadow: "0 2px 8px rgba(22,101,52,0.3)",
+  //                 "&:hover": {
+  //                   background: "linear-gradient(135deg, #14532d, #166534)",
+  //                 },
+  //               }
+  //             : {
+  //                 background: "linear-gradient(135deg, #1a1f36, #2d3561)",
+  //                 color: "#fff",
+  //                 boxShadow: "0 2px 8px rgba(29,53,87,0.3)",
+  //                 "&:hover": {
+  //                   background: "linear-gradient(135deg, #2d3561, #3d4a8a)",
+  //                 },
+  //               }),
+  //       }}
+  //     >
+  //       {agendaInjected ? "✅" : "📋"}
+  //       {agendaInjected ? "Injected" : "Inject Agenda Points"}
+  //       {filledAgendaCount > 0 && (
+  //         <Box
+  //           component="span"
+  //           sx={{
+  //             background: "rgba(255,255,255,0.22)",
+  //             borderRadius: "4px",
+  //             px: "5px",
+  //             py: "1px",
+  //             fontSize: "0.63rem",
+  //             fontWeight: 800,
+  //             lineHeight: 1.4,
+  //           }}
+  //         >
+  //           {filledAgendaCount}
+  //         </Box>
+  //       )}
+  //     </Button>
+  //   </Tooltip>
+  // );
 
   return (
     <Box sx={{ maxWidth: 1000, mx: "auto", px: 3, py: 2, textAlign: "left" }}>
@@ -447,107 +715,426 @@ const AddDirectorMeetingRecords = ({
           <SectionHeader
             icon={<Checklist sx={{ color: "#fff", fontSize: "1.1rem" }} />}
             title="Agenda"
-            subtitle="Briefly describe the agenda and add specific agenda points below."
+            subtitle="Expand each category to record discussion, decisions and action points."
             color="#e65100"
             bg="#fffbf0"
             border="#f0e0a0"
           />
-          <FormControl sx={{ mb: 2 }}>
-            <Input
-              placeholder="e.g. Review Q2 performance, plan Q3 targets…"
-              value={agenda}
-              onChange={(e) => setAgenda(e.target.value)}
-            />
-          </FormControl>
-          {agendaPoints.length > 0 && (
-            <Box
-              sx={{ mb: 2, display: "flex", flexDirection: "column", gap: 1.5 }}
-            >
-              {agendaPoints.map((point, index) => (
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {agendaCategories.map((cat, catIndex) => {
+              const hasFill = cat.agendaPoints.some(
+                (ap) => ap.selectedPoint || ap.description || ap.discussions || ap.decisions
+              );
+              const apCount = cat.agendaPoints.reduce(
+                (sum, ap) => sum + ap.actionPoints.filter((t) => t.description.trim()).length,
+                0
+              );
+
+              return (
                 <Box
-                  key={index}
+                  key={cat.id}
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    p: 1.5,
-                    borderRadius: "10px",
-                    backgroundColor: "#fffbf0",
-                    border: "1px solid #f0e0a0",
-                    animation: "fadeSlideIn 0.2s ease",
-                    "@keyframes fadeSlideIn": {
-                      from: { opacity: 0, transform: "translateY(-6px)" },
-                      to: { opacity: 1, transform: "translateY(0)" },
-                    },
+                    borderRadius: "12px",
+                    border: "1px solid",
+                    borderColor: cat.expanded ? "#f0a000" : hasFill ? "#f0c060" : "#e8e8e8",
+                    overflow: "hidden",
+                    transition: "border-color 0.2s",
                   }}
                 >
+                  {/* ── Accordion header row ── */}
                   <Box
+                    onClick={() => toggleCategory(cat.id)}
                     sx={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: "50%",
-                      backgroundColor: "#e65100",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
+                      gap: 1.5,
+                      px: 2,
+                      py: 1.5,
+                      cursor: "pointer",
+                      backgroundColor: cat.expanded ? "#fffbf0" : hasFill ? "#fffdf7" : "#fafafa",
+                      transition: "background-color 0.2s",
+                      "&:hover": { backgroundColor: "#fffbf0" },
+                      userSelect: "none",
                     }}
                   >
-                    <Typography
+                    {/* Number badge */}
+                    <Box
                       sx={{
-                        color: "#fff",
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
+                        width: 30,
+                        height: 30,
+                        borderRadius: "50%",
+                        backgroundColor: hasFill ? "#e65100" : "#d4d4d4",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        transition: "background-color 0.2s",
                       }}
                     >
-                      {index + 1}
+                      <Typography sx={{ color: "#fff", fontSize: "0.72rem", fontWeight: 700 }}>
+                        {catIndex + 1}
+                      </Typography>
+                    </Box>
+
+                    {/* Category name */}
+                    <Typography
+                      level="title-sm"
+                      fontWeight={700}
+                      sx={{ flex: 1, color: hasFill ? "#c45000" : "text.primary" }}
+                    >
+                      {cat.id}
                     </Typography>
+
+                    {/* Badges */}
+                    {apCount > 0 && (
+                      <Chip size="sm" sx={{ bgcolor: "#fde68a", color: "#92400e", fontWeight: 700, fontSize: "0.65rem", height: 20 }}>
+                        {apCount} action{apCount !== 1 ? "s" : ""}
+                      </Chip>
+                    )}
+                    {hasFill && !cat.expanded && (
+                      <Chip size="sm" sx={{ bgcolor: "#dcfce7", color: "#166534", fontWeight: 700, fontSize: "0.65rem", height: 20 }}>
+                        ✓ filled
+                      </Chip>
+                    )}
+
+                    {/* Toggle icon */}
+                    <Box
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: "50%",
+                        border: "1.5px solid",
+                        borderColor: cat.expanded ? "#e65100" : "#d0d0d0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: cat.expanded ? "#e65100" : "#999",
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        transition: "all 0.2s",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {cat.expanded ? "−" : "+"}
+                    </Box>
                   </Box>
-                  <Input
-                    placeholder={`Agenda point ${index + 1}…`}
-                    value={point}
-                    onChange={(e) => updateAgendaPoint(index, e.target.value)}
-                    sx={{ flex: 1 }}
-                  />
-                  <IconButton
-                    size="sm"
-                    variant="soft"
-                    color="danger"
-                    onClick={() => removeAgendaPoint(index)}
-                    sx={{ flexShrink: 0 }}
-                  >
-                    <Delete sx={{ fontSize: "1rem" }} />
-                  </IconButton>
+
+                  {/* ── Accordion body ── */}
+                  {cat.expanded && (
+                    <Box
+                      sx={{
+                        px: 2,
+                        pb: 2,
+                        pt: 1.5,
+                        backgroundColor: "#fafafa",
+                        borderTop: "1px solid #f0e0a0",
+                        animation: "fadeIn 0.18s ease",
+                        "@keyframes fadeIn": {
+                          from: { opacity: 0, transform: "translateY(-4px)" },
+                          to: { opacity: 1, transform: "translateY(0)" },
+                        },
+                      }}
+                    >
+                      {/* ── Agenda point rows ── */}
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                        {cat.agendaPoints.map((ap, apIdx) => {
+                          const apFilled = ap.selectedPoint || ap.description || ap.discussions || ap.decisions;
+                          const apTaskCount = ap.actionPoints.filter((t) => t.description.trim()).length;
+                          return (
+                            <Box
+                              key={ap.id}
+                              sx={{
+                                borderRadius: "10px",
+                                border: "1px solid",
+                                borderColor: ap.expanded ? "#d0b080" : apFilled ? "#e0c080" : "#e8e0d8",
+                                overflow: "hidden",
+                                backgroundColor: "#fff",
+                              }}
+                            >
+                              {/* ── Agenda point header (Image 1 style) ── */}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1.5,
+                                  px: 1.5,
+                                  py: 1.2,
+                                  backgroundColor: ap.expanded ? "#fffbf0" : "#fff",
+                                }}
+                              >
+                                {/* Number badge */}
+                                <Box
+                                  sx={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "50%",
+                                    backgroundColor: "#f5f0e8",
+                                    border: "1.5px solid #d4c4a0",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#7a5c30" }}>
+                                    {apIdx + 1}
+                                  </Typography>
+                                </Box>
+
+                                {/* +/− toggle */}
+                                <Box
+                                  onClick={() => toggleAgendaPoint(cat.id, ap.id)}
+                                  sx={{
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: "50%",
+                                    border: "1.5px solid",
+                                    borderColor: ap.expanded ? "#e65100" : "#bbb",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: ap.expanded ? "#e65100" : "#999",
+                                    fontSize: "1rem",
+                                    fontWeight: 700,
+                                    lineHeight: 1,
+                                    cursor: "pointer",
+                                    flexShrink: 0,
+                                    transition: "all 0.15s",
+                                    userSelect: "none",
+                                    "&:hover": { borderColor: "#e65100", color: "#e65100" },
+                                  }}
+                                >
+                                  {ap.expanded ? "−" : "+"}
+                                </Box>
+
+                                {/* Label input — always visible */}
+                                <FormControl sx={{ flex: 1 }}>
+                                  <FormLabel sx={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.4px", textTransform: "uppercase", mb: 0.3, color: "text.tertiary" }}>
+                                    Agenda Point to be Discussed
+                                  </FormLabel>
+                                  <Input
+                                    placeholder="Enter agenda point…"
+                                    value={ap.selectedPoint ?? ""}
+                                    onChange={(e) => updateAgendaPoint(cat.id, ap.id, "selectedPoint", e.target.value)}
+                                    sx={{ borderRadius: "7px", "--Input-minHeight": "34px", fontSize: "0.85rem" }}
+                                  />
+                                </FormControl>
+
+                                {/* Badges + remove */}
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexShrink: 0 }}>
+                                  {apTaskCount > 0 && (
+                                    <Chip size="sm" sx={{ bgcolor: "#fde68a", color: "#92400e", fontWeight: 700, fontSize: "0.63rem", height: 18 }}>
+                                      {apTaskCount}AP
+                                    </Chip>
+                                  )}
+                                  {apFilled && !ap.expanded && (
+                                    <Chip size="sm" sx={{ bgcolor: "#dcfce7", color: "#166534", fontWeight: 700, fontSize: "0.63rem", height: 18 }}>✓</Chip>
+                                  )}
+                                  {cat.agendaPoints.length > 1 && (
+                                    <IconButton
+                                      size="sm"
+                                      variant="plain"
+                                      color="danger"
+                                      onClick={() => removeAgendaPoint(cat.id, ap.id)}
+                                      sx={{ opacity: 0.5, "&:hover": { opacity: 1 }, minWidth: 24, height: 24 }}
+                                    >
+                                      <Delete sx={{ fontSize: "0.85rem" }} />
+                                    </IconButton>
+                                  )}
+                                </Box>
+                              </Box>
+
+                              {/* ── Expanded body (Image 2 style) ── */}
+                              {ap.expanded && (
+                                <Box
+                                  sx={{
+                                    px: 2,
+                                    pb: 2,
+                                    pt: 1.5,
+                                    borderTop: "1px solid #f0e8d8",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1.5,
+                                    backgroundColor: "#fffcf7",
+                                  }}
+                                >
+                                  {/* Description + Discussions */}
+                                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
+                                    <FormControl>
+                                      <FormLabel sx={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.3px", mb: 0.4 }}>
+                                        Enter Brief Description
+                                      </FormLabel>
+                                      <Input
+                                        placeholder="Value"
+                                        value={ap.description}
+                                        onChange={(e) => updateAgendaPoint(cat.id, ap.id, "description", e.target.value)}
+                                        sx={{ borderRadius: "7px", fontSize: "0.85rem" }}
+                                      />
+                                    </FormControl>
+                                    <FormControl>
+                                      <FormLabel sx={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.3px", mb: 0.4 }}>
+                                        Enter Discussions
+                                      </FormLabel>
+                                      <Input
+                                        placeholder="Value"
+                                        value={ap.discussions}
+                                        onChange={(e) => updateAgendaPoint(cat.id, ap.id, "discussions", e.target.value)}
+                                        sx={{ borderRadius: "7px", fontSize: "0.85rem" }}
+                                      />
+                                    </FormControl>
+                                  </Box>
+
+                                  {/* Decisions */}
+                                  <FormControl>
+                                    <FormLabel sx={{ fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.3px", mb: 0.4 }}>
+                                      Enter Decisions
+                                    </FormLabel>
+                                    <Input
+                                      placeholder="Value"
+                                      value={ap.decisions}
+                                      onChange={(e) => updateAgendaPoint(cat.id, ap.id, "decisions", e.target.value)}
+                                      sx={{ borderRadius: "7px", fontSize: "0.85rem" }}
+                                    />
+                                  </FormControl>
+
+                                  {/* Action Point Section */}
+                                  <Box
+                                    sx={{
+                                      border: "1px solid #d8c8f0",
+                                      borderRadius: "9px",
+                                      p: 1.5,
+                                      background: "rgba(109,40,217,0.025)",
+                                    }}
+                                  >
+                                    <Typography
+                                      level="body-xs"
+                                      fontWeight={700}
+                                      sx={{
+                                        color: "#6d28d9",
+                                        letterSpacing: "0.4px",
+                                        mb: ap.actionPoints.length > 0 ? 1.2 : 0,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.6,
+                                      }}
+                                    >
+                                      <AssignmentTurnedIn sx={{ fontSize: "0.85rem" }} />
+                                      Action Point Section
+                                    </Typography>
+
+                                    {ap.actionPoints.length > 0 && (
+                                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 1.2 }}>
+                                        {ap.actionPoints.map((task, tIdx) => (
+                                          <Box
+                                            key={task.id}
+                                            sx={{
+                                              display: "grid",
+                                              gridTemplateColumns: "1fr 1fr 110px 1fr auto",
+                                              gap: 0.8,
+                                              alignItems: "center",
+                                              p: 1,
+                                              borderRadius: "7px",
+                                              backgroundColor: task.description && task.assignedTo ? "#f5f3ff" : "#fafafa",
+                                              border: "1px solid",
+                                              borderColor: task.description && task.assignedTo ? "#ddd6fe" : "#eee",
+                                            }}
+                                          >
+                                            <Input
+                                              placeholder={`Task ${tIdx + 1}…`}
+                                              value={task.description}
+                                              onChange={(e) => updateActionPoint(cat.id, ap.id, task.id, "description", e.target.value)}
+                                              sx={{ borderRadius: "6px", fontSize: "0.8rem" }}
+                                            />
+                                            <Autocomplete
+                                              placeholder="Assign to…"
+                                              options={assignableEmployees}
+                                              value={task.assignedTo}
+                                              groupBy={(opt) => opt.group}
+                                              getOptionLabel={(opt) => opt.name ?? ""}
+                                              isOptionEqualToValue={(opt, val) => opt.id === val?.id}
+                                              onChange={(_, val) => updateActionPoint(cat.id, ap.id, task.id, "assignedTo", val)}
+                                              sx={{ borderRadius: "6px", fontSize: "0.8rem" }}
+                                            />
+                                            <Input
+                                              type="date"
+                                              value={task.deadline}
+                                              onChange={(e) => updateActionPoint(cat.id, ap.id, task.id, "deadline", e.target.value)}
+                                              sx={{ borderRadius: "6px", fontSize: "0.8rem" }}
+                                            />
+                                            <Autocomplete
+                                              placeholder="Project…"
+                                              options={projects}
+                                              value={task.project}
+                                              getOptionLabel={(opt) => opt.code ?? ""}
+                                              isOptionEqualToValue={(opt, val) => opt.code === val?.code}
+                                              onChange={(_, val) => updateActionPoint(cat.id, ap.id, task.id, "project", val)}
+                                              sx={{ borderRadius: "6px", fontSize: "0.8rem" }}
+                                            />
+                                            <IconButton
+                                              size="sm"
+                                              variant="soft"
+                                              color="danger"
+                                              onClick={() => removeActionPoint(cat.id, ap.id, task.id)}
+                                            >
+                                              <Delete sx={{ fontSize: "0.85rem" }} />
+                                            </IconButton>
+                                          </Box>
+                                        ))}
+                                      </Box>
+                                    )}
+
+                                    <Button
+                                      size="sm"
+                                      variant="outlined"
+                                      startDecorator={<Add sx={{ fontSize: "0.85rem" }} />}
+                                      onClick={() => addActionPoint(cat.id, ap.id)}
+                                      sx={{
+                                        borderStyle: "dashed",
+                                        borderColor: "#a78bfa",
+                                        color: "#6d28d9",
+                                        fontSize: "0.72rem",
+                                        backgroundColor: "transparent",
+                                        "&:hover": { backgroundColor: "#f5f3ff", borderStyle: "dashed" },
+                                      }}
+                                    >
+                                      Add Action Point
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              )}
+                            </Box>
+                          );
+                        })}
+                      </Box>
+
+                      {/* ── Add Agenda Point button ── */}
+                      <Button
+                        variant="outlined"
+                        size="sm"
+                        startDecorator={<Add sx={{ fontSize: "0.9rem" }} />}
+                        onClick={() => addAgendaPointToCategory(cat.id)}
+                        sx={{
+                          mt: 1.5,
+                          width: "100%",
+                          borderStyle: "dashed",
+                          borderColor: "#f0a000",
+                          color: "#e65100",
+                          backgroundColor: "transparent",
+                          fontSize: "0.78rem",
+                          fontWeight: 600,
+                          "&:hover": { backgroundColor: "#fffbf0", borderStyle: "dashed" },
+                        }}
+                      >
+                        + Add Agenda Point
+                      </Button>
+                    </Box>
+                  )}
                 </Box>
-              ))}
-            </Box>
-          )}
-          <Button
-            variant="outlined"
-            color="warning"
-            size="sm"
-            startDecorator={<Add sx={{ fontSize: "1rem" }} />}
-            onClick={addAgendaPoint}
-            sx={{
-              borderStyle: "dashed",
-              borderColor: "#f0a000",
-              color: "#e65100",
-              backgroundColor: "transparent",
-              "&:hover": { backgroundColor: "#fffbf0", borderStyle: "dashed" },
-            }}
-          >
-            Add Agenda Point
-          </Button>
-          {agendaPoints.length > 0 && (
-            <Typography
-              level="body-xs"
-              sx={{ color: "text.tertiary", mt: 1.5 }}
-            >
-              {agendaPoints.filter((p) => p.trim()).length} of{" "}
-              {agendaPoints.length} point{agendaPoints.length !== 1 ? "s" : ""}{" "}
-              filled
-            </Typography>
-          )}
+              );
+            })}
+          </Box>
         </CardContent>
       </Card>
 
@@ -762,7 +1349,7 @@ const AddDirectorMeetingRecords = ({
                         const realIndex = employees.findIndex(
                           (e) =>
                             e.name === emp.name &&
-                            e.designation === emp.designation,
+                            e.designation === emp.designation
                         );
                         return (
                           <ListItem
@@ -807,7 +1394,8 @@ const AddDirectorMeetingRecords = ({
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      transition: "background-color 0.2s ease",
+                                      transition:
+                                        "background-color 0.2s ease",
                                       flexShrink: 0,
                                     }}
                                   >
@@ -882,6 +1470,7 @@ const AddDirectorMeetingRecords = ({
             icon={<Notes sx={{ color: "#fff", fontSize: "1.1rem" }} />}
             title="Meeting Notes"
             subtitle="Type under each heading — Minutes of Meeting and Crucial Decisions are separated by the blue and orange headings."
+            // action={injectButton}
           />
 
           {/* Legend */}
@@ -943,202 +1532,7 @@ const AddDirectorMeetingRecords = ({
         </CardContent>
       </Card>
 
-      {/* ── Section 5: Action Points ───────────────────────────────────── */}
-      <Card variant="outlined" sx={{ borderRadius: "16px", mb: 3 }}>
-        <CardContent>
-          <SectionHeader
-            icon={
-              <AssignmentTurnedIn sx={{ color: "#fff", fontSize: "1.1rem" }} />
-            }
-            title="Action Points"
-            subtitle={`These will be assigned as tasks.`}
-            color="#6d28d9"
-            bg="#f5f3ff"
-            border="#ddd6fe"
-          />
-
-          {/* Deadline badge */}
-          {/* <div className="inline-flex items-center gap-2 bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold px-3 py-1.5 rounded-lg mb-4">
-            <BoltOutlined sx={{ fontSize: 14 }} />
-            Deadline: {deadlineDisplay}
-          </div> */}
-
-          {/* Action point rows */}
-          {actionPoints.length > 0 && (
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 3 }}
-            >
-              {actionPoints.map((ap, index) => (
-                <Box
-                  key={ap.id}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    p: 2,
-                    borderRadius: "12px",
-                    backgroundColor:
-                      ap.description && ap.assignedTo ? "#f5f3ff" : "#fafbff",
-                    border: `1px solid ${ap.description && ap.assignedTo ? "#ddd6fe" : "#e8eaff"}`,
-                    transition: "all 0.2s ease",
-                    animation: "apSlide 0.2s ease",
-                    "@keyframes apSlide": {
-                      from: { opacity: 0, transform: "translateY(-8px)" },
-                      to: { opacity: 1, transform: "translateY(0)" },
-                    },
-                  }}
-                >
-                  {/* Index badge */}
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs text-white ${ap.description && ap.assignedTo ? "bg-violet-500" : "bg-gray-300"}`}
-                  >
-                    {index + 1}
-                  </div>
-
-                  {/* Description input */}
-                  <Input
-                    placeholder="Describe the action point…"
-                    value={ap.description}
-                    onChange={(e) =>
-                      updateActionPoint(ap.id, "description", e.target.value)
-                    }
-                    sx={{
-                      flex: 2,
-                      borderRadius: "8px",
-                      "--Input-focusedThickness": "1.5px",
-                    }}
-                  />
-
-                  {/* Assign to autocomplete */}
-                  <Autocomplete
-                    placeholder="Assign to employee…"
-                    options={assignableEmployees}
-                    value={ap.assignedTo}
-                    groupBy={(opt) => opt.group}
-                    getOptionLabel={(opt) => opt.name ?? ""}
-                    isOptionEqualToValue={(opt, val) => opt.id === val?.id}
-                    onChange={(_, val) =>
-                      updateActionPoint(ap.id, "assignedTo", val)
-                    }
-                    sx={{
-                      flex: 1.5,
-                      borderRadius: "8px",
-                      "--Input-focusedThickness": "1.5px",
-                      minWidth: 180,
-                    }}
-                    renderOption={(props, opt) => (
-                      <Box
-                        component="li"
-                        {...props}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1.5,
-                          py: 1,
-                          mx: 2,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: "50%",
-                            bgcolor:
-                              opt.group === "Directors" ? "#1976d2" : "#2e7d32",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              color: "#fff",
-                              fontSize: "0.65rem",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {opt.name?.charAt(0)}
-                          </Typography>
-                        </Box>
-                        <Box>
-                          <Typography level="body-sm" fontWeight={600}>
-                            {opt.name}
-                          </Typography>
-                          {opt.designation && (
-                            <Typography
-                              level="body-xs"
-                              sx={{ color: "text.tertiary" }}
-                            >
-                              {opt.designation}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-                  />
-
-                  <Input
-                    type="date"
-                    placeholder="Deadline"
-                    value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
-                  />
-
-                  <Autocomplete
-                    placeholder="Select Project...."
-                    value={projects.code}
-                    options={projects}
-                    getOptionLabel={(opt) => opt.code}
-                    onChange={(e, newVal) => setSelectedProject(newVal)}
-                  />
-
-                  {/* Remove */}
-                  <IconButton
-                    size="sm"
-                    variant="soft"
-                    color="danger"
-                    onClick={() => removeActionPoint(ap.id)}
-                    sx={{ flexShrink: 0 }}
-                  >
-                    <Delete sx={{ fontSize: "1rem" }} />
-                  </IconButton>
-                </Box>
-              ))}
-            </Box>
-          )}
-
-          {/* Add button + counter */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <Button
-              variant="outlined"
-              size="sm"
-              startDecorator={<Add sx={{ fontSize: "1rem" }} />}
-              onClick={addActionPoint}
-              sx={{
-                borderStyle: "dashed",
-                borderColor: "#a78bfa",
-                color: "#6d28d9",
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "#f5f3ff",
-                  borderStyle: "dashed",
-                },
-              }}
-            >
-              Add Action Point
-            </Button>
-            {actionPoints.length > 0 && (
-              <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                {validActionPointCount} of {actionPoints.length} action point
-                {actionPoints.length !== 1 ? "s" : ""} ready to assign
-              </Typography>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Section 6: Remarks ─────────────────────────────────────────── */}
+      {/* ── Section 5: Remarks ─────────────────────────────────────────── */}
       <Card variant="outlined" sx={{ borderRadius: "16px", mb: 3 }}>
         <CardContent>
           <Typography
@@ -1198,19 +1592,13 @@ const AddDirectorMeetingRecords = ({
             size="sm"
             sx={{ alignSelf: "center", mr: "auto" }}
           >
-            {validActionPointCount} action point
-            {validActionPointCount !== 1 ? "s" : ""} will be assigned as tasks
+            {validActionPointCount} action point{validActionPointCount !== 1 ? "s" : ""} will be assigned as tasks
           </Chip>
         )}
         <Button variant="outlined" color="neutral" onClick={clearForm}>
           Clear Form
         </Button>
-        <Button
-          variant="solid"
-          color="primary"
-          startDecorator={<Save />}
-          onClick={handleSubmit}
-        >
+        <Button variant="solid" color="primary" startDecorator={<Save />} onClick={handleSubmit}>
           Save Meeting Record
         </Button>
       </Box>

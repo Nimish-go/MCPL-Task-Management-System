@@ -1,7 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Stack+Sans+Text:wght@200..700&display=swap");
 @import "tailwindcss";
 
 @theme {
   --color-bg-navbar: #023047;
   --color-hover-navbar: #ffb703;
   --font-primary: "Open Sans", sans-serif;
+}
+
+* {
+  font-family: "Stack Sans Text", sans-serif;
 }

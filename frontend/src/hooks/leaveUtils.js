@@ -38,12 +38,21 @@ export const LEAVE_TYPES = [
     text: "#2e7d32",
   },
   {
-    value: "emergency_leave",
+    value: "emergency",
     label: "Emergency Leave",
-    color: "success",
-    bg: "#e8f5e9",
-    border: "#a5d6a7",
-    text: "#2e7d32",
+    color: "danger", // ← changed
+    bg: "#fff0f0", // ← changed: soft red tint
+    border: "#ffb3b3", // ← changed
+    text: "#b91c1c",
+    urgent: true,
+  },
+  {
+    value: "halfDay",
+    label: "Half Day",
+    color: "warning",
+    bg: "#fff8e1",
+    border: "#ffcc80",
+    text: "#e65100",
   },
 ];
 
@@ -62,6 +71,14 @@ export const LEAVE_STATUSES = {
   rejected: { label: "Rejected", color: "danger", dot: "#ef4444" },
   auto_rejected: { label: "Auto Rejected", color: "danger", dot: "#ef4444" },
   cancelled: { label: "Cancelled", color: "neutral", dot: "#94a3b8" },
+};
+
+// Add to the bottom of leaveUtils.js
+
+export const OT_RULES = {
+  MIN_HOURS_FOR_COMP: 4, // minimum OT hours to qualify for comp off
+  FULL_DAY_HOURS: 8, // hours that count as a full comp off day
+  HALF_DAY_HOURS: 4, // hours that count as a half comp off day
 };
 
 // ─── Business logic helpers ────────────────────────────────────────────────
@@ -94,6 +111,7 @@ export const passesAdvanceNotice = (fromDate, days) => {
 
 /** Determine approval flow based on days */
 export const getApprovalFlow = (days, leaveType) => {
+  if (leaveType === "emergency") return ["Director (Immediate)"];
   if (leaveType === "comp_off" || days > LEAVE_RULES.LONG_LEAVE_THRESHOLD) {
     return ["Manager", "Director"];
   }

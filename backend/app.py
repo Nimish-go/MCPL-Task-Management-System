@@ -34,6 +34,28 @@ def getUserId(empName):
     user_id = cursor.fetchone()
     return user_id[0]
 
+# def sendScheduledMeetingEmail(to_email,meeting_title, meeting_date, agenda_html, organizer):
+#     template_params = {
+#         "to_email" : to_email,
+#         "meeting_title" : meeting_title,
+#         "meeting_date" : meeting_date,
+#         "agenda_html" : agenda_html,
+#         "organizer" : organizer
+#     }
+    
+#     payload = {
+#         "service_id" : "service_qwxjdpq",
+#         "template_id" : "template_gm6ip8s",
+#         "user_id" : os.environ.get("EMAILJS_API_KEY"),
+#         "template_params" : template_params
+#     }
+    
+#     response = requests.post("https://api.emailjs.com/api/v1.0/email/send",json=payload,headers={
+#         "Content-Type" : "application/json"
+#     })
+    
+#     return response.status_code, response.text
+
 @app.route("/",methods=["GET"])
 def index():
     return "Welcome to MCPL Task Management System Server."
@@ -177,7 +199,7 @@ def getEmployeeTasks():
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                       WHERE pm."ProjectCode" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[projectCode,getUserId(assignerName)])
+                       WHERE pm."ProjectCode" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE AND ph."ChangeStatus?" = TRUE ORDER BY ph."ProjectHistoryID" ASC """,[projectCode,getUserId(assignerName)])
     
         tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8], "assignedTo" : row[9] } for row in cursor.fetchall()]
     else:
@@ -185,7 +207,7 @@ def getEmployeeTasks():
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                       WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
+                       WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE AND ph."ChangeStatus?" = TRUE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
         tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8], "assignedTo" : row[9] } for row in cursor.fetchall()]
     
     return jsonify(tasks), 200
@@ -800,9 +822,8 @@ def addDirectorMeetingRecord():
     data = request.form
     meetingDate = data.get("meetingDate")
     meetingTitle = data.get("meetingTitle")
-    agenda = data.get("agenda");
-    agendaPoints = data.get("agendaPoints")
-    mom = data.get("mom");
+    agendaPoints = data.get("agendaCategories")
+    mom = data.get("mom")
     crucialDecisions = data.get("crucialDecisions")
     remarks = data.get("remarks")
     directorsPresent = data.get("directorsPresent")
@@ -822,8 +843,8 @@ def addDirectorMeetingRecord():
     cursor.execute(""" INSERT INTO "DirectorMeetingMaster"
                    ("MeetingDate", "MeetingTitle", 
                    "CrucialDecisions", "ParticipantDirectors", "ParticipantStaff", 
-                   "MOMPoints", "Remarks", "IsEdited", "MeetingAgenda", "AgendaPoints", "ActionPoints")
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING "MeetingId" """, [meetingDate, meetingTitle, crucialDecisions, directorsPresent, staffPresent, mom, remarks, False, agenda, agendaPoints, actionPoints])
+                   "MOMPoints", "Remarks", "IsEdited", "AgendaPoints", "ActionPoints")
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING "MeetingID" """, [meetingDate, meetingTitle, crucialDecisions, directorsPresent, staffPresent, mom, remarks, False, agendaPoints, actionPoints])
     meetingId = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
@@ -837,9 +858,9 @@ def getDirectorMeetings():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT "MeetingId", "MeetingDate", "ParticipantDirectors", "ParticipantStaff", 
+    cursor.execute(""" SELECT "MeetingID", "MeetingDate", "ParticipantDirectors", "ParticipantStaff", 
                    "MOMPoints", "CrucialDecisions", "MeetingTitle", "Remarks", "MeetingAgenda" 
-                   FROM "DirectorMeetingMaster" ORDER BY "MeetingDate" ASC; """)
+                   FROM "DirectorMeetingMaster" WHERE "IsScheduled" = FALSE ORDER BY "MeetingDate" ASC; """)
     
     directorMeetings = [{"id": row[0], "meetingDate": row[1], "directors": row[2], 
                         "staff": row[3], "mom": row[4], "crucialDecisions": row[5], 
@@ -960,6 +981,119 @@ def updatePass():
     conn.commit()
     
     return jsonify({ "status" : "success", "message" : "Password Changed Successfully." }), 200
+
+@app.route("/updateReportsTo/<empname>", methods=["POST","PATCH"])
+def updateReportsTo(empname):
+    form = request.form
+    
+    reportsToManager = form.get("reportToManager")
+    reportsToDirector = form.get("reportsToDirector")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" UPDATE "UserMaster" SET "ManagerReportingTo" = %s, "DirectorReportingTo" = %s WHERE "EmpName" = %s """,[reportsToManager, reportsToDirector, empname])
+    conn.commit()
+    
+    return jsonify({ "message" : "Employee: "+empname+", updated successfully." }), 200
+
+@app.route("/applyForLeave",methods=["POST"])
+def applyForLeave():
+    form = request.form
+    leaveType = form.get("leaveType")
+    leaveReason = form.get("leaveReason")
+    requestedBy = form.get("requestedBy")
+    fromDate = form.get("fromDate")
+    toDate = form.get("toDate")
+    appliedOn = form.get("appliedOn")
+    compWorkDate = form.get("compWorkDate")
+    compHours = form.get("compHours")
+    autoRejected = form.get("autoRejected")
+    
+    if autoRejected == True:
+        rejectionReason = "Leaves Greater than 3 days has to be applied 7 days in advance."
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if compWorkDate and compHours:
+        cursor.execute(""" INSERT INTO "LeaveManagementMaster" 
+                   ("LeaveType", "LeaveReason", "LeaveRequestedBy", "FromDate", "ToDate", 
+                   "AppliedOn", "CompWorkDate", "CompHours", "ManagerID") VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
+                   [leaveType, leaveReason, requestedBy, fromDate, toDate, appliedOn, compWorkDate, compHours])
+        conn.commit()
+    elif not compWorkDate and not compHours:
+        cursor.execute(""" INSERT INTO "LeaveManagementMaster" 
+                   ("LeaveType", "LeaveReason", "LeaveRequestedBy", "FromDate", "ToDate", 
+                   "AppliedOn") VALUES (%s,%s,%s,%s,%s,%s)""",
+                   [leaveType, leaveReason, requestedBy, fromDate, toDate, appliedOn])
+        conn.commit()
+    
+    return jsonify({ "message" : "Leave Sent For Approval." }), 200
+
+@app.route("/scheduleNextMeeting",methods=["POST"])
+def scheduleNextMeeting():
+    form = request.form
+    nextMeetingDate = form.get("scheduledMeetingDate")
+    agenda = form.get("agenda")
+    agendaPoints = form.get("agendaPoints")
+    meetingTitle = form.get("meetingTitle")
+    organizer = form.get("organizer")
+    
+    # agenda_html = ""
+
+    # for section in agendaPoints:
+    #     agenda_html += f"""
+    #     <div style="margin-bottom:15px;">
+    #         <strong>{section['category']}</strong>
+    #         <ul>
+    #     """
+
+    # for agenda in section["title"]:
+    #     agenda_html += f"<li>{agenda}</li>"
+
+    #     agenda_html += """
+    #         </ul>
+    #     </div>
+    #     """
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" INSERT INTO "DirectorMeetingMaster"("NextMeetingDate", "MeetingTitle", "AgendaToBeDiscussed", "AgendaPointsToBeDiscussed", "IsScheduled") VALUES(%s, %s, %s, %s, %s) RETURNING "MeetingID" """,[nextMeetingDate, meetingTitle, agenda, agendaPoints, True])
+    insertedId = cursor.fetchone()[0]
+    conn.commit()
+    if insertedId:
+        # cursor.execute(""" SELECT um."UserEmail", um."EmpName" FROM "UserMaster" um JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID" WHERE dm."DesignationName" LIKE %DIRECTOR% """)
+        # emails = [{"email" : row[0], "director_name" : row[1]}for row in cursor.fetchall()]
+        
+        # for email in emails:
+        #     sendScheduledMeetingEmail(to_email=email.email,)
+        
+        return jsonify({ "message" : "Meeting Scheduled Successfully. Scheduled Date: "+nextMeetingDate+"."}), 200
+    else:
+        return jsonify({ "message" : "Something Went Wrong. Please Check the Console." }), 500
+
+@app.route("/getScheduledNextMeetingData", methods=["GET"])
+def getScheduledNextMeetingData():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(""" SELECT "MeetingID", "MeetingTitle", "NextMeetingDate", "AgendaToBeDiscussed", "AgendaPointsToBeDiscussed" FROM "DirectorMeetingMaster" WHERE "NextMeetingDate" >= CURRENT_DATE ORDER "NextMeetingDate" ASC """)
+    scheduledMeetingData = [{"id" : row[0], "title" : row[1], "scheduledMeetingDate" : row[2], "agendaToBeDiscussed" : row[3], "agendaPointsToBeDiscussed" : row[4]}for row in cursor.fetchall()]
+    
+    return jsonify({
+        "status" : "success",
+        "message" : "Data Successfully Fetched.",
+        "data" : scheduledMeetingData
+        }), 200
+
+@app.route("/log_overtime",methods=["GET"])
+def logOvertime():
+    
+    
+    return jsonify(), 200
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0",port = 5002, debug = True)

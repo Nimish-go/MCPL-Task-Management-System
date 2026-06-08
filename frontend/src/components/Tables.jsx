@@ -36,6 +36,7 @@ const StatusChip = ({ status, deadline }) => {
             borderRadius: "6px",
             border: "1px solid #ef9a9a",
             whiteSpace: "nowrap",
+            fontFamily: "'Stack Sans Text', sans-serif",
           }}
         >
           <Warning sx={{ fontSize: "0.85rem", color: "#c62828" }} />
@@ -118,7 +119,7 @@ const PaginationBar = ({
     }}
   >
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-      <Typography level="body-xs" sx={{ color: "#64748b", fontWeight: 500 }}>
+      <Typography level="body-xs" sx={{ color: "#64748b", fontWeight: 500, fontFamily: "'Stack Sans Text', sans-serif", }}>
         Rows:
       </Typography>
       <Select
@@ -529,7 +530,14 @@ const tdStyle = {
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited }) => {
+const Tables = ({
+  type,
+  tableData,
+  loading = true,
+  onEmployeeClick,
+  onTaskEdited,
+  onRefresh,
+}) => {
   useEffect(() => {
     axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app";
   }, []);
@@ -687,6 +695,7 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited
                   width: "100%",
                   borderCollapse: "collapse",
                   tableLayout: "auto",
+                  fontFamily: "Stack Sans Text, sans-serif",
                 }}
               >
                 <colgroup>
@@ -750,6 +759,7 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited
                           style={{
                             backgroundColor:
                               index % 2 === 0 ? "#fff" : "#fafbff",
+                            fontFamily: "'Stack Sans Text', sans-serif",
                           }}
                           onMouseEnter={(e) =>
                             (e.currentTarget.style.backgroundColor = "#f0f4ff")
@@ -776,6 +786,7 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited
                                   fontSize: "0.7rem",
                                   fontWeight: 700,
                                   color: "#1976d2",
+                                  fontFamily: "'Stack Sans Text', sans-serif",
                                 }}
                               >
                                 {startIndex + index + 1}
@@ -817,26 +828,40 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited
                                     fontSize: "0.65rem",
                                     fontWeight: 700,
                                     color: "#1976d2",
+                                    fontFamily: "'Stack Sans Text', sans-serif",
                                   }}
                                 >
                                   {task.assigned_by?.charAt(0).toUpperCase()}
                                 </Typography>
                               </Box>
-                              <Typography sx={{ fontSize: "0.8rem" }}>
+                              <Typography
+                                sx={{
+                                  fontSize: "0.8rem",
+                                  fontFamily: "'Stack Sans Text', sans-serif",
+                                }}
+                              >
                                 {task.assigned_by}
                               </Typography>
                             </Box>
                           </td>
                           <td style={tdStyle}>
                             <Typography
-                              sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}
+                              sx={{
+                                fontSize: "0.8rem",
+                                lineHeight: 1.5,
+                                fontFamily: "'Stack Sans Text', sans-serif",
+                              }}
                             >
                               {task.project_details}
                             </Typography>
                           </td>
                           <td style={tdStyle}>
                             <Typography
-                              sx={{ fontSize: "0.8rem", lineHeight: 1.5 }}
+                              sx={{
+                                fontSize: "0.8rem",
+                                lineHeight: 1.5,
+                                fontFamily: "'Stack Sans Text', sans-serif",
+                              }}
                             >
                               {isExpanded
                                 ? task.task_desc
@@ -878,7 +903,12 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited
                             {formatDate(task.deadline)}
                           </td>
                           <td style={tdStyle}>
-                            <Typography sx={{ fontSize: "0.8rem" }}>
+                            <Typography
+                              sx={{
+                                fontSize: "0.8rem",
+                                fontFamily: "'Stack Sans Text', sans-serif",
+                              }}
+                            >
                               {isRemarksExpanded
                                 ? task.remarks
                                 : getFirstThreeWords(task.remarks)}
@@ -966,7 +996,8 @@ const Tables = ({ type, tableData, loading = true, onEmployeeClick, onTaskEdited
           open={editModal}
           onClose={() => setEditModal(false)}
           type={editModalType}
-          onSaved = {(id) => onTaskEdited?.id}
+          onSaved={(id) => onTaskEdited?.id}
+          onRefresh={onRefresh}
         />
         <TasksModal
           open={showEmployeeTasks}

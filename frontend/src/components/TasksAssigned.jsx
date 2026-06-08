@@ -65,14 +65,14 @@ const TasksAssigned = ({ open, onClose, projects, employees, workTypes }) => {
   const [selectedWorkType, setSelectedWorkType] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [deadline, setDeadline] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+  const [deadline, setDeadline] = useState(today);
   const [toastStatus, setToastStatus] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [projectCodeLoading, setProjectCodeLoading] = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
   const todayDisplay = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
