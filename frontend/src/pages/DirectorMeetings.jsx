@@ -51,7 +51,7 @@ const DirectorMeetings = () => {
   useEffect(() => {
     const designation = sessionStorage.getItem("designation") || "";
     if (!designation.toUpperCase().includes("DIRECTOR")) setAccessDenied(true);
-    // axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
+    axios.defaults.baseURL = "https://mcpl-task-management-system.vercel.app/";
   }, []);
 
   useEffect(() => {
@@ -68,9 +68,14 @@ const DirectorMeetings = () => {
   // ── NEW: Fetch the scheduled next meeting ─────────────────────────────────
   useEffect(() => {
     axios
-      .get("/getScheduledNextMeetingData")
+      .get("http://localhost:5002/getScheduledNextMeetingData")
       .then((res) => {
-        if (res.status === 200 && res.data) setScheduledMeeting(res.data);
+        if (res.status === 200 && res.data?.data?.length > 0) {
+          const latest = res.data.data[0]; // ← take the first record
+          console.log("Latest scheduled meeting:", latest);
+          setScheduledMeeting(latest);
+          console.log(scheduledMeeting);
+        }
       })
       .catch(console.error);
   }, []);
@@ -86,9 +91,9 @@ const DirectorMeetings = () => {
     }
   };
 
-  // ── Helper: format scheduled date nicely ─────────────────────────────────
-  const formattedScheduledDate = scheduledMeeting?.scheduledDate
-    ? new Date(scheduledMeeting.scheduledDate + "T00:00:00").toLocaleDateString(
+  // Fix 2: formatted date helper — use correct field name + parse ISO string directly
+  const formattedScheduledDate = scheduledMeeting?.scheduledMeetingDate
+    ? new Date(scheduledMeeting.scheduledMeetingDate).toLocaleDateString(
         "en-IN",
         {
           day: "numeric",
@@ -98,18 +103,19 @@ const DirectorMeetings = () => {
       )
     : null;
 
-  // ── Helper: how many days away is the next meeting? ──────────────────────
+  // Fix 3: days until meeting — use correct field name
   const daysUntilMeeting = (() => {
-    if (!scheduledMeeting?.scheduledDate) return null;
+    if (!scheduledMeeting?.scheduledMeetingDate) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const target = new Date(scheduledMeeting.scheduledDate + "T00:00:00");
+    const target = new Date(scheduledMeeting.scheduledMeetingDate);
+    target.setHours(0, 0, 0, 0);
     const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
     return diff;
   })();
 
   return (
-    <div className="min-h-screen bg-[#f5f6ff] w-screen min-w-full">
+    <div className="min-h-screen bg-[#f5f6ff] w-screen min-w-full overflow-x-hidden">
       <Navbar />
 
       {/* ── Hero Header ── */}
@@ -210,7 +216,7 @@ const DirectorMeetings = () => {
           </div>
 
           {/* ── NEW: Scheduled Next Meeting Banner ──────────────────────── */}
-          {scheduledMeeting?.scheduledDate && (
+          {scheduledMeeting?.scheduledMeetingDate && (
             <div
               className="inline-flex items-center gap-3 mt-4 px-4 py-2.5 rounded-xl border"
               style={{

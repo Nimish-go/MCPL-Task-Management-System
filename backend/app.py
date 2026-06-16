@@ -34,27 +34,28 @@ def getUserId(empName):
     user_id = cursor.fetchone()
     return user_id[0]
 
-# def sendScheduledMeetingEmail(to_email,meeting_title, meeting_date, agenda_html, organizer):
-#     template_params = {
-#         "to_email" : to_email,
-#         "meeting_title" : meeting_title,
-#         "meeting_date" : meeting_date,
-#         "agenda_html" : agenda_html,
-#         "organizer" : organizer
-#     }
+def sendScheduledMeetingEmail(to_email,meeting_title, meeting_date, agenda_html, organizer, director_name):
+    template_params = {
+        "to_email" : to_email,
+        "meeting_title" : meeting_title,
+        "meeting_date" : meeting_date,
+        "agenda_html" : agenda_html,
+        "organizer" : organizer,
+        "director_name" : director_name
+    }
     
-#     payload = {
-#         "service_id" : "service_qwxjdpq",
-#         "template_id" : "template_gm6ip8s",
-#         "user_id" : os.environ.get("EMAILJS_API_KEY"),
-#         "template_params" : template_params
-#     }
+    payload = {
+        "service_id" : "service_qwxjdpq",
+        "template_id" : "template_gm6ip8s",
+        "user_id" : os.getenv("EMAILJS_API_KEY"),
+        "template_params" : template_params
+    }
     
-#     response = requests.post("https://api.emailjs.com/api/v1.0/email/send",json=payload,headers={
-#         "Content-Type" : "application/json"
-#     })
+    response = requests.post("https://api.emailjs.com/api/v1.0/email/send",json=payload,headers={
+        "Content-Type" : "application/json"
+    })
     
-#     return response.status_code, response.text
+    return response
 
 @app.route("/",methods=["GET"])
 def index():
@@ -199,7 +200,7 @@ def getEmployeeTasks():
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                       WHERE pm."ProjectCode" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE AND ph."ChangeStatus?" = TRUE ORDER BY ph."ProjectHistoryID" ASC """,[projectCode,getUserId(assignerName)])
+                       WHERE pm."ProjectCode" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[projectCode,getUserId(assignerName)])
     
         tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8], "assignedTo" : row[9] } for row in cursor.fetchall()]
     else:
@@ -207,7 +208,7 @@ def getEmployeeTasks():
                        FROM "ProjectHistory" ph
                        JOIN "ProjectMaster" pm ON ph."ProjectID" = pm."ProjectID"
                        JOIN "UserMaster" um ON ph."UserID" = um."UserID"
-                       WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE AND ph."ChangeStatus?" = TRUE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
+                       WHERE ph."UserID" = %s AND ph."AssignedBy" = %s AND ph."IsHistory" = FALSE ORDER BY ph."ProjectHistoryID" ASC """,[getUserId(empName),getUserId(assignerName)])
         tasks = [{ "id": row[0], "taskDesc" : row[1], "projectDetails" : row[2] + " : "+row[3], "remarks" : row[4], "deadline" : row[5], "dateOfEntry" : row[6], "status" : row[7], "isOverdue" : row[8], "assignedTo" : row[9] } for row in cursor.fetchall()]
     
     return jsonify(tasks), 200
@@ -843,8 +844,8 @@ def addDirectorMeetingRecord():
     cursor.execute(""" INSERT INTO "DirectorMeetingMaster"
                    ("MeetingDate", "MeetingTitle", 
                    "CrucialDecisions", "ParticipantDirectors", "ParticipantStaff", 
-                   "MOMPoints", "Remarks", "IsEdited", "AgendaPoints", "ActionPoints")
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING "MeetingID" """, [meetingDate, meetingTitle, crucialDecisions, directorsPresent, staffPresent, mom, remarks, False, agendaPoints, actionPoints])
+                   "MOMPoints", "Remarks", "IsEdited", "AgendaPoints", "ActionPoints","IsScheduled")
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s) RETURNING "MeetingID" """, [meetingDate, meetingTitle, crucialDecisions, directorsPresent, staffPresent, mom, remarks, False, agendaPoints, actionPoints, False])
     meetingId = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
@@ -859,12 +860,12 @@ def getDirectorMeetings():
     cursor = conn.cursor()
     
     cursor.execute(""" SELECT "MeetingID", "MeetingDate", "ParticipantDirectors", "ParticipantStaff", 
-                   "MOMPoints", "CrucialDecisions", "MeetingTitle", "Remarks", "MeetingAgenda" 
+                   "MOMPoints", "CrucialDecisions", "MeetingTitle", "Remarks", "MeetingAgenda", "AgendaPoints"
                    FROM "DirectorMeetingMaster" WHERE "IsScheduled" = FALSE ORDER BY "MeetingDate" ASC; """)
     
     directorMeetings = [{"id": row[0], "meetingDate": row[1], "directors": row[2], 
                         "staff": row[3], "mom": row[4], "crucialDecisions": row[5], 
-                        "meetingTitle" : row[6], "remarks": row[7], "agenda": row[8]}
+                        "meetingTitle" : row[6], "remarks": row[7], "agenda": row[8], "agendaPoints" : row[9]}
                        for row in cursor.fetchall()]
     
     return jsonify(directorMeetings), 200
@@ -1040,22 +1041,21 @@ def scheduleNextMeeting():
     meetingTitle = form.get("meetingTitle")
     organizer = form.get("organizer")
     
-    # agenda_html = ""
+    agenda_html = ""
+    agendaPointsToHtml = json.loads(agendaPoints)
 
-    # for section in agendaPoints:
-    #     agenda_html += f"""
-    #     <div style="margin-bottom:15px;">
-    #         <strong>{section['category']}</strong>
-    #         <ul>
-    #     """
-
-    # for agenda in section["title"]:
-    #     agenda_html += f"<li>{agenda}</li>"
-
-    #     agenda_html += """
-    #         </ul>
-    #     </div>
-    #     """
+    for section in agendaPointsToHtml:
+        agenda_html += f"""
+        <div style="margin-bottom:15px;">
+            <strong>{section['category']}</strong>
+            <ul>
+        """
+        for agenda in section["title"]:
+            agenda_html += f"<li>{agenda}</li>"
+            agenda_html += """
+                </ul>
+            </div>
+            """
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1064,11 +1064,16 @@ def scheduleNextMeeting():
     insertedId = cursor.fetchone()[0]
     conn.commit()
     if insertedId:
-        # cursor.execute(""" SELECT um."UserEmail", um."EmpName" FROM "UserMaster" um JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID" WHERE dm."DesignationName" LIKE %DIRECTOR% """)
-        # emails = [{"email" : row[0], "director_name" : row[1]}for row in cursor.fetchall()]
+        cursor.execute(""" SELECT um."UserEmail", um."EmpName" FROM "UserMaster" um JOIN "DesignationMaster" dm ON um."DesignationID" = dm."DesignationID" WHERE dm."DesignationName" LIKE '%DIRECTOR%' """)
+        emails = [{"email" : row[0], "director_name" : row[1]}for row in cursor.fetchall()]
+        print("Emails Array: ",emails)
         
-        # for email in emails:
-        #     sendScheduledMeetingEmail(to_email=email.email,)
+        for email in emails:
+            res = sendScheduledMeetingEmail(to_email=email["email"], director_name=email["director_name"], agenda_html=agenda_html, organizer=organizer, meeting_date=nextMeetingDate, meeting_title=meetingTitle)
+            if res.status_code == 200:
+                print("Email Sent..//")
+            else:
+                print(res.text)
         
         return jsonify({ "message" : "Meeting Scheduled Successfully. Scheduled Date: "+nextMeetingDate+"."}), 200
     else:
@@ -1079,8 +1084,10 @@ def getScheduledNextMeetingData():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute(""" SELECT "MeetingID", "MeetingTitle", "NextMeetingDate", "AgendaToBeDiscussed", "AgendaPointsToBeDiscussed" FROM "DirectorMeetingMaster" WHERE "NextMeetingDate" >= CURRENT_DATE ORDER "NextMeetingDate" ASC """)
+    cursor.execute(""" SELECT "MeetingID", "MeetingTitle", "NextMeetingDate", "AgendaToBeDiscussed", "AgendaPointsToBeDiscussed" FROM "DirectorMeetingMaster" WHERE "NextMeetingDate" >= CURRENT_DATE AND "IsScheduled" = TRUE ORDER BY "NextMeetingDate" ASC """)
     scheduledMeetingData = [{"id" : row[0], "title" : row[1], "scheduledMeetingDate" : row[2], "agendaToBeDiscussed" : row[3], "agendaPointsToBeDiscussed" : row[4]}for row in cursor.fetchall()]
+    
+    print("Scheduled Meeting Data: ",scheduledMeetingData)
     
     return jsonify({
         "status" : "success",
@@ -1088,11 +1095,11 @@ def getScheduledNextMeetingData():
         "data" : scheduledMeetingData
         }), 200
 
-@app.route("/log_overtime",methods=["GET"])
-def logOvertime():
+# @app.route("/log_overtime",methods=["GET"])
+# def logOvertime():
     
     
-    return jsonify(), 200
+#     return jsonify(), 200
 
 
 if __name__ == '__main__':

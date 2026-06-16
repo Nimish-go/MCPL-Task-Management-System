@@ -9,8 +9,12 @@ import {
 } from "@mui/joy";
 import { CalendarMonth, Group, Person } from "@mui/icons-material";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useEffect } from "react";
 
 const ViewPastMeetings = ({ meetingData, isLoading = false }) => {
+  useEffect(() => {
+    console.log(meetingData);
+  }, []);
   if (isLoading) {
     return (
       <Box
@@ -359,57 +363,341 @@ const ViewPastMeetings = ({ meetingData, isLoading = false }) => {
                       color: "text.secondary",
                       textTransform: "uppercase",
                       letterSpacing: 1,
-                      mb: 0.5,
+                      mb: 1.5,
                     }}
                   >
                     Agenda
                   </Typography>
-                  <Typography level="body-sm">
-                    {meeting.agenda || "—"}
-                  </Typography>
 
-                  {/* Agenda Points */}
-                  {meeting.agendaPoints?.length > 0 && (
-                    <Box sx={{ mt: 1.5 }}>
-                      {meeting.agendaPoints.map((point, i) => (
-                        <Box
-                          key={i}
-                          sx={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 1.5,
-                            mb: 0.8,
-                          }}
-                        >
+                  {meeting.agendaPoints?.length > 0 ? (
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                    >
+                      {meeting.agendaPoints.map((category, ci) => (
+                        <Box key={ci}>
+                          {/* Category Header */}
                           <Box
                             sx={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: "50%",
-                              backgroundColor: "#e65100",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                              mt: 0.1,
+                              gap: 1,
+                              mb: 1,
+                              px: 0.5,
                             }}
                           >
-                            <Typography
+                            <Box
                               sx={{
-                                color: "#fff",
-                                fontSize: "0.65rem",
+                                height: "2px",
+                                width: 16,
+                                backgroundColor: "#e65100",
+                                borderRadius: 2,
+                              }}
+                            />
+                            <Typography
+                              level="body-xs"
+                              sx={{
+                                color: "#e65100",
+                                textTransform: "uppercase",
+                                letterSpacing: 1,
                                 fontWeight: 700,
                               }}
                             >
-                              {i + 1}
+                              {category.id}
                             </Typography>
+                            <Box
+                              sx={{
+                                flex: 1,
+                                height: "1px",
+                                backgroundColor: "#f0e0a0",
+                              }}
+                            />
                           </Box>
-                          <Typography level="body-sm" sx={{ mt: 0.2 }}>
-                            {point}
-                          </Typography>
+
+                          {/* Agenda Points under this category */}
+                          <AccordionGroup
+                            variant="outlined"
+                            sx={{
+                              borderRadius: "8px",
+                              overflow: "hidden",
+                              backgroundColor: "#fff",
+                              "& .MuiAccordion-root": {
+                                border: "none",
+                                borderBottom: "1px solid #f5ead0",
+                                "&:last-child": { borderBottom: "none" },
+                              },
+                            }}
+                          >
+                            {category.agendaPoints?.map((point, pi) => (
+                              <Accordion key={pi}>
+                                <AccordionSummary
+                                  sx={{
+                                    px: 2,
+                                    py: 1,
+                                    "&:hover": { backgroundColor: "#fffbf5" },
+                                    transition: "background-color 0.2s ease",
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1.5,
+                                      width: "100%",
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: "50%",
+                                        backgroundColor: "#fff3e0",
+                                        border: "1.5px solid #e65100",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <Typography
+                                        sx={{
+                                          color: "#e65100",
+                                          fontSize: "0.6rem",
+                                          fontWeight: 700,
+                                        }}
+                                      >
+                                        {pi + 1}
+                                      </Typography>
+                                    </Box>
+                                    <Typography
+                                      level="title-sm"
+                                      fontWeight={600}
+                                    >
+                                      {point.selectedPoint || "Untitled Point"}
+                                    </Typography>
+                                    {point.actionPoints?.length > 0 && (
+                                      <Chip
+                                        size="sm"
+                                        variant="soft"
+                                        color="primary"
+                                        sx={{ ml: "auto", mr: 1 }}
+                                      >
+                                        {point.actionPoints.length} action
+                                        {point.actionPoints.length !== 1
+                                          ? "s"
+                                          : ""}
+                                      </Chip>
+                                    )}
+                                  </Box>
+                                </AccordionSummary>
+
+                                <AccordionDetails
+                                  sx={{
+                                    px: 2,
+                                    pb: 2,
+                                    backgroundColor: "#fffdf7",
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 1.5,
+                                      mt: 1,
+                                    }}
+                                  >
+                                    {/* Description */}
+                                    {point.description && (
+                                      <Box>
+                                        <Typography
+                                          level="body-xs"
+                                          sx={{
+                                            color: "text.secondary",
+                                            textTransform: "uppercase",
+                                            letterSpacing: 0.8,
+                                            mb: 0.3,
+                                          }}
+                                        >
+                                          Description
+                                        </Typography>
+                                        <Typography level="body-sm">
+                                          {point.description}
+                                        </Typography>
+                                      </Box>
+                                    )}
+
+                                    {/* Discussions */}
+                                    {point.discussions && (
+                                      <Box>
+                                        <Typography
+                                          level="body-xs"
+                                          sx={{
+                                            color: "text.secondary",
+                                            textTransform: "uppercase",
+                                            letterSpacing: 0.8,
+                                            mb: 0.3,
+                                          }}
+                                        >
+                                          Discussion
+                                        </Typography>
+                                        <Typography level="body-sm">
+                                          {point.discussions}
+                                        </Typography>
+                                      </Box>
+                                    )}
+
+                                    {/* Decisions */}
+                                    {point.decisions && (
+                                      <Box
+                                        sx={{
+                                          p: 1.2,
+                                          borderRadius: "6px",
+                                          backgroundColor: "#fff3e0",
+                                          border: "1px solid #ffcc80",
+                                        }}
+                                      >
+                                        <Typography
+                                          level="body-xs"
+                                          sx={{
+                                            color: "#e65100",
+                                            textTransform: "uppercase",
+                                            letterSpacing: 0.8,
+                                            fontWeight: 700,
+                                            mb: 0.3,
+                                          }}
+                                        >
+                                          ⚡ Decision
+                                        </Typography>
+                                        <Typography level="body-sm">
+                                          {point.decisions}
+                                        </Typography>
+                                      </Box>
+                                    )}
+
+                                    {/* Action Points */}
+                                    {point.actionPoints?.length > 0 && (
+                                      <Box>
+                                        <Typography
+                                          level="body-xs"
+                                          sx={{
+                                            color: "#1976d2",
+                                            textTransform: "uppercase",
+                                            letterSpacing: 0.8,
+                                            fontWeight: 700,
+                                            mb: 0.8,
+                                          }}
+                                        >
+                                          Action Points
+                                        </Typography>
+                                        <Box
+                                          sx={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 0.8,
+                                          }}
+                                        >
+                                          {point.actionPoints.map((ap, j) => (
+                                            <Box
+                                              key={j}
+                                              sx={{
+                                                display: "flex",
+                                                gap: 1.5,
+                                                alignItems: "flex-start",
+                                                p: 1.2,
+                                                borderRadius: "6px",
+                                                backgroundColor: "#f0f4ff",
+                                                border: "1px solid #d0d9f0",
+                                              }}
+                                            >
+                                              <Box
+                                                sx={{
+                                                  width: 18,
+                                                  height: 18,
+                                                  borderRadius: "50%",
+                                                  backgroundColor: "#1976d2",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                  flexShrink: 0,
+                                                  mt: 0.2,
+                                                }}
+                                              >
+                                                <Typography
+                                                  sx={{
+                                                    color: "#fff",
+                                                    fontSize: "0.55rem",
+                                                    fontWeight: 700,
+                                                  }}
+                                                >
+                                                  {j + 1}
+                                                </Typography>
+                                              </Box>
+                                              <Box sx={{ flex: 1 }}>
+                                                <Typography
+                                                  level="body-sm"
+                                                  fontWeight={600}
+                                                >
+                                                  {ap.description}
+                                                </Typography>
+                                                <Typography
+                                                  level="body-xs"
+                                                  sx={{
+                                                    color: "text.secondary",
+                                                    mt: 0.3,
+                                                  }}
+                                                >
+                                                  {ap.assignedTo?.name}
+                                                  {ap.assignedTo?.designation
+                                                    ? ` · ${ap.assignedTo.designation}`
+                                                    : ""}
+                                                </Typography>
+                                                {ap.deadline && (
+                                                  <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                      color: "#e65100",
+                                                      mt: 0.2,
+                                                    }}
+                                                  >
+                                                    Due:{" "}
+                                                    {new Date(
+                                                      ap.deadline,
+                                                    ).toDateString()}
+                                                  </Typography>
+                                                )}
+                                                {ap.project?.name && (
+                                                  <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                      color: "text.tertiary",
+                                                      mt: 0.2,
+                                                      fontStyle: "italic",
+                                                    }}
+                                                  >
+                                                    {ap.project.code} –{" "}
+                                                    {ap.project.name}
+                                                  </Typography>
+                                                )}
+                                              </Box>
+                                            </Box>
+                                          ))}
+                                        </Box>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                </AccordionDetails>
+                              </Accordion>
+                            ))}
+                          </AccordionGroup>
                         </Box>
                       ))}
                     </Box>
+                  ) : (
+                    <Typography
+                      level="body-xs"
+                      sx={{ color: "text.tertiary", mt: 0.5 }}
+                    >
+                      No agenda points recorded.
+                    </Typography>
                   )}
                 </Box>
 
