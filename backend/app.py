@@ -1069,11 +1069,12 @@ def scheduleNextMeeting():
         print("Emails Array: ",emails)
         
         for email in emails:
-            res = sendScheduledMeetingEmail(to_email=email["email"], director_name=email["director_name"], agenda_html=agenda_html, organizer=organizer, meeting_date=nextMeetingDate, meeting_title=meetingTitle)
-            if res.status_code == 200:
-                print("Email Sent..//")
-            else:
-                print(res.text)
+            print(emails)
+            # res = sendScheduledMeetingEmail(to_email=email["email"], director_name=email["director_name"], agenda_html=agenda_html, organizer=organizer, meeting_date=nextMeetingDate, meeting_title=meetingTitle)
+            # if res.status_code == 200:
+            #     print("Email Sent..//")
+            # else:
+            #     print(res.text)
         
         return jsonify({ "message" : "Meeting Scheduled Successfully. Scheduled Date: "+nextMeetingDate+"."}), 200
     else:

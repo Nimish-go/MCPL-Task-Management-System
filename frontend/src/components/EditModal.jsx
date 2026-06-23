@@ -83,7 +83,8 @@ const styles = {
   },
   divider: {
     height: "1px",
-    background: "linear-gradient(90deg, rgba(99,179,237,0.2) 0%, transparent 100%)",
+    background:
+      "linear-gradient(90deg, rgba(99,179,237,0.2) 0%, transparent 100%)",
     marginBottom: "1.5rem",
   },
   infoCard: {
@@ -294,8 +295,9 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
     const interval = setInterval(() => {
       setLoadingIndex((prev) => {
         let next;
-        do { next = Math.floor(Math.random() * loadingMessages.length); }
-        while (next === prev);
+        do {
+          next = Math.floor(Math.random() * loadingMessages.length);
+        } while (next === prev);
         return next;
       });
     }, 1500);
@@ -345,7 +347,7 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
         if (res.status === 200) {
           const data = res.data;
           setToastStatus(data.status);
-          setToastMessage(data.message);
+          setToastMessage(data.message+" Please Refresh the dashboard once.");
           setToastShow(true);
           window.location.reload();
         }
@@ -360,7 +362,9 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
   };
 
   const isUnderReview = type === "underReview";
-  const handleSave = isUnderReview ? handleTasksUnderReviewUpdate : handleTaskUpdate;
+  const handleSave = isUnderReview
+    ? handleTasksUnderReviewUpdate
+    : handleTaskUpdate;
 
   return (
     <>
@@ -372,7 +376,10 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
               top: "1rem",
               right: "1rem",
               color: "rgba(162,183,206,0.5)",
-              "&:hover": { color: "#e2eaf4", background: "rgba(255,255,255,0.06)" },
+              "&:hover": {
+                color: "#e2eaf4",
+                background: "rgba(255,255,255,0.06)",
+              },
             }}
           />
 
@@ -401,7 +408,10 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
               <LoadingState text={loadingMessages[loadingIndex]} />
             ) : (
               <div className="edit-modal-form">
-                <InfoCard taskDesc={taskData.taskDesc} remarks={taskData.remarks} />
+                <InfoCard
+                  taskDesc={taskData.taskDesc}
+                  remarks={taskData.remarks}
+                />
                 <FieldGroup
                   label="Task Description Update"
                   placeholder="What changed? Describe the update…"
@@ -414,7 +424,9 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
                 />
                 {isUnderReview && (
                   <FormControl style={{ marginBottom: "0.85rem" }}>
-                    <FormLabel style={styles.fieldLabel}>Update Status</FormLabel>
+                    <FormLabel style={styles.fieldLabel}>
+                      Update Status
+                    </FormLabel>
                     <Select
                       className="edit-modal-select"
                       placeholder="Select new status…"
@@ -422,13 +434,34 @@ const EditModal = ({ open, onClose, taskId, type, onSaved }) => {
                       sx={styles.selectWrap}
                     >
                       <Option value="Pending">
-                        <Chip color="warning" size="sm" variant="soft" sx={{ fontWeight: 600 }}>Pending</Chip>
+                        <Chip
+                          color="warning"
+                          size="sm"
+                          variant="soft"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          Pending
+                        </Chip>
                       </Option>
                       <Option value="Reloaded">
-                        <Chip color="danger" size="sm" variant="soft" sx={{ fontWeight: 600 }}>Reloaded</Chip>
+                        <Chip
+                          color="danger"
+                          size="sm"
+                          variant="soft"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          Reloaded
+                        </Chip>
                       </Option>
                       <Option value="Cleared">
-                        <Chip color="success" size="sm" variant="soft" sx={{ fontWeight: 600 }}>Cleared</Chip>
+                        <Chip
+                          color="success"
+                          size="sm"
+                          variant="soft"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          Cleared
+                        </Chip>
                       </Option>
                     </Select>
                   </FormControl>

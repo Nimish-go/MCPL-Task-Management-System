@@ -119,7 +119,14 @@ const PaginationBar = ({
     }}
   >
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-      <Typography level="body-xs" sx={{ color: "#64748b", fontWeight: 500, fontFamily: "'Stack Sans Text', sans-serif", }}>
+      <Typography
+        level="body-xs"
+        sx={{
+          color: "#64748b",
+          fontWeight: 500,
+          fontFamily: "'Stack Sans Text', sans-serif",
+        }}
+      >
         Rows:
       </Typography>
       <Select

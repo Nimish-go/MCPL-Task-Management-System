@@ -11,13 +11,15 @@ const useEmail = () => {
     setError(null);
     setSuccess(false);
 
+    const emailJsAPIKEY = import.meta.env.EMAILJS_API_KEY;
+
     try {
       const response = await emailjs.send(
         "service_7pvvf5q",
         "template_8u3047w",
         templateParams,
         {
-          publicKey: "OwPNSSva-FXe5igPJ",
+          publicKey: emailJsAPIKEY,
         },
       );
       setSuccess(true);

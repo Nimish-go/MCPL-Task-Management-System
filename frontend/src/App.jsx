@@ -21,28 +21,37 @@ import "primeicons/primeicons.css";
 import LeaveManagement from "./pages/LeaveManagement";
 import Navbar from "./components/Navbar";
 
-function App() {
+// App.jsx
+
+function ProtectedRoute() {
   const empName = sessionStorage.getItem("empName");
+  const isLoggedIn = empName && empName !== "" && empName !== undefined;
 
-  const isLoggedIn = empName && empName !== "" && empName != undefined;
+  return isLoggedIn ? <Outlet /> : <Navigate to="/" replace/>;
+}
 
+function App() {
   return (
     <div>
       <BrowserRouter>
         <Routes>
-          <Route
-            path="/"
-            element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login />}
-          />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin_panel" element={<AdminPanel />} />
-          <Route path="/proj_hist_report" element={<ProjectHistoryReport />} />
-          <Route
-            path="/tasks_perform_report"
-            element={<TasksPerformedReport />}
-          />
-          <Route path="/director_meetings" element={<DirectorMeetings />} />
-          <Route path="/leave_management" element={<LeaveManagement />} />
+          <Route path="/" element={<Login />} />
+
+          {/* All protected routes go inside this wrapper */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin_panel" element={<AdminPanel />} />
+            <Route
+              path="/proj_hist_report"
+              element={<ProjectHistoryReport />}
+            />
+            <Route
+              path="/tasks_perform_report"
+              element={<TasksPerformedReport />}
+            />
+            <Route path="/director_meetings" element={<DirectorMeetings />} />
+            <Route path="/leave_management" element={<LeaveManagement />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </div>

@@ -1516,11 +1516,7 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                     dataKey="value"
                   >
                     {pieData.map((i) => (
-                      <Cell
-                        key={i}
-                        fill={getPieColor(i.name)}
-                        stroke="none"
-                      />
+                      <Cell key={i} fill={getPieColor(i.name)} stroke="none" />
                     ))}
                   </Pie>
                   <RechartsTooltip content={<CustomTooltip />} />
@@ -1639,6 +1635,7 @@ const DashboardTasksUnderReview = ({ refreshKey = 0, onRefresh }) => {
                   <Box
                     sx={{
                       display: "flex",
+                      width: "100%",
                       alignItems: "center",
                       gap: 1,
                       textAlign: "center",
