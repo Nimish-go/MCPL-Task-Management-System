@@ -44,6 +44,10 @@ def sendScheduledMeetingEmail(to_email,meeting_title, meeting_date, agenda_html,
         "director_name" : director_name
     }
     
+    public_key = os.getenv("EMAILJS_API_KEY")
+    
+    print(f"Public Key: '{public_key}'")
+    
     payload = {
         "service_id" : "service_qwxjdpq",
         "template_id" : "template_gm6ip8s",
