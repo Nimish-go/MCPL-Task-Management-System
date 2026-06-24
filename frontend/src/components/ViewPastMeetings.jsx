@@ -11,6 +11,51 @@ import { CalendarMonth, Group, Person } from "@mui/icons-material";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useEffect } from "react";
 
+// ─── Shared HTML renderer styles for PrimeReact Editor output ─────────────
+const htmlRendererSx = {
+  fontSize: "0.875rem",
+  lineHeight: 1.7,
+  color: "text.primary",
+  // Headings
+  "& h1": { fontSize: "1.2rem", fontWeight: 700, mb: 1, mt: 1.5, color: "inherit" },
+  "& h2": { fontSize: "1.05rem", fontWeight: 700, mb: 0.8, mt: 1.2, color: "inherit" },
+  "& h3": { fontSize: "0.95rem", fontWeight: 600, mb: 0.6, mt: 1, color: "inherit" },
+  // Lists
+  "& ol": { listStyleType: "decimal", pl: 3, mb: 0.5 },
+  "& ul": { listStyleType: "disc !important", pl: 3, mb: 0.5 },
+  "& ol li": { listStyleType: "decimal", mb: 0.4 },
+  "& ul li": { listStyleType: "disc !important", mb: 0.4 },
+  // Paragraphs & inline
+  "& p": { mb: 0.5, mt: 0 },
+  "& strong": { fontWeight: 700 },
+  "& em": { fontStyle: "italic" },
+  "& u": { textDecoration: "underline" },
+  "& s": { textDecoration: "line-through" },
+  // Blockquote
+  "& blockquote": {
+    borderLeft: "3px solid #e0c080",
+    pl: 1.5,
+    ml: 0,
+    color: "text.secondary",
+    fontStyle: "italic",
+  },
+  // Code
+  "& pre": {
+    backgroundColor: "#f4f4f4",
+    borderRadius: "6px",
+    p: 1,
+    fontSize: "0.8rem",
+    overflowX: "auto",
+  },
+  "& code": {
+    backgroundColor: "#f4f4f4",
+    borderRadius: "3px",
+    px: 0.5,
+    fontSize: "0.82rem",
+    fontFamily: "monospace",
+  },
+};
+
 const ViewPastMeetings = ({
   meetingData,
   isLoading = false,
@@ -19,6 +64,7 @@ const ViewPastMeetings = ({
   useEffect(() => {
     console.log(meetingData);
   }, []);
+
   if (isLoading) {
     return (
       <Box
@@ -131,7 +177,6 @@ const ViewPastMeetings = ({
                     width: "100%",
                   }}
                 >
-                  {/* Index circle */}
                   <Box
                     sx={{
                       width: 36,
@@ -145,30 +190,21 @@ const ViewPastMeetings = ({
                     }}
                   >
                     <Typography
-                      sx={{
-                        fontSize: "0.85rem",
-                        fontWeight: 700,
-                        color: "#1976d2",
-                      }}
+                      sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#1976d2" }}
                     >
                       {index + 1}
                     </Typography>
                   </Box>
 
-                  {/* Title & Date */}
                   <Box sx={{ flex: 1 }}>
                     <Typography level="title-sm" fontWeight={600}>
                       {meeting.meetingTitle || "Untitled Meeting"}
                     </Typography>
-                    <Typography
-                      level="body-xs"
-                      sx={{ color: "text.secondary", mt: 0.3 }}
-                    >
+                    <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.3 }}>
                       {new Date(meeting.meetingDate).toDateString()}
                     </Typography>
                   </Box>
 
-                  {/* Chips */}
                   <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                     <Chip
                       size="sm"
@@ -190,9 +226,7 @@ const ViewPastMeetings = ({
                 </Box>
               </AccordionSummary>
 
-              <AccordionDetails
-                sx={{ px: 3, pb: 3, backgroundColor: "#fafbff" }}
-              >
+              <AccordionDetails sx={{ px: 3, pb: 3, backgroundColor: "#fafbff" }}>
                 {/* Date & Title Row */}
                 <Box sx={{ display: "flex", gap: 2, mb: 2, mt: 1 }}>
                   <Box
@@ -206,11 +240,7 @@ const ViewPastMeetings = ({
                   >
                     <Typography
                       level="body-xs"
-                      sx={{
-                        color: "text.secondary",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
+                      sx={{ color: "text.secondary", textTransform: "uppercase", letterSpacing: 1 }}
                     >
                       Meeting Date
                     </Typography>
@@ -229,11 +259,7 @@ const ViewPastMeetings = ({
                   >
                     <Typography
                       level="body-xs"
-                      sx={{
-                        color: "text.secondary",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
+                      sx={{ color: "text.secondary", textTransform: "uppercase", letterSpacing: 1 }}
                     >
                       Meeting Title
                     </Typography>
@@ -256,33 +282,17 @@ const ViewPastMeetings = ({
                   >
                     <Typography
                       level="body-xs"
-                      sx={{
-                        color: "text.secondary",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                        mb: 1,
-                      }}
+                      sx={{ color: "text.secondary", textTransform: "uppercase", letterSpacing: 1, mb: 1 }}
                     >
                       Directors Present
                     </Typography>
                     {meeting.directors?.length === 0 || !meeting.directors ? (
-                      <Typography
-                        level="body-xs"
-                        sx={{ color: "text.tertiary" }}
-                      >
+                      <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                         None
                       </Typography>
                     ) : (
                       meeting.directors.map((d, i) => (
-                        <Box
-                          key={i}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 0.5,
-                          }}
-                        >
+                        <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
                           <Box
                             sx={{
                               width: 7,
@@ -308,33 +318,17 @@ const ViewPastMeetings = ({
                   >
                     <Typography
                       level="body-xs"
-                      sx={{
-                        color: "text.secondary",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                        mb: 1,
-                      }}
+                      sx={{ color: "text.secondary", textTransform: "uppercase", letterSpacing: 1, mb: 1 }}
                     >
                       Staff Present
                     </Typography>
                     {meeting.staff?.length === 0 || !meeting.staff ? (
-                      <Typography
-                        level="body-xs"
-                        sx={{ color: "text.tertiary" }}
-                      >
+                      <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                         None
                       </Typography>
                     ) : (
                       meeting.staff.map((s, i) => (
-                        <Box
-                          key={i}
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 0.5,
-                          }}
-                        >
+                        <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
                           <Box
                             sx={{
                               width: 7,
@@ -351,7 +345,7 @@ const ViewPastMeetings = ({
                   </Box>
                 </Box>
 
-                {/* Agenda */}
+                {/* ── Agenda ──────────────────────────────────────────── */}
                 <Box
                   sx={{
                     p: 2,
@@ -374,28 +368,15 @@ const ViewPastMeetings = ({
                   </Typography>
 
                   {meeting.agendaPoints?.length > 0 ? (
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                    >
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                       {meeting.agendaPoints.map((category, ci) => (
                         <Box key={ci}>
                           {/* Category Header */}
                           <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              mb: 1,
-                              px: 0.5,
-                            }}
+                            sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, px: 0.5 }}
                           >
                             <Box
-                              sx={{
-                                height: "2px",
-                                width: 16,
-                                backgroundColor: "#e65100",
-                                borderRadius: 2,
-                              }}
+                              sx={{ height: "2px", width: 16, backgroundColor: "#e65100", borderRadius: 2 }}
                             />
                             <Typography
                               level="body-xs"
@@ -408,16 +389,10 @@ const ViewPastMeetings = ({
                             >
                               {category.id}
                             </Typography>
-                            <Box
-                              sx={{
-                                flex: 1,
-                                height: "1px",
-                                backgroundColor: "#f0e0a0",
-                              }}
-                            />
+                            <Box sx={{ flex: 1, height: "1px", backgroundColor: "#f0e0a0" }} />
                           </Box>
 
-                          {/* Agenda Points under this category */}
+                          {/* Agenda Points accordion */}
                           <AccordionGroup
                             variant="outlined"
                             sx={{
@@ -431,31 +406,35 @@ const ViewPastMeetings = ({
                               },
                             }}
                           >
-                            {category.agendaPoints?.map((point, pi) => (
-                              <>
+                            {category.agendaPoints?.map((point, pi) => {
+                              // Strip HTML to check if there's actual content (new records)
+                              const notesText = (point.notes || "").replace(/<[^>]*>/g, "").trim();
+                              // hasNotes covers both new (point.notes HTML) and legacy (plain-text fields)
+                              const hasNotes =
+                                notesText.length > 0 ||
+                                !!point.description ||
+                                !!point.discussions ||
+                                !!point.decisions;
+                              const hasActionPoints = point.actionPoints?.length > 0;
+
+                              return (
                                 <Accordion key={pi}>
                                   <AccordionSummary
                                     sx={{
                                       px: 2,
                                       py: 1,
-                                      "&:hover": {
-                                        backgroundColor: "#fffbf5",
-                                      },
+                                      "&:hover": { backgroundColor: "#fffbf5" },
                                       transition: "background-color 0.2s ease",
                                     }}
                                   >
                                     <Box
-                                      sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1.5,
-                                        width: "100%",
-                                      }}
+                                      sx={{ display: "flex", alignItems: "center", gap: 1.5, width: "100%" }}
                                     >
+                                      {/* Point number badge */}
                                       <Box
                                         sx={{
-                                          width: 20,
-                                          height: 20,
+                                          width: 22,
+                                          height: 22,
                                           borderRadius: "50%",
                                           backgroundColor: "#fff3e0",
                                           border: "1.5px solid #e65100",
@@ -466,124 +445,164 @@ const ViewPastMeetings = ({
                                         }}
                                       >
                                         <Typography
-                                          sx={{
-                                            color: "#e65100",
-                                            fontSize: "0.6rem",
-                                            fontWeight: 700,
-                                          }}
+                                          sx={{ color: "#e65100", fontSize: "0.6rem", fontWeight: 700 }}
                                         >
                                           {pi + 1}
                                         </Typography>
                                       </Box>
-                                      <Typography
-                                        level="title-sm"
-                                        fontWeight={600}
-                                      >
-                                        {point.selectedPoint
-                                          ? point.selectedPoint
-                                          : "Nothing was discussed"}
+
+                                      {/* Point title */}
+                                      <Typography level="title-sm" fontWeight={600} sx={{ flex: 1 }}>
+                                        {point.selectedPoint || "Nothing was discussed"}
                                       </Typography>
-                                      {point.actionPoints?.length > 0 && (
-                                        <Chip
-                                          size="sm"
-                                          variant="soft"
-                                          color="primary"
-                                          sx={{ ml: "auto", mr: 1 }}
-                                        >
-                                          {point.actionPoints.length} action
-                                          {point.actionPoints.length !== 1
-                                            ? "s"
-                                            : ""}
-                                        </Chip>
-                                      )}
+
+                                      {/* Badges */}
+                                      <Box sx={{ display: "flex", gap: 0.75, alignItems: "center", flexShrink: 0 }}>
+                                        {hasNotes && (
+                                          <Chip
+                                            size="sm"
+                                            variant="soft"
+                                            sx={{
+                                              bgcolor: "#fffbf0",
+                                              color: "#b45309",
+                                              border: "1px solid #f0e0a0",
+                                              fontSize: "0.62rem",
+                                              fontWeight: 700,
+                                              height: 20,
+                                            }}
+                                          >
+                                            📝 Notes
+                                          </Chip>
+                                        )}
+                                        {hasActionPoints && (
+                                          <Chip
+                                            size="sm"
+                                            variant="soft"
+                                            color="primary"
+                                            sx={{ fontSize: "0.62rem", fontWeight: 700, height: 20 }}
+                                          >
+                                            {point.actionPoints.length} action{point.actionPoints.length !== 1 ? "s" : ""}
+                                          </Chip>
+                                        )}
+                                      </Box>
                                     </Box>
                                   </AccordionSummary>
 
-                                  <AccordionDetails
-                                    sx={{
-                                      px: 2,
-                                      pb: 2,
-                                      backgroundColor: "#fffdf7",
-                                    }}
-                                  >
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 1.5,
-                                        mt: 1,
-                                      }}
-                                    >
-                                      {/* Description */}
-                                      {point.description && (
-                                        <Box>
-                                          <Typography
-                                            level="body-xs"
-                                            sx={{
-                                              color: "text.secondary",
-                                              textTransform: "uppercase",
-                                              letterSpacing: 0.8,
-                                              mb: 0.3,
-                                            }}
-                                          >
-                                            Description
-                                          </Typography>
-                                          <Typography level="body-sm">
-                                            {point.description}
-                                          </Typography>
-                                        </Box>
-                                      )}
+                                  <AccordionDetails sx={{ px: 2, pb: 2, backgroundColor: "#fffdf7" }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1 }}>
 
-                                      {/* Discussions */}
-                                      {point.discussions && (
-                                        <Box>
-                                          <Typography
-                                            level="body-xs"
-                                            sx={{
-                                              color: "text.secondary",
-                                              textTransform: "uppercase",
-                                              letterSpacing: 0.8,
-                                              mb: 0.3,
-                                            }}
-                                          >
-                                            Discussion
-                                          </Typography>
-                                          <Typography level="body-sm">
-                                            {point.discussions}
-                                          </Typography>
-                                        </Box>
-                                      )}
-
-                                      {/* Decisions */}
-                                      {point.decisions && (
+                                      {/* ── Discussions & Decisions ──
+                                          New records  → point.notes (HTML from editor)
+                                          Legacy records → point.description / discussions / decisions (plain text) */}
+                                      {notesText.length > 0 ? (
                                         <Box
                                           sx={{
-                                            p: 1.2,
-                                            borderRadius: "6px",
-                                            backgroundColor: "#fff3e0",
-                                            border: "1px solid #ffcc80",
+                                            p: 2,
+                                            borderRadius: "8px",
+                                            backgroundColor: "#fff",
+                                            border: "1px solid #e8d8b8",
                                           }}
                                         >
                                           <Typography
                                             level="body-xs"
                                             sx={{
-                                              color: "#e65100",
+                                              color: "#7a5c30",
                                               textTransform: "uppercase",
                                               letterSpacing: 0.8,
                                               fontWeight: 700,
-                                              mb: 0.3,
+                                              mb: 1,
                                             }}
                                           >
-                                            ⚡ Decision
+                                            📝 Discussions &amp; Decisions
                                           </Typography>
-                                          <Typography level="body-sm">
-                                            {point.decisions}
-                                          </Typography>
+                                          <Box
+                                            sx={htmlRendererSx}
+                                            dangerouslySetInnerHTML={{ __html: point.notes }}
+                                          />
                                         </Box>
+                                      ) : (point.description || point.discussions || point.decisions) ? (
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+                                          {point.description && (
+                                            <Box
+                                              sx={{
+                                                p: 1.5,
+                                                borderRadius: "8px",
+                                                backgroundColor: "#fff",
+                                                border: "1px solid #e8d8b8",
+                                              }}
+                                            >
+                                              <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                  color: "#7a5c30",
+                                                  textTransform: "uppercase",
+                                                  letterSpacing: 0.8,
+                                                  fontWeight: 700,
+                                                  mb: 0.4,
+                                                }}
+                                              >
+                                                Description
+                                              </Typography>
+                                              <Typography level="body-sm">{point.description}</Typography>
+                                            </Box>
+                                          )}
+                                          {point.discussions && (
+                                            <Box
+                                              sx={{
+                                                p: 1.5,
+                                                borderRadius: "8px",
+                                                backgroundColor: "#fff",
+                                                border: "1px solid #e8d8b8",
+                                              }}
+                                            >
+                                              <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                  color: "#7a5c30",
+                                                  textTransform: "uppercase",
+                                                  letterSpacing: 0.8,
+                                                  fontWeight: 700,
+                                                  mb: 0.4,
+                                                }}
+                                              >
+                                                Discussion
+                                              </Typography>
+                                              <Typography level="body-sm">{point.discussions}</Typography>
+                                            </Box>
+                                          )}
+                                          {point.decisions && (
+                                            <Box
+                                              sx={{
+                                                p: 1.5,
+                                                borderRadius: "8px",
+                                                backgroundColor: "#fff3e0",
+                                                border: "1px solid #ffcc80",
+                                              }}
+                                            >
+                                              <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                  color: "#e65100",
+                                                  textTransform: "uppercase",
+                                                  letterSpacing: 0.8,
+                                                  fontWeight: 700,
+                                                  mb: 0.4,
+                                                }}
+                                              >
+                                                ⚡ Decision
+                                              </Typography>
+                                              <Typography level="body-sm">{point.decisions}</Typography>
+                                            </Box>
+                                          )}
+                                        </Box>
+                                      ) : (
+                                        <Typography level="body-xs" sx={{ color: "text.tertiary", fontStyle: "italic" }}>
+                                          No discussions or decisions recorded.
+                                        </Typography>
                                       )}
 
-                                      {/* Action Points */}
-                                      {point.actionPoints?.length > 0 && (
+                                      {/* ── Action Points ── */}
+                                      {hasActionPoints && (
                                         <Box>
                                           <Typography
                                             level="body-xs"
@@ -595,15 +614,9 @@ const ViewPastMeetings = ({
                                               mb: 0.8,
                                             }}
                                           >
-                                            Action Points
+                                            ✅ Action Points
                                           </Typography>
-                                          <Box
-                                            sx={{
-                                              display: "flex",
-                                              flexDirection: "column",
-                                              gap: 0.8,
-                                            }}
-                                          >
+                                          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
                                             {point.actionPoints.map((ap, j) => (
                                               <Box
                                                 key={j}
@@ -631,32 +644,22 @@ const ViewPastMeetings = ({
                                                   }}
                                                 >
                                                   <Typography
-                                                    sx={{
-                                                      color: "#fff",
-                                                      fontSize: "0.55rem",
-                                                      fontWeight: 700,
-                                                    }}
+                                                    sx={{ color: "#fff", fontSize: "0.55rem", fontWeight: 700 }}
                                                   >
                                                     {j + 1}
                                                   </Typography>
                                                 </Box>
                                                 <Box sx={{ flex: 1 }}>
-                                                  {/* Top row: description + status chip */}
                                                   <Box
                                                     sx={{
                                                       display: "flex",
                                                       alignItems: "center",
-                                                      justifyContent:
-                                                        "space-between",
+                                                      justifyContent: "space-between",
                                                       gap: 1,
                                                       flexWrap: "wrap",
                                                     }}
                                                   >
-                                                    <Typography
-                                                      level="body-sm"
-                                                      fontWeight={600}
-                                                      sx={{ flex: 1 }}
-                                                    >
+                                                    <Typography level="body-sm" fontWeight={600} sx={{ flex: 1 }}>
                                                       {ap.description}
                                                     </Typography>
                                                     {actionPointStatus && (
@@ -664,66 +667,35 @@ const ViewPastMeetings = ({
                                                         size="sm"
                                                         variant="soft"
                                                         color={
-                                                          ap.status.toLowerCase() ===
-                                                          "completed"
+                                                          ap.status?.toLowerCase() === "completed"
                                                             ? "success"
-                                                            : ap.status.toLowerCase() ===
-                                                                "in progress"
+                                                            : ap.status?.toLowerCase() === "in progress"
                                                               ? "warning"
-                                                              : ap.status.toLowerCase() ===
-                                                                  "overdue"
+                                                              : ap.status?.toLowerCase() === "overdue"
                                                                 ? "danger"
                                                                 : "neutral"
                                                         }
-                                                        sx={{
-                                                          fontWeight: 600,
-                                                          textTransform:
-                                                            "capitalize",
-                                                          flexShrink: 0,
-                                                        }}
+                                                        sx={{ fontWeight: 600, textTransform: "capitalize", flexShrink: 0 }}
                                                       >
                                                         {actionPointStatus}
                                                       </Chip>
                                                     )}
                                                   </Box>
-
-                                                  <Typography
-                                                    level="body-xs"
-                                                    sx={{
-                                                      color: "text.secondary",
-                                                      mt: 0.3,
-                                                    }}
-                                                  >
+                                                  <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.3 }}>
                                                     {ap.assignedTo?.name}
-                                                    {ap.assignedTo?.designation
-                                                      ? ` · ${ap.assignedTo.designation}`
-                                                      : ""}
+                                                    {ap.assignedTo?.designation ? ` · ${ap.assignedTo.designation}` : ""}
                                                   </Typography>
                                                   {ap.deadline && (
-                                                    <Typography
-                                                      level="body-xs"
-                                                      sx={{
-                                                        color: "#e65100",
-                                                        mt: 0.2,
-                                                      }}
-                                                    >
-                                                      Due:{" "}
-                                                      {new Date(
-                                                        ap.deadline,
-                                                      ).toDateString()}
+                                                    <Typography level="body-xs" sx={{ color: "#e65100", mt: 0.2 }}>
+                                                      Due: {new Date(ap.deadline).toDateString()}
                                                     </Typography>
                                                   )}
                                                   {ap.project?.name && (
                                                     <Typography
                                                       level="body-xs"
-                                                      sx={{
-                                                        color: "text.tertiary",
-                                                        mt: 0.2,
-                                                        fontStyle: "italic",
-                                                      }}
+                                                      sx={{ color: "text.tertiary", mt: 0.2, fontStyle: "italic" }}
                                                     >
-                                                      {ap.project.code} –{" "}
-                                                      {ap.project.name}
+                                                      {ap.project.code} – {ap.project.name}
                                                     </Typography>
                                                   )}
                                                 </Box>
@@ -735,114 +707,15 @@ const ViewPastMeetings = ({
                                     </Box>
                                   </AccordionDetails>
                                 </Accordion>
-                              </>
-                            ))}
+                              );
+                            })}
                           </AccordionGroup>
                         </Box>
                       ))}
                     </Box>
                   ) : (
-                    <Typography
-                      level="body-xs"
-                      sx={{ color: "text.tertiary", mt: 0.5 }}
-                    >
+                    <Typography level="body-xs" sx={{ color: "text.tertiary", mt: 0.5 }}>
                       No agenda points recorded.
-                    </Typography>
-                  )}
-                </Box>
-
-                {/* Minutes of Meeting */}
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: "10px",
-                    backgroundColor: "#fafafa",
-                    border: "1px solid #e0e0e0",
-                    mb: 2,
-                  }}
-                >
-                  <Typography
-                    level="body-xs"
-                    sx={{
-                      color: "#1976d2",
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                      fontWeight: 700,
-                      mb: 1,
-                    }}
-                  >
-                    📋 Minutes of Meeting
-                  </Typography>
-                  {meeting.mom ? (
-                    <Box
-                      sx={{
-                        fontSize: "0.875rem",
-                        lineHeight: 1.6,
-                        "& ol": { listStyleType: "decimal", pl: 3, mb: 0.5 },
-                        "& ul": {
-                          listStyleType: "disc !important",
-                          pl: 3,
-                          mb: 0.5,
-                        },
-                        "& ol li": { listStyleType: "decimal" },
-                        "& ul li": { listStyleType: "disc !important" },
-                        "& li": { mb: 0.5 },
-                        "& p": { mb: 0.5 },
-                      }}
-                      dangerouslySetInnerHTML={{ __html: meeting.mom }}
-                    />
-                  ) : (
-                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                      No minutes recorded.
-                    </Typography>
-                  )}
-                </Box>
-
-                {/* Crucial Decisions */}
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: "10px",
-                    backgroundColor: "#fff8f0",
-                    border: "1px solid #f0c080",
-                    mb: 2,
-                  }}
-                >
-                  <Typography
-                    level="body-xs"
-                    sx={{
-                      color: "#e65100",
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                      fontWeight: 700,
-                      mb: 1,
-                    }}
-                  >
-                    ⚡ Crucial Decisions
-                  </Typography>
-                  {meeting.crucialDecisions ? (
-                    <Box
-                      sx={{
-                        fontSize: "0.875rem",
-                        lineHeight: 1.6,
-                        "& ol": { listStyleType: "decimal", pl: 3, mb: 0.5 },
-                        "& ul": {
-                          listStyleType: "disc !important",
-                          pl: 3,
-                          mb: 0.5,
-                        },
-                        "& ol li": { listStyleType: "decimal" },
-                        "& ul li": { listStyleType: "disc !important" },
-                        "& li": { mb: 0.5 },
-                        "& p": { mb: 0.5 },
-                      }}
-                      dangerouslySetInnerHTML={{
-                        __html: meeting.crucialDecisions,
-                      }}
-                    />
-                  ) : (
-                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                      No crucial decisions recorded.
                     </Typography>
                   )}
                 </Box>
