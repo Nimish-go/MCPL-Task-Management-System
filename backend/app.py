@@ -51,9 +51,7 @@ def sendScheduledMeetingEmail(to_email,meeting_title, meeting_date, agenda_html,
         "template_params" : template_params
     }
     
-    response = requests.post("https://api.emailjs.com/api/v1.0/email/send",json=payload,headers={
-        "Content-Type" : "application/json"
-    })
+    response = requests.post("https://api.emailjs.com/api/v1.0/email/send",json=payload)
     
     return response
 
