@@ -51,7 +51,7 @@ def sendScheduledMeetingEmail(to_email,meeting_title, meeting_date, agenda_html,
     payload = {
         "service_id" : "service_qwxjdpq",
         "template_id" : "template_gm6ip8s",
-        "user_id" : os.getenv("EMAILJS_API_KEY"),
+        "user_id" : public_key,
         "template_params" : template_params
     }
     
